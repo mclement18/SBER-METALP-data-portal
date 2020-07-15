@@ -6,4 +6,8 @@
         font-style: normal;
         color: $primary-color;
     }
+
+    &--inverted {
+        color: $white;
+    }
 }

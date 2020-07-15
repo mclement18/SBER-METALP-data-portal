@@ -1,0 +1,35 @@
+.footer-to-bottom-container {
+    position: relative;
+    min-height: 100vh;
+}
+  
+.footer-to-bottom {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 2.5rem;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    background-color: $grey1;
+    padding: 3em;
+    color: $grey5;
+
+    .logo {
+        margin: 0 1.5em 0 0;
+    }
+
+    a {
+        color: $grey4;
+
+        &:hover {
+            color: $grey3;
+        }
+    }
+
+    .copyright {
+        margin: 0 0 0 auto;
+    }
+}
