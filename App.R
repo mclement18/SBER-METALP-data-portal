@@ -1,23 +1,22 @@
+## Load Libraries #################################################################
 library(shiny)
 library(sass)
 library(stringr)
 
+
+## Compile CSS from Sass ##########################################################
 sass(
   sass_file('assets/sass/main.scss'), 
   output = 'www/main.css',
   options = sass_options(output_style = 'compressed')
 )
 
-navbarPageWithWrapper <- function(navbarPageOutput, footer = NULL) {
-  navbarPageOutput[[3]][[1]]$children[[1]]$attribs$class <- str_interp('${navbarPageOutput[[3]][[1]]$children[[1]]$attribs$class} content-wrapper')
-  navbarPageOutput[[3]][[2]]$attribs$class <- str_interp('${navbarPageOutput[[3]][[2]]$attribs$class} content-wrapper')
-  
-  if(!is.null(footer)) {
-    navbarPageOutput[[3]][[length(navbarPageOutput[[3]]) + 1]] <- footer
-  }
-  
-  return(navbarPageOutput)
-}
+## Source needed files ############################################################
+
+# Load Shiny extensions functions
+source('./utils/shiny_extensions.R')
+
+## Create main UI #################################################################
 
 ui <- tagList(
   tags$head(
@@ -33,10 +32,15 @@ ui <- tagList(
       tabPanel('Data Input'),
       tabPanel('Tools')
     ),
-    htmlTemplate('html_components/footer.html')
+    footer = htmlTemplate('html_components/footer.html')
   )
 )
 
+## Create server function #########################################################
+
 server <- function(input, output, session) {}
+
+
+## Launch App #####################################################################
 
 shinyApp(ui, server)
