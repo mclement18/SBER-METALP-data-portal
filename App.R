@@ -27,7 +27,16 @@ ui <- tagList(
     navbarPage(
       htmlTemplate('html_components/logo.html'),
       windowTitle = 'METALP DATA PORTAL',
-      tabPanel('Home'),
+      tabPanel(
+        'Home',
+        htmlTemplate(
+          'html_components/home.html',
+          chartIcon = icon('chart-bar'),
+          dataIcon = icon('database'),
+          toolboxIcon = icon('toolbox'),
+          downloadIcon = icon('download')
+        )
+      ),
       tabPanel('Visualisation'),
       tabPanel('Data Input'),
       tabPanel('Tools')

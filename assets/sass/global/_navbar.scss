@@ -1,0 +1,47 @@
+.navbar {
+    background-color: $grey5;
+    margin: 0;
+    border: none;
+
+    .navbar-nav > .active > a,
+    .navbar-nav > .active > a:focus,
+    .navbar-nav > .active > a:hover {
+        background-color: $grey3;
+        color: $primary-color;
+    }
+    
+    .navbar-nav > li > a {
+        color: $grey1;
+
+        &:hover, &:focus {
+            background-color: $grey4;
+            color: $grey2;    
+        }
+    }
+}
+
+// TODO
+// div {
+//     border: 1px solid #eee;
+//   }
+//   ul {
+//     display: flex;
+//   }
+//   li {
+//     margin: 1em;
+//   }
+  
+//   span {
+//   /*   display: none; */
+//     visibility: hidden;
+//     opacity: 0;
+//     position: absolute;
+//     transition: opacity 0.5s linear;
+//   /*   transition: display 1s linear; */
+//   }
+//   li:hover span {
+//   /*   display: inline; */
+//     visibility: visible;
+//     opacity: 1;
+//     position: static;
+//   }
