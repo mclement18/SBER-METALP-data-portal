@@ -1,3 +1,17 @@
 .content-wrapper {
-    margin: 0 1.5em;
+    margin: 0 1rem;
+    padding: 0;
+    
+    @include tablet {
+        margin: 0 1.5rem;
+    }
+
+    @include laptop {
+        margin: 0 2rem;
+    }
+
+    @include desktop {
+        max-width: 1648px;
+        margin: 0 auto;
+    }
 }

@@ -1,5 +1,6 @@
 library(shiny)
 library(sass)
+library(stringr)
 
 sass(
   sass_file('assets/sass/main.scss'), 
