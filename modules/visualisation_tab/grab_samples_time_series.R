@@ -82,13 +82,15 @@ grabSamplesTimeSeriesUI <- function(id, minDate, maxDate) {
     sidebarLayout(
       sidebarPanel(
         id = 'time-series-inputs',
-        timeSeriesPlottingUIList$inputs
+        timeSeriesPlottingUIList$inputs,
+        width = 3
       ),
       mainPanel(
         div(
           id = 'time-series-plots',
           timeSeriesPlottingUIList$plots
-        )
+        ),
+        width = 9
       )
     )
   )

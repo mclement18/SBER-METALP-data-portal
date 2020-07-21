@@ -75,3 +75,17 @@
         background: none;
     }
 }
+
+.icon-btn {
+    border: none;
+    background: none;
+    padding: 0;
+    color: $primary-color;
+
+    &:hover,
+    &:focus,
+    &:active {
+        color: $secondary-color;
+        background: none;
+    }
+}

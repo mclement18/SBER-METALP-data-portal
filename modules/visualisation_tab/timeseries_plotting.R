@@ -21,17 +21,25 @@ timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
   list(
     'inputs' = div(
       id = str_interp('time-serie-plot-input-${id}'),
+      class = 'time-serie-input',
       selectInput(ns('catchment'), str_interp('Catchment ${serieNb}'), catchmentsOptions),
-      checkboxGroupInput(ns('sites'), str_interp('Stations')),
-      selectInput(ns('param'), str_interp('Parameter'), paramOptions),
+      checkboxGroupInput(ns('sites'), 'Stations'),
+      selectInput(
+        ns('param'),
+        tags$span(
+          'Parameter',
+          actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
+        ),
+        paramOptions
+      ),
       hidden(
         checkboxGroupInput(ns('paramfilter'), label = 'Parameter filter')
       ),
-      p(textOutput(ns('description'))),
       actionButton(ns('showstats'), 'Show Stats', class = 'custom-style')
     ),
     'plots' = div(
       id = str_interp('time-serie-plots-${id}'),
+      class = 'time-serie-plot',
       plotOutput(ns('lowfreq')),
       plotOutput(ns('doy'))
     )
@@ -140,11 +148,6 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     )
   })
   
-  ## Display Parameter's description
-  output$description <- renderText({
-    parameters %>% filter(param_name == input$param) %>% select(description) %>% unlist()
-  })
-  
   createTable <- function(df) {
     
     ## Function that create a data frame of one column with some summary statistics
@@ -222,6 +225,18 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     showModal(modalDialog(
       title = str_interp('Stats ${unique(sites$catchments[sites$sites_short %in% selectedSites_d()])}'),
       htmlOutput(session$ns('stats')),
+      easyClose = TRUE
+    ))
+  })
+  
+  ## Display Parameter's description
+  observeEvent(input$paramHelper, {
+    
+    output$description <- renderUI(tags$p(parameters %>% filter(param_name == input$param) %>% select(description) %>% unlist()))
+    
+    showModal(modalDialog(
+      title = 'Parameters description',
+      htmlOutput(session$ns('description')),
       easyClose = TRUE
     ))
   })
