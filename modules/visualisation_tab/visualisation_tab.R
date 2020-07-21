@@ -16,7 +16,6 @@ visualisationTabUI <- function(id, grabSampleDf) {
   return(
     tagList(
       tabsetPanel(
-        
         tabPanel(
           'Grab Samples',
           grabSamplesTimeSeriesUI(
@@ -25,10 +24,8 @@ visualisationTabUI <- function(id, grabSampleDf) {
             maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE)
           )
         ),
-        navbarMenu('Sensors',
-                   tabPanel('Time Series'),
-                   tabPanel('VS Grab samples')
-        )
+        tabPanel('Sensors'),
+        tabPanel('Parameters comparisons')
       )
     )
   )

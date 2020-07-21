@@ -61,9 +61,9 @@ grabSamplesTimeSeriesUI <- function(id, minDate, maxDate) {
     paramOptions = paramOptions
   )
   
-  sidebarLayout(
-    sidebarPanel(
-      id = 'time-series-inputs',
+  div(
+    div(
+      class = 'main-inputs',
       dateRangeInput(ns('time'), 'Date range:',
                      start = minDate,
                      end = maxDate,
@@ -71,14 +71,24 @@ grabSamplesTimeSeriesUI <- function(id, minDate, maxDate) {
                      max = maxDate,
                      format = 'dd/mm/yyyy',
                      separator = '-'),
-      actionButton(ns('addUnit'), 'Add Unit'),
-      actionButton(ns('removeUnit'), 'Remove Unit'),
-      timeSeriesPlottingUIList$inputs
-    ),
-    mainPanel(
       div(
-        id = 'time-series-plots',
-        timeSeriesPlottingUIList$plots
+        class = 'btn-group',
+        actionButton(ns('addUnit'), 'Add Unit'),
+        disabled(
+          actionButton(ns('removeUnit'), 'Remove Unit')
+        )
+      )
+    ),
+    sidebarLayout(
+      sidebarPanel(
+        id = 'time-series-inputs',
+        timeSeriesPlottingUIList$inputs
+      ),
+      mainPanel(
+        div(
+          id = 'time-series-plots',
+          timeSeriesPlottingUIList$plots
+        )
       )
     )
   )
@@ -94,7 +104,7 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
   callModule(timeSeriesPlotting, '1', grabSampleDf, dateRange)
   
   observeEvent(input$addUnit, {
-    if (catchmentsNb() == 0) enable('removeUnit')
+    if (catchmentsNb() == 1) enable('removeUnit')
     catchmentsNb(catchmentsNb() + 1)
     
     timeSeriesPlottingUIList <- timeSeriesPlottingUI(
@@ -134,6 +144,6 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
     
     catchmentsNb(catchmentsNb() - 1)
     
-    if (catchmentsNb() == 0) disable('removeUnit')
+    if (catchmentsNb() == 1) disable('removeUnit')
   })
 }

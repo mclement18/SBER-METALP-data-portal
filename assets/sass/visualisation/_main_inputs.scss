@@ -1,0 +1,27 @@
+.main-inputs {
+    display: flex;
+    flex-wrap: wrap;;
+    align-items: center;
+    margin: 0 0 1.5em;
+
+    @include tablet {
+        .btn-group {
+            margin: 0 0 0 auto;
+        }
+    
+        .form-group {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            width: auto;
+    
+            & > label{
+                margin: 0 1.5em 0 0;
+            }
+            
+            & > div {
+               width: auto;
+            }
+        }
+    }
+}

@@ -15,10 +15,13 @@
 timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
   ns <- NS(id)
   
+  splittedId <- str_split(id, '-') %>% unlist()
+  serieNb <- splittedId[length(splittedId)]
+  
   list(
     'inputs' = div(
       id = str_interp('time-serie-plot-input-${id}'),
-      selectInput(ns('catchment'), str_interp('Catchment ${id}'), catchmentsOptions),
+      selectInput(ns('catchment'), str_interp('Catchment ${serieNb}'), catchmentsOptions),
       checkboxGroupInput(ns('sites'), str_interp('Stations')),
       selectInput(ns('param'), str_interp('Parameter'), paramOptions),
       hidden(
@@ -57,11 +60,7 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
                              choices = dataColumns,
                              selected = dataColumns[1])
     
-    if (dataColumns %>% length() == 1) {
-      hide('paramfilter')
-    } else {
-      show('paramfilter')
-    }
+    toggleElement('paramfilter', condition = length(dataColumns) > 1)
   })
   
   paramfilter <- reactive({
