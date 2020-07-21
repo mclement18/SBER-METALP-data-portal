@@ -73,9 +73,9 @@ grabSamplesTimeSeriesUI <- function(id, minDate, maxDate) {
                      separator = '-'),
       div(
         class = 'btn-group',
-        actionButton(ns('addUnit'), 'Add Unit'),
+        actionButton(ns('addUnit'), 'Add Unit', class = 'custom-style'),
         disabled(
-          actionButton(ns('removeUnit'), 'Remove Unit')
+          actionButton(ns('removeUnit'), 'Remove Unit', class = 'custom-style')
         )
       )
     ),

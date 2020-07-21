@@ -1,0 +1,77 @@
+.btn.custom-style {
+    color: $secondary-color;
+    &:hover,
+    &:focus {
+        color: $primary-color;
+        background: lighten($grey5, 20);
+    }
+
+    &:active {
+        color: $primary-color;
+        background: $grey5;
+    }
+
+    &:disabled {
+        color: $secondary-color;
+        background: none;
+    }
+}
+
+.selectize-dropdown,
+.selectize-input,
+.selectize-input input {
+    color: $secondary-color;
+}
+
+.selectize-dropdown .optgroup-header {
+    color: $primary-color;
+}
+
+.input-daterange {
+    .form-control {
+        color: $secondary-color;
+    }
+}
+
+.datepicker {
+    .datepicker-switch,
+    .prev, .next {
+        color: $primary-color;
+    }
+
+    table tr td,
+    table tr td span {
+        &.active {
+            &.active,
+            &.highlighted,
+            &.active.focus,
+            &.active:focus,
+            &.active:hover,
+            &.highlighted.active.focus,
+            &.highlighted.active:focus,
+            &.highlighted.active:hover,
+            &.highlighted:active.focus,
+            &.highlighted:active:focus,
+            &.highlighted:active:hover,
+            &:active.focus,
+            &:active:focus,
+            &:active:hover,
+            &.active:hover.active:hover {
+                background: $primary-color;
+            }
+        }
+    }
+
+    .next, .prev, .datepicker-switch,
+    .day, .month, .year, .decade, .century,
+    table tr td.day {
+        &:hover {
+            background: lighten($grey5, 20);
+            color: $primary-color;
+        }
+    }
+
+    table tr td.day.disabled:hover {
+        background: none;
+    }
+}

@@ -28,7 +28,7 @@ timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
         checkboxGroupInput(ns('paramfilter'), label = 'Parameter filter')
       ),
       p(textOutput(ns('description'))),
-      actionButton(ns('showstats'), 'Show Stats')
+      actionButton(ns('showstats'), 'Show Stats', class = 'custom-style')
     ),
     'plots' = div(
       id = str_interp('time-serie-plots-${id}'),
