@@ -1,6 +1,4 @@
 .time-serie-plot {
-    display: grid;
-    grid-template-columns: repeat(2, 1 / 2 * 100%);
     margin: 0 0 1.5em;
 
     &:first-child {
@@ -9,5 +7,11 @@
 
     &:last-child {
         margin: 0;
+    }
+    
+    @include tablet {
+        display: grid;
+        grid-template-columns: repeat(2, 1 / 2 * 100%);
+    
     }
 }

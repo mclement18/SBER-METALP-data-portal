@@ -58,8 +58,14 @@ basicPlot <- function(df, x, param, plotTitle) {
     scale_linetype(labels = 'LOESS curve')+
     # Set the y axis limits
     scale_y_continuous(limits = calculateYaxisLimits(min(df$values, na.rm = TRUE), max(df$values, na.rm = TRUE)))+
-    # Remove legend title and move legend to the bottom of the plot
-    theme(legend.position = "bottom", legend.title = element_blank())+
+    # Set theme
+    theme_bw()+
+    # Remove legend title, move legend to the bottom of the plot and set text size
+    theme(
+      plot.title = element_text(size = 16, face = 'bold'),
+      legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 10),
+      axis.title = element_text(size = 14), axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 11)
+    )+
     # Remove the shape legend
     guides(shape = 'none')
   return(p)
