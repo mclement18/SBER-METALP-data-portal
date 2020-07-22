@@ -7,6 +7,7 @@
 @import 'global/navbar';
 @import 'global/secondary_nav';
 @import 'global/inputs';
+@import 'global/modal';
 @import 'global/footer';
 // home
 @import 'home/banner';
@@ -16,3 +17,4 @@
 @import 'visualisation/main_inputs';
 @import 'visualisation/sidebar';
 @import 'visualisation/main_content';
+@import 'visualisation/stats_summary';

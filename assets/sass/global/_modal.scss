@@ -1,0 +1,12 @@
+.modal-dialog {
+    width: auto;
+    max-width: 750px;
+
+    @include laptop {
+        max-width: 900px;
+    }
+
+    @include desktop {
+        max-width: 1200px;
+    }
+}

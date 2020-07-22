@@ -211,8 +211,11 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
         site_name <- sites %>% filter(sites_short == site) %>% pull(sites_full)
         tablesOutput <- tagList(
           tablesOutput,
-          h4(site_name),
-          tableOutput(session$ns(tableId)
+          tags$div(
+            class = 'stats-summary-table',
+            h4(site_name),
+            tableOutput(session$ns(tableId)
+          )
         ))
         output[[tableId]] <- renderTable(createTable(perSiteData), rownames = TRUE)
       }
@@ -224,7 +227,7 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     
     showModal(modalDialog(
       title = str_interp('Stats ${unique(sites$catchments[sites$sites_short %in% selectedSites_d()])}'),
-      htmlOutput(session$ns('stats')),
+      htmlOutput(session$ns('stats'), class = 'stats-summary'),
       easyClose = TRUE
     ))
   })
@@ -232,7 +235,10 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
   ## Display Parameter's description
   observeEvent(input$paramHelper, {
     
-    output$description <- renderUI(tags$p(parameters %>% filter(param_name == input$param) %>% select(description) %>% unlist()))
+    output$description <- renderUI(tags$p(
+      class = 'description',
+      parameters %>% filter(param_name == input$param) %>% select(description) %>% unlist()
+    ))
     
     showModal(modalDialog(
       title = 'Parameters description',
