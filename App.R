@@ -2,6 +2,7 @@
 library(shiny)
 library(shinyjs)
 library(sass)
+library(jsonlite)
 library(stringr)
 library(ggplot2)
 library(data.table)
@@ -21,7 +22,7 @@ sass(
 ## Load data ######################################################################
 
 # Load Grab Samples
-grabSampleDf <- read.csv('./data/Metalp_grab_20200710_ND.csv', header = TRUE, na.strings=c(""," ","NA", "<0.05"))
+grabSampleDf <- read.csv('./data/Metalp_grab_20200717_ND.csv', header = TRUE, na.strings=c(""," ","NA", "<0.05"))
 
 ## Convert Date to Date data type and create a DATETIME_GMT column
 grabSampleDf$DATETIME_GMT <- paste(grabSampleDf$DATE_reading, grabSampleDf$TIME_reading_GMT) %>% dmy_hms(tz = 'GMT')
@@ -41,7 +42,9 @@ source('./modules/visualisation_tab/visualisation_tab.R')
 ui <- tagList(
   useShinyjs(),
   tags$head(
-    tags$link(href = 'main.css', rel = 'stylesheet', type = 'text/css')
+    tags$link(href = 'main.css', rel = 'stylesheet', type = 'text/css'),
+    includeScript('./assets/js/sidebar_actions.js'),
+    includeScript('./assets/js/shiny_custom_events.js')
   ),
   tags$body(class = 'footer-to-bottom-container'),
   navbarPageWithWrapper(

@@ -73,6 +73,7 @@ grabSamplesTimeSeriesUI <- function(id, minDate, maxDate) {
                      separator = '-'),
       div(
         class = 'btn-group',
+        actionButton(ns('toggleSidebar'), 'Hide inputs', class = 'custom-style'),
         actionButton(ns('addUnit'), 'Add Unit', class = 'custom-style'),
         disabled(
           actionButton(ns('removeUnit'), 'Remove Unit', class = 'custom-style')
@@ -86,10 +87,8 @@ grabSamplesTimeSeriesUI <- function(id, minDate, maxDate) {
         width = 3
       ),
       mainPanel(
-        div(
-          id = 'time-series-plots',
-          timeSeriesPlottingUIList$plots
-        ),
+        id = 'time-series-plots',
+        timeSeriesPlottingUIList$plots,
         width = 9
       )
     )
@@ -147,5 +146,26 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
     catchmentsNb(catchmentsNb() - 1)
     
     if (catchmentsNb() == 1) disable('removeUnit')
+  })
+  
+  # Sidebar inputs toggle logic
+  sidebarVisible <- reactiveVal(TRUE)
+  
+  observeEvent(input$toggleSidebar, {
+    
+    sidebarVisible(!sidebarVisible())
+    
+    messageJSON <- toJSON(list(
+      'sidebarId' = 'time-series-inputs',
+      'mainPanelId' = 'time-series-plots',
+      'show' = sidebarVisible()
+    ), auto_unbox = TRUE)
+    
+    session$sendCustomMessage('sidebarToggle', messageJSON)
+    
+    newBtnLabel <- 'Show inputs'
+    if (sidebarVisible()) newBtnLabel <- 'Hide inputs'
+    
+    updateActionButton(session, 'toggleSidebar', label = newBtnLabel)
   })
 }

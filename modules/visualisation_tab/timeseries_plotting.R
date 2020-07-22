@@ -226,7 +226,7 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     output$stats <- renderMultiTable('statstable', tables)
     
     showModal(modalDialog(
-      title = str_interp('Stats ${unique(sites$catchments[sites$sites_short %in% selectedSites_d()])}'),
+      title = str_interp('Stats ${unique(sites$catchments[sites$sites_short %in% selectedSites_d()])} catchment'),
       htmlOutput(session$ns('stats'), class = 'stats-summary'),
       easyClose = TRUE
     ))
