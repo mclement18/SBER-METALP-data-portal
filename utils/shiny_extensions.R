@@ -22,3 +22,35 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
   
   return(navbarPageOutput)
 }
+
+
+pointHoverWidgetServer <- function(session, plotId, df, input, threshold = 5) {
+  observeEvent(input(), {
+    plotId <- session$ns(plotId)
+    mapping <- input()$mapping
+    
+    if (length(mapping) > 0) {
+      point <- nearPoints(df(), input(), maxpoints = 1, threshold = threshold) %>% 
+        select(mapping$x, mapping$y)
+      
+      if (dim(point)[1] == 1) {
+        messageJSON <- toJSON(list(
+          'pointInfo' = unbox(point),
+          'hoverInfo' = input(),
+          'plotId' = plotId
+        ), auto_unbox = TRUE)
+        
+        session$sendCustomMessage('addHoverWidget', messageJSON)
+        return()
+      }
+    }
+    
+    
+    messageJSON <- toJSON(list(
+      'plotId' = plotId
+    ), auto_unbox = TRUE)
+    
+    session$sendCustomMessage('removeHoverWidget', messageJSON)
+    
+  }, ignoreNULL = FALSE)
+}

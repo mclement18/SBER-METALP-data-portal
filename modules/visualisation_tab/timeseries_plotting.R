@@ -40,8 +40,8 @@ timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
     'plots' = div(
       id = str_interp('time-serie-plots-${id}'),
       class = 'time-serie-plot',
-      plotOutput(ns('lowfreq')),
-      plotOutput(ns('doy'))
+      plotOutput(ns('lowfreq'), hover = hoverOpts(ns('lowfreq_hover'))),
+      plotOutput(ns('doy'),  hover = hoverOpts(ns('doy_hover')))
     )
   )
 }
@@ -147,6 +147,10 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
       siteName = str_interp('${unique(sites$catchments[sites$sites_short %in% selectedSites_d()])} catchment')
     )
   })
+  
+  pointHoverWidgetServer(session, 'lowfreq', data, reactive(input$lowfreq_hover))
+  
+  pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover))
   
   createTable <- function(df) {
     

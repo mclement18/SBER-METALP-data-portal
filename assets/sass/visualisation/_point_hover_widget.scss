@@ -1,0 +1,49 @@
+.point-hover-widget-plot {
+    position: relative;
+}
+
+.point-hover-widget {
+    font-size: .9em;
+    position: absolute;
+}
+
+.point-info {
+    display: block;
+    margin: 0 0 1em;
+
+    &:last-child {
+        margin: 0;
+    }
+
+    .name {
+        font-weight: bold;
+        margin: 0 5px;
+    }
+
+    .value {
+        font-style: oblique;
+    }
+}
+
+.bubble {
+    position: relative;
+    background-color: $white;
+    padding: 10px;
+    border-radius: 1em;
+    box-shadow:	0 1px 7px 0 $grey5;
+
+    &::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 0;
+        top: 100%;
+        left: 15px; 
+        border: 10px solid transparent;
+        border-bottom: none;
+        border-top-color: $white;
+        filter: drop-shadow(0 2.88px 0.72px lighten($grey5, 20));
+    }
+}
+
+
