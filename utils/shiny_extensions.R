@@ -24,19 +24,43 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
 }
 
 
-pointHoverWidgetServer <- function(session, plotId, df, input, threshold = 5) {
+pointHoverWidgetServer <- function(session, plotId, df, input, x_label = NULL, y_label = NULL, threshold = 5) {
   observeEvent(input(), {
     plotId <- session$ns(plotId)
     mapping <- input()$mapping
     
     if (length(mapping) > 0) {
-      point <- nearPoints(df(), input(), maxpoints = 1, threshold = threshold) %>% 
-        select(mapping$x, mapping$y)
+      point <- nearPoints(df(), input(), maxpoints = 1, threshold = threshold)
       
       if (dim(point)[1] == 1) {
+        pointInfo <- point %>% select(Site_ID, mapping$x, mapping$y)
+        
+        x_y_labels = list(
+          'x' = mapping$x,
+          'y' = mapping$y
+        )
+        
+        if (!is.null(x_label)) {
+          if (x_label %in% colnames(point)) {
+            x_y_labels$x <- point %>% pull(x_label)
+          } else {
+            x_y_labels$x <- x_label
+          }
+        }
+        
+        if (!is.null(y_label)) {
+          if (y_label %in% colnames(point)) {
+            x_y_labels$y <- point %>% pull(y_label)
+          } else {
+            x_y_labels$y <- y_label
+          }
+        }
+        
         messageJSON <- toJSON(list(
-          'pointInfo' = unbox(point),
-          'hoverInfo' = input(),
+          'pointInfo' = unbox(pointInfo),
+          'mapping' = mapping,
+          'coords_img' = input()$coords_img,
+          'x_y_labels' = x_y_labels,
           'plotId' = plotId
         ), auto_unbox = TRUE)
         

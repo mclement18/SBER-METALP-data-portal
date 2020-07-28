@@ -25,16 +25,17 @@ PointHoverWidget.buildValueInfo = function(axis, name, value) {
     return info;
 };
 
-PointHoverWidget.addWidget = function(plotId, pointInfo, hoverInfo) {
+PointHoverWidget.addWidget = function(plotId, pointInfo, mapping, coords_img, x_y_labels) {
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.appendChild(this.buildValueInfo('x', hoverInfo.mapping.x, pointInfo[hoverInfo.mapping.x]));
-    bubble.appendChild(this.buildValueInfo('y', hoverInfo.mapping.y, pointInfo[hoverInfo.mapping.y]));
+    bubble.appendChild(this.buildValueInfo('x', x_y_labels.x, pointInfo[mapping.x]));
+    bubble.appendChild(this.buildValueInfo('y', x_y_labels.y, pointInfo[mapping.y]));
+    bubble.appendChild(this.buildValueInfo('site', 'Station', pointInfo.Site_ID));
     
     const widget = document.createElement('div');
     widget.className = 'point-hover-widget';
-    widget.style.left = `${hoverInfo.coords_img.x - 10}px`;
-    widget.style.bottom = `${400 - hoverInfo.coords_img.y + 10}px`;
+    widget.style.left = `${coords_img.x - 10}px`;
+    widget.style.bottom = `${400 - coords_img.y + 10}px`;
     widget.appendChild(bubble);
 
     this.getPlot(plotId).appendChild(widget);
@@ -47,9 +48,9 @@ PointHoverWidget.removeWidget = function(plotId) {
 };
 
 PointHoverWidget.inputEqualCurrentWidget = function(currentWidget, x, y) {
-    return (currentWidget.querySelector('.x__value').textContent === toString(x)
+    return (currentWidget.querySelector('.x__value').textContent === x
             &&
-            currentWidget.querySelector('.y__value').textContent === toString(y));
+            currentWidget.querySelector('.y__value').textContent === y.toString());
 };
 
 PointHoverWidget.needUpdate = function(plotId, pointInfo, mapping) {
@@ -60,12 +61,11 @@ PointHoverWidget.needUpdate = function(plotId, pointInfo, mapping) {
 };
 
 PointHoverWidget.addWidgetCallback = function(message) {
-    const {pointInfo, hoverInfo, plotId} = message;
+    const {pointInfo, mapping, coords_img, x_y_labels, plotId} = message;
 
-    if (this.needUpdate(plotId, pointInfo, hoverInfo.mapping)) {
-        console.log('adding');
+    if (this.needUpdate(plotId, pointInfo, mapping)) {
         this.removeWidget(plotId);
-        this.addWidget(plotId, pointInfo, hoverInfo);
+        this.addWidget(plotId, pointInfo, mapping, coords_img, x_y_labels);
     }
 };
 

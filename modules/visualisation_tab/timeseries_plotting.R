@@ -148,9 +148,9 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     )
   })
   
-  pointHoverWidgetServer(session, 'lowfreq', data, reactive(input$lowfreq_hover))
+  pointHoverWidgetServer(session, 'lowfreq', data, reactive(input$lowfreq_hover), x_label = 'Date', y_label = 'parameters')
   
-  pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover))
+  pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover), x_label = 'Date', y_label = 'parameters')
   
   createTable <- function(df) {
     

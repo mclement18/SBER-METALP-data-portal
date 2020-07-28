@@ -8,8 +8,8 @@
 }
 
 .point-info {
-    display: block;
-    margin: 0 0 1em;
+    display: flex;
+    margin: 0 0 .5em;
 
     &:last-child {
         margin: 0;
@@ -21,7 +21,9 @@
     }
 
     .value {
+        margin: 0 0 0 auto;
         font-style: oblique;
+        color: $primary-color;
     }
 }
 
