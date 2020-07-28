@@ -39,7 +39,7 @@ timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
     ),
     'plots' = div(
       id = str_interp('time-serie-plots-${id}'),
-      class = 'time-serie-plot',
+      class = 'time-serie-plot point-hover-widget-plot',
       plotOutput(ns('lowfreq'), hover = hoverOpts(ns('lowfreq_hover'))),
       plotOutput(ns('doy'),  hover = hoverOpts(ns('doy_hover')))
     )
@@ -148,9 +148,12 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     )
   })
   
-  pointHoverWidgetServer(session, 'lowfreq', data, reactive(input$lowfreq_hover), x_label = 'Date', y_label = 'parameters')
+  pointHoverWidgetServer(session, 'lowfreq', data, reactive(input$lowfreq_hover),
+                         x_label = 'Date', y_label = 'parameters')
   
-  pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover), x_label = 'Date', y_label = 'parameters')
+  pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover),
+                         x_label = 'Date', y_label = 'parameters',
+                         override.mapping = list('x' = 'DATETIME_GMT'))
   
   createTable <- function(df) {
     

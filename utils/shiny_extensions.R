@@ -24,7 +24,9 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
 }
 
 
-pointHoverWidgetServer <- function(session, plotId, df, input, x_label = NULL, y_label = NULL, threshold = 5) {
+pointHoverWidgetServer <- function(session, plotId, df, input,
+                                   x_label = NULL, y_label = NULL,
+                                   override.mapping = NULL, threshold = 5) {
   observeEvent(input(), {
     plotId <- session$ns(plotId)
     mapping <- input()$mapping
@@ -33,6 +35,12 @@ pointHoverWidgetServer <- function(session, plotId, df, input, x_label = NULL, y
       point <- nearPoints(df(), input(), maxpoints = 1, threshold = threshold)
       
       if (dim(point)[1] == 1) {
+        
+        if (typeof(override.mapping) == 'list') {
+          if (!is.null(override.mapping$x)) mapping$x <- override.mapping$x
+          if (!is.null(override.mapping$y)) mapping$y <- override.mapping$y
+        }
+        
         pointInfo <- point %>% select(Site_ID, mapping$x, mapping$y)
         
         x_y_labels = list(

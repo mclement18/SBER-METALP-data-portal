@@ -34,7 +34,7 @@ PointHoverWidget.addWidget = function(plotId, pointInfo, mapping, coords_img, x_
     
     const widget = document.createElement('div');
     widget.className = 'point-hover-widget';
-    widget.style.left = `${coords_img.x - 10}px`;
+    widget.style.left = `${coords_img.x - 25}px`;
     widget.style.bottom = `${400 - coords_img.y + 10}px`;
     widget.appendChild(bubble);
 
