@@ -1,3 +1,7 @@
+// ####################################
+// Shiny button style overriding
+// ####################################
+
 .btn.custom-style {
     color: $secondary-color;
     &:hover,
@@ -17,6 +21,10 @@
     }
 }
 
+// ####################################
+// Shiny select input style overriding
+// ####################################
+
 .selectize-dropdown,
 .selectize-input,
 .selectize-input input {
@@ -26,6 +34,10 @@
 .selectize-dropdown .optgroup-header {
     color: $primary-color;
 }
+
+// ####################################
+// Shiny datepicker style overriding
+// ####################################
 
 .input-daterange {
     .form-control {
@@ -75,6 +87,10 @@
         background: none;
     }
 }
+
+// ####################################
+// Custom icon only button
+// ####################################
 
 .icon-btn {
     border: none;

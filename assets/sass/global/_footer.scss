@@ -1,3 +1,7 @@
+// ####################################
+// Keeping footer at the bottom of the page
+// ####################################
+
 .footer-to-bottom-container {
     position: relative;
     min-height: 100vh;
@@ -8,6 +12,10 @@
     bottom: 0;
     width: 100%;
 }
+
+// ####################################
+// Footer styling
+// ####################################
 
 .footer {
     background-color: $grey1;

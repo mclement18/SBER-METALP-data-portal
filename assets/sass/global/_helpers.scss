@@ -1,3 +1,7 @@
+// ####################################
+// Global content wrapper
+// ####################################
+
 .content-wrapper {
     margin: 0 1rem;
     padding: 0;
@@ -16,9 +20,17 @@
     }
 }
 
+// ####################################
+// Adding margin to content before the main footer
+// ####################################
+
 .before-footer {
     padding-bottom: 9em;
 }
+
+// ####################################
+// Justify all the descriptions
+// ####################################
 
 .description {
     text-align: justify;

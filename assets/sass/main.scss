@@ -1,4 +1,7 @@
-// global
+// ####################################
+// Global styles import
+// ####################################
+
 @import 'global/variables';
 @import 'global/mixins';
 @import 'global/base';
@@ -9,11 +12,19 @@
 @import 'global/inputs';
 @import 'global/modal';
 @import 'global/footer';
-// home
+
+// ####################################
+// Homepage styles import
+// ####################################
+
 @import 'home/banner';
 @import 'home/info';
 @import 'home/features';
-// visualisation
+
+// ####################################
+// Visualisation page styles import
+// ####################################
+
 @import 'visualisation/main_inputs';
 @import 'visualisation/sidebar';
 @import 'visualisation/main_content';

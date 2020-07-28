@@ -1,3 +1,7 @@
+// ####################################
+// Homepage features layout
+// ####################################
+
 .features {
     margin: 0 auto;
 
@@ -7,6 +11,10 @@
         justify-content: space-evenly;
     }
 }
+
+// ####################################
+// Homepage feature style
+// ####################################
 
 .feature {
     box-shadow: 1px 2px 6px 2px $grey5;
