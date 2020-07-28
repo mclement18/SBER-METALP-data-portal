@@ -148,24 +148,12 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
     if (catchmentsNb() == 1) disable('removeUnit')
   })
   
-  # Sidebar inputs toggle logic
+  # Sidebar inputs toggle logic ###################################################
+  # Create a boolean rective value that keep track of the sidebar vsibility state
   sidebarVisible <- reactiveVal(TRUE)
   
-  observeEvent(input$toggleSidebar, {
-    
-    sidebarVisible(!sidebarVisible())
-    
-    messageJSON <- toJSON(list(
-      'sidebarId' = 'time-series-inputs',
-      'mainPanelId' = 'time-series-plots',
-      'show' = sidebarVisible()
-    ), auto_unbox = TRUE)
-    
-    session$sendCustomMessage('sidebarToggle', messageJSON)
-    
-    newBtnLabel <- 'Show inputs'
-    if (sidebarVisible()) newBtnLabel <- 'Hide inputs'
-    
-    updateActionButton(session, 'toggleSidebar', label = newBtnLabel)
-  })
+  # Call sideBarToggleServer that contains server logic to toggle sidebar visibility
+  sideBarToggleServer(session, reactive(input$toggleSidebar), sidebarVisible,
+                      'time-series-inputs', 'time-series-plots', 'toggleSidebar',
+                      'Show inputs', 'Hide inputs')
 }

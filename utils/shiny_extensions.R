@@ -1,5 +1,7 @@
 # Functions that extend shiny default functions ###################################
 
+# UI function modifiers ####################################################################
+
 navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrapper', footer = NULL, beforeFooterClass = 'before-footer') {
 # Create a shiny navbarPage with a content wrapper class for the navbar and content
 # Parameters:
@@ -21,6 +23,49 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
   }
   
   return(navbarPageOutput)
+}
+
+# Reusable server logic ###########################################################
+
+sideBarToggleServer <- function(session, buttonInput, sidebarVisible,
+                                sidebarId, mainPanelId, buttonInputId,
+                                buttonLabelShow, buttonLabelHide) {
+# Create an observeEvent to toggle the sideBar visibility of a sidebarPanel in sidebarLayout
+# Parameters:
+# - session: the shiny session where the function is called
+# - buttonInput: a reactive expression returning the input value of the actionButton that toggle the sidebar
+# - sideBarVisible: a boolean reactive value that will keeep track of the sideBar state
+# - sidebarId: a string containing the id given to the sidebarPanel
+# - mainPanelId: a string containing the id given to the mainPanel
+# - buttonInputId: a string containing the id given to the mainPanel
+# - buttonLabelShow: a string containing the button label for when the sidebar is hidden
+# - buttonLabelHide: a string containing the button label for when the sidebar is visible
+# 
+# Returns an observeEvent
+  
+  # Create the observeEvent that react to the buttonInput change
+  observeEvent(buttonInput(), {
+    
+    # Invert sidebarVisible value
+    sidebarVisible(!sidebarVisible())
+    
+    # Create JSON message to send to client
+    messageJSON <- toJSON(list(
+      'sidebarId' = sidebarId,
+      'mainPanelId' = mainPanelId,
+      'show' = sidebarVisible()
+    ), auto_unbox = TRUE)
+    
+    # Send the shiny custom message
+    session$sendCustomMessage('sidebarToggle', messageJSON)
+    
+    # Determine correct toggling button label
+    newBtnLabel <- buttonLabelShow
+    if (sidebarVisible()) newBtnLabel <- buttonLabelHide
+    
+    # Update toggling button label
+    updateActionButton(session, buttonInputId, label = newBtnLabel)
+  })
 }
 
 
