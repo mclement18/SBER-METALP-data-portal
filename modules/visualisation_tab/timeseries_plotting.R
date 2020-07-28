@@ -40,7 +40,16 @@ timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
     'plots' = div(
       id = str_interp('time-serie-plots-${id}'),
       class = 'time-serie-plot point-hover-widget-plot',
-      plotOutput(ns('lowfreq'), hover = hoverOpts(ns('lowfreq_hover'))),
+      plotOutput(
+        ns('lowfreq'),
+        hover = hoverOpts(ns('lowfreq_hover')),
+        brush = brushOpts(
+          ns('lowfreq_brush'),
+          direction = 'x',
+          delayType = 'debounce',
+          resetOnNew = TRUE
+        )
+      ),
       plotOutput(ns('doy'),  hover = hoverOpts(ns('doy_hover')))
     )
   )
@@ -109,8 +118,8 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     
     filteredDf <- df %>% filter(
       Site_ID %in% selectedSites_d(),
-      DATE_reading >= dateRange()$min,
-      DATE_reading <= dateRange()$max
+      DATE_reading >= dateRange$min,
+      DATE_reading <= dateRange$max
     )
     
     if (dim(filteredDf)[1] == 0) return(NULL)
@@ -148,12 +157,24 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     )
   })
   
-  pointHoverWidgetServer(session, 'lowfreq', data, reactive(input$lowfreq_hover),
-                         x_label = 'Date', y_label = 'parameters')
+  # pointHoverWidgetServer(session, 'lowfreq', data, reactive(input$lowfreq_hover),
+  #                        x_label = 'Date', y_label = 'parameters')
+  # 
+  # pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover),
+  #                        x_label = 'Date', y_label = 'parameters',
+  #                        override.mapping = list('x' = 'DATETIME_GMT'))
   
-  pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover),
-                         x_label = 'Date', y_label = 'parameters',
-                         override.mapping = list('x' = 'DATETIME_GMT'))
+  updateDateRange <- reactiveValues()
+  
+  updateDateRange$update <- 1
+  
+  observeEvent(input$lowfreq_brush, {
+    dateRange$min <- as.Date(as.POSIXct(input$lowfreq_brush$xmin, origin = "1970-01-01", tz = "GMT"))
+    dateRange$max <- as.Date(as.POSIXct(input$lowfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
+    updateDateRange$update <- updateDateRange$update + 1
+    updateDateRange$min <- dateRange$min
+    updateDateRange$max <- dateRange$max
+  })
   
   createTable <- function(df) {
     
@@ -253,5 +274,7 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
       easyClose = TRUE
     ))
   })
+  
+  return(updateDateRange)
 }
 

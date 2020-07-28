@@ -98,11 +98,21 @@ grabSamplesTimeSeriesUI <- function(id, minDate, maxDate) {
 ## Create module server function ##################################################
 
 grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
-  dateRange <- reactive({list('min' = input$time[1], 'max' = input$time[2])})
+  dateRange <- reactiveValues()
+  updateDateRange <- reactiveValues()
+  
+  observeEvent(input$time, {
+    dateRange$min <- input$time[1]
+    dateRange$max <- input$time[2]
+  })
   
   catchmentsNb <- reactiveVal(1)
   
-  callModule(timeSeriesPlotting, '1', grabSampleDf, dateRange)
+  updateDateRange <- callModule(timeSeriesPlotting, '1', grabSampleDf, dateRange)
+  
+  observeEvent(updateDateRange$update, {
+    updateDateRangeInput(session, 'time', start = updateDateRange$min, end = updateDateRange$max)
+  })
   
   observeEvent(input$addUnit, {
     if (catchmentsNb() == 1) enable('removeUnit')
@@ -126,7 +136,11 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
       immediate = TRUE
     )
     
-    callModule(timeSeriesPlotting, catchmentsNb(), grabSampleDf, dateRange)
+    updateDateRange <- callModule(timeSeriesPlotting, catchmentsNb(), grabSampleDf, dateRange)
+    
+    observeEvent(updateDateRange$update, {
+      updateDateRangeInput(session, 'time', start = updateDateRange$min, end = updateDateRange$max)
+    })
   })
   
   observeEvent(input$removeUnit, {
