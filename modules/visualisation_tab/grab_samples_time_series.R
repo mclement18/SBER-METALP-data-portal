@@ -98,13 +98,7 @@ grabSamplesTimeSeriesUI <- function(id, minDate, maxDate) {
 ## Create module server function ##################################################
 
 grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
-  dateRange <- reactiveValues()
-  updateDateRange <- reactiveValues()
-  
-  observeEvent(input$time, {
-    dateRange$min <- input$time[1]
-    dateRange$max <- input$time[2]
-  })
+  dateRange <- reactive({list('min' = input$time[1], 'max' = input$time[2])})
   
   catchmentsNb <- reactiveVal(1)
   
