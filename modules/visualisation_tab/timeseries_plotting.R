@@ -40,9 +40,12 @@ timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
     'plots' = div(
       id = str_interp('time-serie-plots-${id}'),
       class = 'time-serie-plot point-hover-widget-plot',
+      # TimeSerie plotOutput
       plotOutput(
         ns('lowfreq'),
+        # Data points are hoverable
         hover = hoverOpts(ns('lowfreq_hover')),
+        # Plot is brushable in the x direction
         brush = brushOpts(
           ns('lowfreq_brush'),
           direction = 'x',
@@ -50,6 +53,8 @@ timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
           resetOnNew = TRUE
         )
       ),
+      # Day of the Year time serie plotOuput
+      # Data points are hoverable
       plotOutput(ns('doy'),  hover = hoverOpts(ns('doy_hover')))
     )
   )
@@ -164,6 +169,9 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
                          x_label = 'Date', y_label = 'parameters',
                          override.mapping = list('x' = 'DATETIME_GMT'))
   
+  # Create a reactive expression that contains the new dateRange to be used globally
+  # Should be returned by the module
+  # Converting number to date using the Linux epoch time as origin
   updateDateRange <- reactive(list(
     'min' = as.Date(as.POSIXct(input$lowfreq_brush$xmin, origin = "1970-01-01", tz = "GMT")),
     'max' = as.Date(as.POSIXct(input$lowfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
@@ -268,6 +276,7 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
     ))
   })
   
+  # Return the new dateRange values in order to update the outer module dateRangeInput
   return(updateDateRange)
 }
 

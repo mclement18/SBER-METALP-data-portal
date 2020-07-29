@@ -102,8 +102,11 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
   
   catchmentsNb <- reactiveVal(1)
   
+  # Call the module and retrieve the reactive expression containing the updated dateRange
   updateDateRange <- callModule(timeSeriesPlotting, '1', grabSampleDf, dateRange)
   
+  # Add an observeEvent that track the plot brushing dateRange input
+  # And update the dateRangeInput accordingly
   observeEvent(updateDateRange(), {
     updateDateRangeInput(session, 'time', start = updateDateRange()$min, end = updateDateRange()$max)
   })
@@ -130,8 +133,11 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
       immediate = TRUE
     )
     
+    # Call the module and retrieve the reactive expression containing the updated dateRange
     updateDateRange <- callModule(timeSeriesPlotting, catchmentsNb(), grabSampleDf, dateRange)
     
+    # Add an observeEvent that track the plot brushing dateRange input
+    # And update the dateRangeInput accordingly
     observeEvent(updateDateRange(), {
       updateDateRangeInput(session, 'time', start = updateDateRange()$min, end = updateDateRange()$max)
     })
