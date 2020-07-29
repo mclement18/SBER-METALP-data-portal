@@ -87,7 +87,7 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
       'filter' = NULL,
       'param' = NULL
     ))
-    param <- parameters %>% filter(param_name == input$param)
+    param <- parameters %>% filter(param_name == inputParam)
     return(list(
       'filter' = paramToDisplay,
       'param' = param
@@ -163,16 +163,11 @@ timeSeriesPlotting <- function(input, output, session, df, dateRange) {
   pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover),
                          x_label = 'Date', y_label = 'parameters',
                          override.mapping = list('x' = 'DATETIME_GMT'))
-
-  updateDateRange <- reactiveValues()
   
-  updateDateRange$update <- 0
-  
-  observeEvent(input$lowfreq_brush, {
-    updateDateRange$update <- updateDateRange$update + 1
-    updateDateRange$min <- as.Date(as.POSIXct(input$lowfreq_brush$xmin, origin = "1970-01-01", tz = "GMT"))
-    updateDateRange$max <- as.Date(as.POSIXct(input$lowfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
-  })
+  updateDateRange <- reactive(list(
+    'min' = as.Date(as.POSIXct(input$lowfreq_brush$xmin, origin = "1970-01-01", tz = "GMT")),
+    'max' = as.Date(as.POSIXct(input$lowfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
+  ))
   
   createTable <- function(df) {
     

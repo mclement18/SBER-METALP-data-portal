@@ -104,8 +104,8 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
   
   updateDateRange <- callModule(timeSeriesPlotting, '1', grabSampleDf, dateRange)
   
-  observeEvent(updateDateRange$update, {
-    updateDateRangeInput(session, 'time', start = updateDateRange$min, end = updateDateRange$max)
+  observeEvent(updateDateRange(), {
+    updateDateRangeInput(session, 'time', start = updateDateRange()$min, end = updateDateRange()$max)
   })
   
   observeEvent(input$addUnit, {
@@ -132,8 +132,8 @@ grabSamplesTimeSeries <- function(input, output, session, grabSampleDf) {
     
     updateDateRange <- callModule(timeSeriesPlotting, catchmentsNb(), grabSampleDf, dateRange)
     
-    observeEvent(updateDateRange$update, {
-      updateDateRangeInput(session, 'time', start = updateDateRange$min, end = updateDateRange$max)
+    observeEvent(updateDateRange(), {
+      updateDateRangeInput(session, 'time', start = updateDateRange()$min, end = updateDateRange()$max)
     })
   })
   
