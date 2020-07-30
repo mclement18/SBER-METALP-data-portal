@@ -58,6 +58,8 @@ grabSampleDf$DATE_reading <- dmy(grabSampleDf$DATE_reading)
 
 ## Source needed files ############################################################
 
+# Load helper functions
+source('./utils/helper_functions.R')
 # Load Shiny extensions functions
 source('./utils/shiny_extensions.R')
 # Load tabs modules

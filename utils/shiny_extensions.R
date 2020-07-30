@@ -31,6 +31,52 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
 
 ## Reusable server logic ##########################################################
 
+
+renderStatsTablePerSite <- function(session, output, id, data, sites, selectedSites) {
+# Create and render a multi tables output that contain stats summary of each selected site
+# Parameters:
+#  - session: Shiny session, the session where the function is called
+#  - output: Shiny output of the current module
+#  - id: String, the id of the multi tables output
+#  - data: Reactive expression returning a Data.frame of the data to summarise
+#  - sites: Data.frame, contains the information of the sites
+#  - selectedSites: Reactive expression returning the sites for which to get the stats
+# 
+# Returns an multi tables UI element to render
+  
+  # Create an empty tagList
+  tablesOutput <- tagList()
+  
+  # For each selected site
+  for (site in selectedSites()) {
+    # Generate a table id
+    tableId <- str_interp('${id}-${site}')
+    # Get the site full name
+    site_name <- sites %>% filter(sites_short == site) %>% pull(sites_full)
+    
+    # Create a stats table UI with a tableOutput and combine it to the existing tablesOutput
+    tablesOutput <- tagList(
+      tablesOutput,
+      tags$div(
+        class = 'stats-summary-table',
+        h4(site_name),
+        tableOutput(session$ns(tableId)
+        )
+      ))
+    
+    # Filter data per site
+    perSiteData <- data() %>% filter(Site_ID == site)
+    
+    # Render the stats summary table
+    output[[tableId]] <- renderTable(createStatsTable(perSiteData), rownames = TRUE)
+  }
+  
+  # Return the stats tables UI
+  return(renderUI(tablesOutput))
+}
+
+
+
 pointHoverWidgetServer <- function(session, plotId, df, input,
                                    x_label = NULL, y_label = NULL,
                                    override.mapping = NULL, threshold = 5) {
