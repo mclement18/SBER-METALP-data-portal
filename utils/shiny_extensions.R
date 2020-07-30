@@ -31,39 +31,68 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
 
 # Reusable server logic ###########################################################
 
-
 pointHoverWidgetServer <- function(session, plotId, df, input,
                                    x_label = NULL, y_label = NULL,
                                    override.mapping = NULL, threshold = 5) {
+# Create an observeEvent that react to either an click or hover input on a plot and send information
+# to the client to create an info bubble for the closest point
+# Parameters:
+#  - session: Shiny session, the session where the function is called
+#  - plotId: String, the id of the plot to track
+#  - df: Reactive expression returning a Data.frame, the data used to draw the plot
+#  - input: reactive expression, returning either a click or a hover input
+#  - x_label, y_label: String, either a column name of the df where to get the label
+#                      or a new label, if NULL (default) values found in the input()$mapping is used
+#  - override.mapping: Named list, containing the new mapping to use for the widget. Default NULL
+#                      (i.e. list('x' = 'new_x_mapping', 'y' = 'new_y_mapping'), list('x' = 'new_x_mapping'))
+#  - threshold: Int, threshold in pixels to determined the nearest point, default 5.
+# 
+# Returns an observeEvent
+  
+  # Create an observeEvent that react to input() changes even if it is NULL
+  # Is returned by the function
   observeEvent(input(), {
+    # Parse the potId to add the current namespace to it
     plotId <- session$ns(plotId)
+    # Extract the mapping information from the input()
     mapping <- input()$mapping
     
+    # If there is a mapping
     if (length(mapping) > 0) {
+      # Get the nearest point
       point <- nearPoints(df(), input(), maxpoints = 1, threshold = threshold)
       
+      # If there is a point process it and return
       if (dim(point)[1] == 1) {
         
+        # Correct the mapping if overrided
         if (typeof(override.mapping) == 'list') {
           if (!is.null(override.mapping$x)) mapping$x <- override.mapping$x
           if (!is.null(override.mapping$y)) mapping$y <- override.mapping$y
         }
         
+        # Extract relevant point information
         pointInfo <- point %>% select(Site_ID, mapping$x, mapping$y)
         
+        # Predefine the x and y labels with the mapping info
         x_y_labels = list(
           'x' = mapping$x,
           'y' = mapping$y
         )
         
+        # If a label is specified for x or y process it
         if (!is.null(x_label)) {
+          # If the label is a name of a column
           if (x_label %in% colnames(point)) {
+            # Use the value stored in that column
             x_y_labels$x <- point %>% pull(x_label)
           } else {
+            # Otherwise use the label
             x_y_labels$x <- x_label
           }
         }
         
+        # The same for y label
         if (!is.null(y_label)) {
           if (y_label %in% colnames(point)) {
             x_y_labels$y <- point %>% pull(y_label)
@@ -72,6 +101,12 @@ pointHoverWidgetServer <- function(session, plotId, df, input,
           }
         }
         
+        # Create a JSON message to send to the client containing:
+        #  - pointInfo: the point information (use unbox() to get an object rather than an array)
+        #  - mapping: the mapping information
+        #  - coords_img: the coordinates of the input location on the plot
+        #  - x_y_labels: the x and y labels
+        #  - plotId: the id of the concerned plot
         messageJSON <- toJSON(list(
           'pointInfo' = unbox(pointInfo),
           'mapping' = mapping,
@@ -80,16 +115,27 @@ pointHoverWidgetServer <- function(session, plotId, df, input,
           'plotId' = plotId
         ), auto_unbox = TRUE)
         
+        # Send the shiny custom message to create a widget
+        # Linked to some JavaScript defined in './assets/js/point_hover_widget.js'
         session$sendCustomMessage('addHoverWidget', messageJSON)
+        
+        # Return to stop the expression execution
         return()
-      }
-    }
+      } # End if dim(point)[1] == 1
+    } # End if length(mapping) > 0
     
     
+    
+    # This part is executed only if length(mapping) ≤ 0 or no nearest point were found
+    
+    # Create a JSON message to send to the client containing:
+    #  - plotId: the id of the concerned plot
     messageJSON <- toJSON(list(
       'plotId' = plotId
     ), auto_unbox = TRUE)
     
+    # Send the shiny custom message to remove widgets
+    # Linked to some JavaScript defined in './assets/js/point_hover_widget.js'
     session$sendCustomMessage('removeHoverWidget', messageJSON)
     
   }, ignoreNULL = FALSE)

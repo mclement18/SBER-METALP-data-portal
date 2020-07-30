@@ -10,6 +10,8 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI) {
 #  - minDate: Date, the lower bound for the dateRangeInput
 #  - maxDate: Date, the upper bound for the dateRangeInput
 #  - innerModuleUI: Function, the inner module UI function
+# 
+# Returns a div containing layout
   
   # Create namespace
   ns <- NS(id)
@@ -76,15 +78,17 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
 #                            + inputs: String, the prefix for the inner module inputs UI element
 #                            + plots: String, the prefix for the inner module plots UI element
 #  - df: Data.frame, the data to pass to the inner module
-  
-  # DateRange input logic #########################################################
+# 
+# Returns NULL
+    
+  ## DateRange input logic ########################################################
   
   # Create dateRange reactive expression containing the min and max values of the dateRangeInput
   dateRange <- reactive(list('min' = input$time[1], 'max' = input$time[2]))
   
   
   
-  # First unit module calling #####################################################
+  ## First unit module calling ####################################################
 
   # Call the first unit of the innerModule and retrieve the reactive expression containing the updated dateRange
   updateDateRange <- callModule(innerModule, '1', df, dateRange)
@@ -97,7 +101,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
   
   
   
-  # Unit Nb tracking ##############################################################
+  ## Unit Nb tracking #############################################################
   
   # Create a reactive value that keep track of the number of displayed units
   # One is displayed by default
@@ -105,7 +109,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
   
   
   
-  # Unit adding logic #############################################################
+  ## Unit adding logic ############################################################
   
   # Add an observeEvent that will run upon click on the add unit button
   observeEvent(input$addUnit, {
@@ -143,7 +147,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
   
   
   
-  # Unit removing logic ###########################################################
+  ## Unit removing logic ##########################################################
   
   # Add an observeEvent that will run upon click on the remove unit button
   observeEvent(input$removeUnit, {
@@ -172,7 +176,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
   
   
   
-  # Sidebar inputs toggle logic ###################################################
+  ## Sidebar inputs toggle logic ##################################################
   
   # Create a boolean reactive value that keep track of the sidebar visibility state
   sidebarVisible <- reactiveVal(TRUE)
@@ -193,7 +197,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
       'show' = sidebarVisible()
     ), auto_unbox = TRUE)
     
-    # Send the shiny custom message
+    # Send the shiny custom message to toggle sidebar visibility
     # Linked to some JavaScript defined in './assets/js/sidebar_actions.js'
     session$sendCustomMessage('sidebarToggle', messageJSON)
     

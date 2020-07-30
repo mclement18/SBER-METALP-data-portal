@@ -1,4 +1,5 @@
 // Module to show and hide the shiny sidebar from a sidebar panel
+// Linked to the sidebarInputLayout module defined in './modules/visualisation_tab/sidebar_input_layout.R'
 const Sidebar = {};
 
 // Get sidebar element with enclosing div used for layout
