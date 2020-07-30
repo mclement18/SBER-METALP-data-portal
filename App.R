@@ -44,12 +44,13 @@ sass(
   options = sass_options(output_style = 'compressed')
 )
 
+
 ## Load data ######################################################################
 
 # Load Grab Samples
 grabSampleDf <- read.csv('./data/Metalp_grab_20200717_ND.csv', header = TRUE, na.strings=c(""," ","NA", "<0.05"))
 
-## Convert Date to Date data type and create a DATETIME_GMT column
+# Convert Date to Date data type and create a DATETIME_GMT POSIXct column
 grabSampleDf$DATETIME_GMT <- paste(grabSampleDf$DATE_reading, grabSampleDf$TIME_reading_GMT) %>% dmy_hms(tz = 'GMT')
 grabSampleDf$DATE_reading <- dmy(grabSampleDf$DATE_reading)
 
@@ -62,23 +63,38 @@ source('./utils/shiny_extensions.R')
 # Load tabs modules
 source('./modules/visualisation_tab/visualisation_tab.R')
 
+
+
 ## Create main UI #################################################################
 
 ui <- tagList(
+  # Load shinyjs
   useShinyjs(),
+  # Add stylesheet link and script tags to head
   tags$head(
+    # Add link to main.css stylesheet
     tags$link(href = 'main.css', rel = 'stylesheet', type = 'text/css'),
+    # Add script for each js file
     includeScript('./assets/js/sidebar_actions.js'),
     includeScript('./assets/js/point_hover_widget.js'),
+    # Important to had the shiny custom events in last
     includeScript('./assets/js/shiny_custom_events.js')
   ),
+  # Add a class to the body element to keep the footer at the bottom of the page
   tags$body(class = 'footer-to-bottom-container'),
+  # Create the navbarPage using custom function to add a content-wrapper (defined in './utils/shiny_extensions.R')
   navbarPageWithWrapper(
+    # Pass in the output of shiny navbarPage()
     navbarPage(
-      htmlTemplate('html_components/logo.html'),
+      # Load the custom logo for the navbar title
+      htmlTemplate('./html_components/logo.html'),
+      # Set a window browser window title
       windowTitle = 'METALP DATA PORTAL',
+      # Create the home tab
       tabPanel(
+        # Create a tab title with an icon
         tags$span(icon('home'),tags$span('Home', class = 'navbar-menu-name')),
+        # Load the home page template with some icons
         htmlTemplate(
           'html_components/home.html',
           chartIcon = icon('chart-bar'),
@@ -87,23 +103,43 @@ ui <- tagList(
           downloadIcon = icon('download')
         )
       ),
+      # Create the visualisation tab
       tabPanel(
+        # Create a tab title with an icon
         tags$span(icon('chart-bar'),tags$span('Visualisation', class = 'navbar-menu-name')),
+        # Load the visualisationTab module UI elements
         visualisationTabUI('1', grabSampleDf)
       ),
-      tabPanel(tags$span(icon('database'),tags$span('Data Management', class = 'navbar-menu-name'))),
-      tabPanel(tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name'))),
-      tabPanel(tags$span(icon('download'),tags$span('Download', class = 'navbar-menu-name')))
+      # Create the data management tab
+      tabPanel(
+        # Create a tab title with an icon
+        tags$span(icon('database'),tags$span('Data Management', class = 'navbar-menu-name'))
+      ),
+      # Create the toolbox tab
+      tabPanel(
+        # Create a tab title with an icon
+        tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name'))
+      ),
+      # Create the download tab
+      tabPanel(
+        # Create a tab title with an icon
+        tags$span(icon('download'),tags$span('Download', class = 'navbar-menu-name'))
+      )
     ),
+    # Add footer to navbarPageWithWrapper
     footer = htmlTemplate('html_components/footer.html')
   )
 )
 
+
+
 ## Create server function #########################################################
 
 server <- function(input, output, session) {
+  # Load visualisationTab module server logic
   callModule(visualisationTab, '1', grabSampleDf)
 }
+
 
 
 ## Launch App #####################################################################
