@@ -1,18 +1,58 @@
-# library(shiny)
-# library(shinyjs)
-# library(ggplot2)
-# library(scales)
-# library(data.table)
-# library(lubridate)
-# library(magrittr)
-# library(stringr)
-# library(tidyr)
-# library(dplyr)
+## Load parameters and sites information ##########################################
+
+# Use fread() from data.table library because of the long description text that lead EOF error with read.csv
+# Beware it produces a data.table and not a data.frame which similar but has some differences
+# Convertible to a data.frame with as.data.frame()
+
+parameters <- fread('./data/parameters_grab_samples.csv', header = TRUE, sep = ',')
+sites <- fread('./data/sites.csv', header = TRUE, sep = ',')
+
+## Create lists containing select input element options ########################################################
+
+## Function to parse options for select input with section
+
+## Takes in a data.frame or data.table with a 'section_name' and an 'option_name' column
+## Containing the dropdown and option text, respectively
+## And a third column containing the option value of the name of your choice that you need to pass as second parameter
+## It returns a named list of named lists to be used as choices parameter for shiny selectInput()
+parseOptionsWithSections <- function(paramOptions, valueColumn) {
+  
+  optionsList <- list()
+  
+  ## For each row in the data
+  ## Add a list to optionsList if the corresponding section_name list is not already created
+  ## Add an option to the corresponding section_name list
+  for (i in c(1:dim(paramOptions)[1])) {
+    currentRow <- as.data.frame(paramOptions[i,])
+    
+    if (optionsList[[currentRow$section_name]] %>% is.null()) {
+      optionsList[[currentRow$section_name]] <- list()
+    }
+    
+    optionsList[[currentRow$section_name]][[currentRow$option_name]] <- currentRow[[valueColumn]]
+  }
+  
+  return(optionsList)
+}
+
+## Function that create a simple options list for select input
+parseOptions <- function(optionsTable, optionsColumn) {
+  return(
+    optionsTable[[optionsColumn]] %>% unique()
+  )
+}
+
+
+## Create the two optionsLists needed
+paramOptions <- parseOptionsWithSections(parameters, 'param_name')
+
+catchmentsOptions <- parseOptions(sites, 'catchments')
+
 
 
 ## Create the UI function of the module ###############################################
 
-timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
+grabSamplesTimeSeriesUI <- function(id) {
   ns <- NS(id)
   
   splittedId <- str_split(id, '-') %>% unlist()
@@ -64,7 +104,7 @@ timeSeriesPlottingUI <- function(id, catchmentsOptions, paramOptions) {
 
 ## Create the server function of the module ###############################################
 
-timeSeriesPlotting <- function(input, output, session, df, dateRange) {
+grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
   
   observeEvent(input$catchment, {
     currentSites <- sites %>% filter(catchments == input$catchment)
