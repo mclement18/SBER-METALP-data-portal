@@ -1,40 +1,71 @@
-## This module contains the UI and server code for the Visualisation tab ##########
+## This module contains the UI and server code for the Visualisation tab
 
 ## Source needed files ############################################################
 
 # Load plotting functions
 source('./utils/plotting_functions.R')
+
 # Load visualisation modules
 source('./modules/visualisation_tab/sidebar_input_layout.R')
 source('./modules/visualisation_tab/grab_samples_timeseries.R')
 
+
+
 ## Create module UI ###############################################################
 
 visualisationTabUI <- function(id, grabSampleDf) {
+# Create the UI for the visualisationTab module
+# Parameters:
+#  - id: String, the module id
+#  - grabSampleDf: Data.frame, the grab samples data
+# 
+# Returns a tabsetPanel containing the layout
+  
+  # Create namespace
   ns <- NS(id)
   
-  return(
-    tagList(
-      tabsetPanel(
-        tabPanel(
-          'Grab Samples',
-          sidebarInputLayoutUI(
-            ns('grab-samples-timeseries'),
-            minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
-            maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
-            innerModuleUI = grabSamplesTimeSeriesUI
-          )
-        ),
-        tabPanel('Sensors'),
-        tabPanel('Parameters comparisons')
+  # Create a tabsetPanel to create sub navigation
+  tabsetPanel(
+    # Create the grab samples timeserie visualisation tab
+    tabPanel(
+      # Tab title
+      'Grab Samples',
+      # Tab content
+      # Create a sidebarInputLayout UI with for the grabSamplesTimeSeries module 
+      sidebarInputLayoutUI(
+        ns('grab-samples-timeseries'),
+        minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
+        maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+        innerModuleUI = grabSamplesTimeSeriesUI
       )
+    ),
+    # Create the Sensors timeserie visualisation tab
+    tabPanel('Sensors'),
+    # Create the exploratory analysis visualisation tab with dropdown menu
+    navbarMenu(
+      'Exploratory analysis',
+      # Create the grab samples comparison tab
+      tabPanel('Grab samples comparison'),
+      # Create the sensors vs grab samples comparison tab
+      tabPanel('Sensors vs Grab samples comparison')
     )
   )
 }
 
+
+
 ## Create module server function ##################################################
 
 visualisationTab <- function(input, output, session, grabSampleDf) {
+# Create the logic for the visualisationTab module
+# Parameters:
+#  - input, output, session: Default needed parameters to create a module
+#  - grabSampleDf: Data.frame, the data of the grab samples
+#                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
+# 
+# Returns NULL
+  
+  # Load the server logic for the grabSamplesTimeSeries module inside the sidebarInputLayout module
   callModule(sidebarInputLayout, 'grab-samples-timeseries',
              grabSamplesTimeSeries, grabSamplesTimeSeriesUI,
              list('inputs' = 'time-serie-plot-input', 'plots' = 'time-serie-plots'),

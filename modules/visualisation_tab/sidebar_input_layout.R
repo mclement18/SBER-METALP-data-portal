@@ -1,5 +1,5 @@
-# This module contains the UI and server code for the show/hide sidebar input layout 
-# with a dynamic interface to add and remove units of an inner module for visualisation
+## This module contains the UI and server code for the show/hide sidebar input layout
+## with a dynamic interface to add and remove units of an inner module for visualisation
 
 ## Create module UI function ######################################################
 
@@ -11,7 +11,7 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI) {
 #  - maxDate: Date, the upper bound for the dateRangeInput
 #  - innerModuleUI: Function, the inner module UI function
 # 
-# Returns a div containing layout
+# Returns a div containing the layout
   
   # Create namespace
   ns <- NS(id)

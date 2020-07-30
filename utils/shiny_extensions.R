@@ -1,7 +1,7 @@
-# Functions that extend shiny default functions ###################################
+## Functions that extend shiny default functions ##################################
 
 
-# UI function modifiers ####################################################################
+## UI function modifiers ##########################################################
 
 navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrapper', footer = NULL, beforeFooterClass = 'before-footer') {
 # Create a shiny navbarPage with a content wrapper class for the navbar and content
@@ -29,7 +29,7 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
 
 
 
-# Reusable server logic ###########################################################
+## Reusable server logic ##########################################################
 
 pointHoverWidgetServer <- function(session, plotId, df, input,
                                    x_label = NULL, y_label = NULL,

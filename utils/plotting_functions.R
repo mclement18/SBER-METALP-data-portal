@@ -1,4 +1,4 @@
-## Regroups all plotting functions used with ggplot2 ##############################
+## Regroups all plotting functions used with ggplot2
 
 ## Plotting helpers ###############################################################
 
