@@ -68,3 +68,53 @@ createStatsTable <- function(df) {
   ## Return stats summary table
   return(statsTable)
 }
+
+
+
+parseOptionsWithSections <- function(optionsInfo, valueColumn) {
+# Function to parse options for select input with section
+# Parameters:
+#  - optionsInfo: Data.frame, containing the info to create the select input options. Columns format:
+#                 + section_name: Containing the name of the section.
+#                 + option_name: Containing the name of the option.
+#                 + valueColumn: A column with the same name as specified in valueColumn.
+#                                Containing the value of the option.
+#  - valueColumn: String, name of the column containing the options value
+# 
+# Returns a named list of named lists to be used as choices parameter for shiny selectInput()
+  
+  # Create an empty list
+  optionsList <- list()
+  
+  # For each row in the optionsInfo
+  for (i in c(1:dim(optionsInfo)[1])) {
+    # Extract current row
+    currentRow <- optionsInfo[i,]
+    
+    # Add a list to optionsList if the corresponding section_name list is not already created
+    if (optionsList[[currentRow$section_name]] %>% is.null()) {
+      optionsList[[currentRow$section_name]] <- list()
+    }
+    
+    # Add the option to the corresponding section_name list
+    optionsList[[currentRow$section_name]][[currentRow$option_name]] <- currentRow[[valueColumn]]
+  }
+  
+  return(optionsList)
+}
+
+
+
+parseOptions <- function(optionsInfo, optionsColumn) {
+# Function that create a simple options list for select input
+# Parameters:
+#  - optionsInfo: Data.frame, containing the info to create the select input options. Columns format:
+#                 + optionsColumn: A column with the same name as specified in optionsColumn
+#                                Containing the name and value (value == name) of the option.
+#  - optionsColumn: String, name of the column containing the options value (and name)
+# 
+# Returns a named list to be used as choices parameter for shiny selectInput()
+  return(
+    optionsInfo[[optionsColumn]] %>% unique()
+  )
+}

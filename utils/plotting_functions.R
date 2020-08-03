@@ -20,7 +20,7 @@ siteColors <- function(df, sitesTable) {
 
 ## Plot types #####################################################################
 
-basicPlot <- function(df, x, param, plotTitle) {
+basicPlot <- function(df, x, param, plotTitle, sites) {
 # Function that create a simple scatter plot with a LOESS curve for one value
 # Parameters:
 # - df: DataFrame in long format containing the following columns:
@@ -33,6 +33,7 @@ basicPlot <- function(df, x, param, plotTitle) {
 #          + param_name: String
 #          + units: String
 # - plotTitle: String containing the title of the plot
+# - sites: Data.frame, contains the sites info (e.i. sites_color)
 #
 # Returns a ggplot2 plot
   
@@ -72,7 +73,7 @@ basicPlot <- function(df, x, param, plotTitle) {
 }
 
 
-sdPlot <- function(df, x, param, plotTitle) {
+sdPlot <- function(df, x, param, plotTitle, sites) {
 # Function that create a simple scatter plot with a LOESS curve and error bars for each point for one value
 # Parameters:
 # - df: DataFrame in long format containing the following columns:
@@ -87,20 +88,21 @@ sdPlot <- function(df, x, param, plotTitle) {
 #          + units: String
 #          + sd: String (column name for the corresponding parameter's sd)
 # - plotTitle: String containing the title of the plot
+# - sites: Data.frame, contains the sites info (e.i. sites_color)
 #
 # Returns a ggplot2 plot
   
   # Create a symbole with the string contained in param$sd
   sd <- sym(param$sd)
   # Create a basicPlot
-  p <- basicPlot(df, x, param, plotTitle)
+  p <- basicPlot(df, x, param, plotTitle, sites)
   # Add error bars to the plot using the sd
   p <- p + geom_errorbar(aes(ymin = values - !!sd, ymax = values + !!sd))
   return(p)
 }
 
 
-minMaxPlot <- function(df, x, param, plotTitle) {
+minMaxPlot <- function(df, x, param, plotTitle, sites) {
 # Function that create a simple scatter plot with a LOESS curve for one value and a min and max value
 # Parameters:
 # - df: DataFrame in long format containing the following columns:
@@ -113,11 +115,12 @@ minMaxPlot <- function(df, x, param, plotTitle) {
 #          + param_name: String
 #          + units: String
 # - plotTitle: String containing the title of the plot
+# - sites: Data.frame, contains the sites info (e.i. sites_color)
 #
 # Returns a ggplot2 plot
   
   # Create a basicPlot
-  p <- basicPlot(df, x, param, plotTitle)
+  p <- basicPlot(df, x, param, plotTitle, sites)
   p <- p + 
     # Set the linetype values of the parameters groups to make only the avg visible
     scale_linetype_manual(values = c(1, 0, 0))+
@@ -129,7 +132,7 @@ minMaxPlot <- function(df, x, param, plotTitle) {
 }
 
 
-multiPlot <- function(df, x, param, plotTitle) {
+multiPlot <- function(df, x, param, plotTitle, sites) {
 # Function that create a simple scatter plot with a LOESS curve for one, two or three parameters
 # Parameters:
 # - df: DataFrame in long format containing the following columns:
@@ -142,11 +145,12 @@ multiPlot <- function(df, x, param, plotTitle) {
 #          + param_name: String
 #          + units: String
 # - plotTitle: String containing the title of the plot
+# - sites: Data.frame, contains the sites info (e.i. sites_color)
 #
 # Returns a ggplot2 plot
   
   # Create a basicPlot
-  p <- basicPlot(df, x, param, plotTitle)
+  p <- basicPlot(df, x, param, plotTitle, sites)
   p <- p +
     # Define the linetypes in case of multiple parameters
     scale_linetype_manual(values = c(1, 3, 2), name = 'parameters')+
@@ -157,7 +161,7 @@ multiPlot <- function(df, x, param, plotTitle) {
   return(p)
 }
 
-timeSeriePlot <- function(df, x, parameter, siteName) {
+timeSeriePlot <- function(df, x, parameter, siteName, sites) {
 # Function that create a time series plot using the plotting function encoded in the parameter argument
 # Parameters:
 # - df: DataFrame in long format (for shape details, refer to subsequent plotting function used)
@@ -166,6 +170,7 @@ timeSeriePlot <- function(df, x, parameter, siteName) {
 #              + plot_func: String corresping to a plotting function name
 #              + other required by the specific plotting function used
 # - siteName: String containing the site name to use for the plot title generation
+# - sites: Data.frame, contains the sites info (e.i. sites_color)
 #
 # Returns a ggplot2 plot
   
@@ -174,14 +179,14 @@ timeSeriePlot <- function(df, x, parameter, siteName) {
   # Create plot title
   plotTitle <- str_interp('${siteName} Time Serie')
   # Create plot using the plotting function
-  p <- plottingFunc(df, x, parameter, plotTitle)
+  p <- plottingFunc(df, x, parameter, plotTitle, sites)
   # Set the x axis as datetime
   p <- p + scale_x_datetime(date_minor_breaks = '1 month')
   return(p)
 }
 
 
-DOYPlot <- function(df, x, parameter, siteName) {
+DOYPlot <- function(df, x, parameter, siteName, sites) {
 # Function that create a DOY time series plot using the plotting function encoded in the parameter argument
 # Parameters:
 # - df: DataFrame in long format with the folling requiered columns:
@@ -193,6 +198,7 @@ DOYPlot <- function(df, x, parameter, siteName) {
 #              + plot_func: String corresping to a plotting function name
 #              + other required by the specific plotting function used
 # - siteName: String containing the site name to use for the plot title generation
+# - sites: Data.frame, contains the sites info (e.i. sites_color)
 #
 # Returns a ggplot2 plot
   
@@ -201,7 +207,7 @@ DOYPlot <- function(df, x, parameter, siteName) {
   # Create plot title
   plotTitle <- str_interp('${siteName} DOY Serie')
   # Create plot using the plotting function
-  p <- plottingFunc(df, x, parameter, plotTitle)
+  p <- plottingFunc(df, x, parameter, plotTitle, sites)
   # Set the x axis as datetime
   p <- p + scale_x_datetime(
     date_breaks = '1 month',

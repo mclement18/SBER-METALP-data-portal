@@ -13,11 +13,15 @@ source('./modules/visualisation_tab/grab_samples_timeseries.R')
 
 ## Create module UI ###############################################################
 
-visualisationTabUI <- function(id, grabSampleDf) {
+visualisationTabUI <- function(id, grabSampleDf, hfDfList, sites, grabSampleParameters, hfParameters) {
 # Create the UI for the visualisationTab module
 # Parameters:
 #  - id: String, the module id
 #  - grabSampleDf: Data.frame, the grab samples data
+#  - hfDfList: Named list of the sensors high frequency data of each station
+#  - sites: Named list of sites info, cf data_preprocessing.R
+#  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
+#  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns a tabsetPanel containing the layout
   
@@ -36,11 +40,24 @@ visualisationTabUI <- function(id, grabSampleDf) {
         ns('grab-samples-timeseries'),
         minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
         maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
-        innerModuleUI = grabSamplesTimeSeriesUI
+        innerModuleUI = grabSamplesTimeSeriesUI,
+        sites = sites,
+        parameters = grabSampleParameters
       )
     ),
     # Create the Sensors timeserie visualisation tab
-    tabPanel('Sensors'),
+    tabPanel(
+      # Tab title
+      'Sensors',
+      # Tab content
+      # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
+      # sidebarInputLayoutUI(
+      #   ns('sensors-timeseries'),
+      #   minDate = min(hfDfList$AND$date, na.rm = TRUE), 
+      #   maxDate = max(hfDfList$AND$date, na.rm = TRUE),
+      #   innerModuleUI = highFreqTimeSeriesUI
+      # )
+    ),
     # Create the exploratory analysis visualisation tab with dropdown menu
     navbarMenu(
       'Exploratory analysis',
@@ -56,12 +73,16 @@ visualisationTabUI <- function(id, grabSampleDf) {
 
 ## Create module server function ##################################################
 
-visualisationTab <- function(input, output, session, grabSampleDf) {
+visualisationTab <- function(input, output, session, grabSampleDf, hfDfList, sites, grabSampleParameters, hfParameters) {
 # Create the logic for the visualisationTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
+#  - hfDfList: Named list of the sensors high frequency data of each station
+#  - sites: Named list of sites info, cf data_preprocessing.R
+#  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
+#  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns NULL
   
@@ -69,5 +90,10 @@ visualisationTab <- function(input, output, session, grabSampleDf) {
   callModule(sidebarInputLayout, 'grab-samples-timeseries',
              grabSamplesTimeSeries, grabSamplesTimeSeriesUI,
              list('inputs' = 'time-serie-plot-input', 'plots' = 'time-serie-plots'),
-             grabSampleDf)
+             df = grabSampleDf, sites = sites, parameters = grabSampleParameters)
+  # # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
+  # callModule(sidebarInputLayout, 'sensors-timeseries',
+  #            highFreqTimeSeries, highFreqTimeSeriesUI,
+  #            list('inputs' = 'time-serie-plot-input', 'plots' = 'time-serie-plots'),
+  #            hfDfList)
 }

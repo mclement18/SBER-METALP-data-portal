@@ -3,13 +3,14 @@
 
 ## Create module UI function ######################################################
 
-sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI) {
+sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI, ...) {
 # Create the UI for the sidebarInputLayout module
 # Parameters:
 #  - id: String, the module id
 #  - minDate: Date, the lower bound for the dateRangeInput
 #  - maxDate: Date, the upper bound for the dateRangeInput
 #  - innerModuleUI: Function, the inner module UI function
+#  - ...: All other arguments needed by the inner module function
 # 
 # Returns a div containing the layout
   
@@ -17,7 +18,7 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI) {
   ns <- NS(id)
 
   # Create the first unit UI elements of the innerModule
-  innerModuleUIList <- innerModuleUI(ns('1'))
+  innerModuleUIList <- innerModuleUI(ns('1'), ...)
   
   # Create the module layout
   div(
@@ -68,7 +69,7 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI) {
 
 ## Create module server function ##################################################
 
-sidebarInputLayout <- function(input, output, session, innerModule, innerModuleUI, innerModulePrefixIds, df) {
+sidebarInputLayout <- function(input, output, session, innerModule, innerModuleUI, innerModulePrefixIds, df, ...) {
 # Create the logic for the sidebarInputLayout module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -78,6 +79,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
 #                            + inputs: String, the prefix for the inner module inputs UI element
 #                            + plots: String, the prefix for the inner module plots UI element
 #  - df: Data.frame, the data to pass to the inner module
+#  - ...: All other arguments needed by the inner module function
 # 
 # Returns NULL
     
@@ -91,7 +93,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
   ## First unit module calling ####################################################
 
   # Call the first unit of the innerModule and retrieve the reactive expression containing the updated dateRange
-  updateDateRange <- callModule(innerModule, '1', df, dateRange)
+  updateDateRange <- callModule(innerModule, '1', df, dateRange, ...)
   
   # Add an observeEvent that track the plot brushing dateRange input for the first innerModule unit
   # And update the dateRangeInput accordingly
@@ -119,7 +121,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
     unitsNb(unitsNb() + 1)
     
     # Create new unit UI elements
-    innerModuleUIList <- innerModuleUI(session$ns(unitsNb()))
+    innerModuleUIList <- innerModuleUI(session$ns(unitsNb()), ...)
     
     # Insert the new unit input UI elements in the sidebar
     insertUI(
@@ -136,7 +138,7 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
     )
     
     # Call the new unit module function and retrieve the reactive expression containing the updated dateRange
-    updateDateRange <- callModule(innerModule, unitsNb(), df, dateRange)
+    updateDateRange <- callModule(innerModule, unitsNb(), df, dateRange, ...)
     
     # Add an observeEvent that track the plot brushing dateRange input of the new module unit
     # And update the dateRangeInput accordingly

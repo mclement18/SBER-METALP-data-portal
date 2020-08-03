@@ -1,63 +1,13 @@
 ## This module contains the code for the grab samples timeserie visualisation
 
-## Load parameters and sites information ##########################################
-
-# Use fread() from data.table library because of the long description text that lead EOF error with read.csv
-# Beware it produces a data.table and not a data.frame which similar but has some differences
-# Convertible to a data.frame with as.data.frame()
-
-parameters <- fread('./data/parameters_grab_samples.csv', header = TRUE, sep = ',')
-sites <- fread('./data/sites.csv', header = TRUE, sep = ',')
-
-## Create lists containing select input element options ########################################################
-
-# Function to parse options for select input with section
-
-# Takes in a data.frame or data.table with a 'section_name' and an 'option_name' column
-# Containing the dropdown and option text, respectively
-# And a third column containing the option value of the name of your choice that you need to pass as second parameter
-# It returns a named list of named lists to be used as choices parameter for shiny selectInput()
-parseOptionsWithSections <- function(paramOptions, valueColumn) {
-  
-  optionsList <- list()
-  
-  # For each row in the data
-  # Add a list to optionsList if the corresponding section_name list is not already created
-  # Add an option to the corresponding section_name list
-  for (i in c(1:dim(paramOptions)[1])) {
-    currentRow <- as.data.frame(paramOptions[i,])
-    
-    if (optionsList[[currentRow$section_name]] %>% is.null()) {
-      optionsList[[currentRow$section_name]] <- list()
-    }
-    
-    optionsList[[currentRow$section_name]][[currentRow$option_name]] <- currentRow[[valueColumn]]
-  }
-  
-  return(optionsList)
-}
-
-# Function that create a simple options list for select input
-parseOptions <- function(optionsTable, optionsColumn) {
-  return(
-    optionsTable[[optionsColumn]] %>% unique()
-  )
-}
-
-
-# Create the two optionsLists needed
-paramOptions <- parseOptionsWithSections(parameters, 'param_name')
-
-catchmentsOptions <- parseOptions(sites, 'catchments')
-
-
-
 ## Create the UI function of the module ###############################################
 
-grabSamplesTimeSeriesUI <- function(id) {
+grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
 # Create the UI for the grabSamplesTimeSeries module
 # Parameters:
 #  - id: String, the module id
+#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - parameters: Named list, contains all sites info, cf data_preprocessing.R
 # 
 # Returns a list containing:
 #  - inputs: the inputs UI elements of the module
@@ -78,7 +28,7 @@ grabSamplesTimeSeriesUI <- function(id) {
       id = str_interp('time-serie-plot-input-${id}'),
       class = 'time-serie-input',
       # Create select input for catchment selection
-      selectInput(ns('catchment'), str_interp('Catchment ${unitNb}'), catchmentsOptions),
+      selectInput(ns('catchment'), str_interp('Catchment ${unitNb}'), sites$catchmentsOptions),
       # Create an empty checkbox group input for station selection
       # Will update dynamically in function of the catchment
       checkboxGroupInput(ns('sites'), 'Stations'),
@@ -91,7 +41,7 @@ grabSamplesTimeSeriesUI <- function(id) {
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
-        paramOptions
+        parameters$selectOptions
       ),
       # Create an hidden checkbox input group (with shinyjs) for sub parameter selection
       # Will be displayed only if there is a sub parameter selection available
@@ -131,7 +81,7 @@ grabSamplesTimeSeriesUI <- function(id) {
 
 ## Create the server function of the module ###############################################
 
-grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
+grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, parameters) {
 # Create the logic for the grabSamplesTimeSeries module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -140,6 +90,8 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
+#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - parameters: Named list, contains all sites info, cf data_preprocessing.R
 # 
 # Returns a reactive expression containing the updated date range with the same format as the input
   
@@ -148,7 +100,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
   # Create an observeEvent that react to the catchment select input
   observeEvent(input$catchment, {
     # Get catchment sites info
-    currentSites <- sites %>% filter(catchments == input$catchment)
+    currentSites <- sites$sites %>% filter(catchments == input$catchment)
     
     # Update sites checkbox group input with current sites info
     updateCheckboxGroupInput(session, 'sites',
@@ -163,6 +115,11 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
   # Create a debounced reactive expression returning the selected sites
   selectedSites_d <-  selectedSites %>% debounce(1000)
   
+  # Create a currentCatchment reactive expression
+  currentCatchment <- reactive({
+    sites$sites %>% filter(sites_short %in% selectedSites_d()) %>%
+    select(catchments) %>% unique() %>% pull()
+  })
   
   
   ## Sub parameter update logic ###################################################
@@ -170,7 +127,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
   # Create an observeEvent that react to the param select input
   observeEvent(input$param,{
     # Get parameter info
-    dataColumns <- parameters %>% filter(param_name == input$param) %>% select(data) %>% str_split(',') %>% unlist()
+    dataColumns <- parameters$parameters %>% filter(param_name == input$param) %>% select(data) %>% str_split(',') %>% unlist()
     
     # Update sub parameter checkbox group input with current parameter info
     updateCheckboxGroupInput(session, 'paramfilter',
@@ -199,7 +156,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
     ))
     
     # Otherwise get parameter info
-    param <- parameters %>% filter(param_name == inputParam)
+    param <- parameters$parameters %>% filter(param_name == inputParam)
     # Return the sub parameters and parameter info
     return(list(
       'filter' = paramToDisplay,
@@ -277,7 +234,8 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
       df = data(),
       x = 'DATETIME_GMT',
       parameter = paramfilter_d()$param,
-      siteName = str_interp('${unique(sites$catchments[sites$sites_short %in% selectedSites_d()])} catchment')
+      siteName = str_interp('${currentCatchment()} catchment'),
+      sites = sites$sites
     )
   })
   
@@ -291,7 +249,8 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
       df = data(),
       x = 'DATETIME_month_day_time_GMT',
       parameter = paramfilter_d()$param,
-      siteName = str_interp('${unique(sites$catchments[sites$sites_short %in% selectedSites_d()])} catchment')
+      siteName = str_interp('${currentCatchment()} catchment'),
+      sites = sites$sites
     )
   })
   
@@ -315,11 +274,11 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
   # Create an observeEvent that react to show stats button
   observeEvent(input$showstats, {
     # Render the statsTables in the modal
-    output$stats <- renderStatsTablePerSite(session, output, 'statstable', data, sites, selectedSites_d)
+    output$stats <- renderStatsTablePerSite(session, output, 'statstable', data, sites$sites, selectedSites_d)
     
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
-      title = str_interp('Stats ${unique(sites$catchments[sites$sites_short %in% selectedSites_d()])} catchment'),
+      title = str_interp('Stats ${currentCatchment()} catchment'),
       htmlOutput(session$ns('stats'), class = 'stats-summary'),
       easyClose = TRUE
     ))
@@ -334,7 +293,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange) {
     # Render the description UI in the modal
     output$description <- renderUI(tags$p(
       class = 'description',
-      parameters %>% filter(param_name == input$param) %>% select(description) %>% unlist()
+      parameters$parameters %>% filter(param_name == input$param) %>% select(description) %>% unlist()
     ))
     
     # Create modal with the corresponding htmlOutput

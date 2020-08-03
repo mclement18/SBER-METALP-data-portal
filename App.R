@@ -45,24 +45,32 @@ sass(
 )
 
 
+
+## Load helper functions ##########################################################
+source('./utils/helper_functions.R')
+
+
+
 ## Load data ######################################################################
 
-# Load Grab Samples
-grabSampleDf <- read.csv('./data/Metalp_grab_20200717_ND.csv', header = TRUE, na.strings=c(""," ","NA", "<0.05"))
+# Load data loading functions
+source('./utils/data_preprocessing.R')
 
-# Convert Date to Date data type and create a DATETIME_GMT POSIXct column
-grabSampleDf$DATETIME_GMT <- paste(grabSampleDf$DATE_reading, grabSampleDf$TIME_reading_GMT) %>% dmy_hms(tz = 'GMT')
-grabSampleDf$DATE_reading <- dmy(grabSampleDf$DATE_reading)
+grabSampleDf <- loadGrabSampleDf()
+# hfDfList <- loadHighFreqDf()
 
- 
+sites <- loadSites()
+grabSampleParameters <- loadGrabSamplesParameters()
+# hfParameters <- loadHfParameters()
 
-## Source needed files ############################################################
 
-# Load helper functions
-source('./utils/helper_functions.R')
-# Load Shiny extensions functions
+
+## Load Shiny extensions functions ################################################
 source('./utils/shiny_extensions.R')
-# Load tabs modules
+
+
+
+## Load tabs modules ##############################################################
 source('./modules/visualisation_tab/visualisation_tab.R')
 
 
@@ -110,7 +118,7 @@ ui <- tagList(
         # Create a tab title with an icon
         tags$span(icon('chart-bar'),tags$span('Visualisation', class = 'navbar-menu-name')),
         # Load the visualisationTab module UI elements
-        visualisationTabUI('1', grabSampleDf)
+        visualisationTabUI('1', grabSampleDf, hfDfList, sites, grabSampleParameters, hfParameters)
       ),
       # Create the data management tab
       tabPanel(
@@ -139,7 +147,7 @@ ui <- tagList(
 
 server <- function(input, output, session) {
   # Load visualisationTab module server logic
-  callModule(visualisationTab, '1', grabSampleDf)
+  callModule(visualisationTab, '1', grabSampleDf, hfDfList, sites, grabSampleParameters, hfParameters)
 }
 
 
