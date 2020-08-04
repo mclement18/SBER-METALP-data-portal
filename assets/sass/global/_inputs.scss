@@ -105,3 +105,32 @@
         background: none;
     }
 }
+
+
+// ####################################
+// Custom checkbox input group layout
+// ####################################
+
+.checkbox-grid {
+    .shiny-options-group{
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    & label ~ .shiny-options-group,
+    & label ~ .shiny-options-group,
+    .checkbox + .checkbox,
+    .radio + .radio,
+    .checkbox,
+    .radio {
+        margin-top: 0;
+    }
+
+    @include tablet {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include laptop {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

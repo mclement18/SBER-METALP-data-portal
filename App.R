@@ -57,11 +57,11 @@ source('./utils/helper_functions.R')
 source('./utils/data_preprocessing.R')
 
 grabSampleDf <- loadGrabSampleDf()
-# hfDfList <- loadHighFreqDf()
+hfDf <- loadHighFreqDf()
 
 sites <- loadSites()
 grabSampleParameters <- loadGrabSamplesParameters()
-# hfParameters <- loadHfParameters()
+hfParameters <- loadHfParameters()
 
 
 
@@ -118,7 +118,7 @@ ui <- tagList(
         # Create a tab title with an icon
         tags$span(icon('chart-bar'),tags$span('Visualisation', class = 'navbar-menu-name')),
         # Load the visualisationTab module UI elements
-        visualisationTabUI('1', grabSampleDf, hfDfList, sites, grabSampleParameters, hfParameters)
+        visualisationTabUI('1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
       ),
       # Create the data management tab
       tabPanel(
@@ -147,7 +147,7 @@ ui <- tagList(
 
 server <- function(input, output, session) {
   # Load visualisationTab module server logic
-  callModule(visualisationTab, '1', grabSampleDf, hfDfList, sites, grabSampleParameters, hfParameters)
+  callModule(visualisationTab, '1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
 }
 
 

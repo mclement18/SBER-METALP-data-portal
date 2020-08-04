@@ -1,0 +1,211 @@
+## This module contains the code for the high frequency data timeserie visualisation
+
+## Create the UI function of the module ###############################################
+
+highFreqTimeSeriesUI <- function(id, sites, parameters) {
+# Create the UI for the highFreqTimeSeries module
+# Parameters:
+#  - id: String, the module id
+#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - parameters: Named list, contains high frequency data parameters info, cf data_preprocessing.R
+# 
+# Returns a list containing:
+#  - inputs: the inputs UI elements of the module
+#  - plots: the plots UI elements of the module
+  
+  # Create namespace
+  ns <- NS(id)
+  
+  # Parse id to get the module unit nb
+  splittedId <- str_split(id, '-') %>% unlist()
+  unitNb <- splittedId[length(splittedId)]
+  
+  # Create the UI list to be returned
+  list(
+    # Create the UI inputs
+    'inputs' = div(
+      # Set UI inputs id and class
+      id = str_interp('hf-time-serie-plot-input-${id}'),
+      class = 'time-serie-input',
+      # Create select input for catchment selection
+      checkboxGroupInputWithClass(
+        checkboxGroupInput(
+          ns('sites'),
+          str_interp('Stations ${unitNb}'),
+          choices = sites$sitesOptions,
+          selected = sites$sitesOptions[[1]]
+        ),
+        class = 'checkbox-grid'        
+      ),
+      selectInput(
+        ns('param'),
+        # Create a label with an icon button
+        tags$span(
+          'Parameter',
+          # Create an icon button that trigger a modal to display the parameter description
+          actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
+        ),
+        parameters$selectOptions
+      )
+    ),
+    # Create the UI plots
+    'plots' = div(
+      # Set UI plots id and class
+      id = str_interp('hf-time-serie-plots-${id}'),
+      class = 'time-serie-plot point-hover-widget-plot',
+      # Create a plotOutput for the regular timeserie plot
+      plotOutput(
+        ns('highfreq'),
+        # Make data points hoverable
+        hover = hoverOpts(ns('highfreq_hover')),
+        # Make plot brushable in the x direction with a debouncing delay type
+        # Reset it when the plot is refreshed
+        brush = brushOpts(
+          ns('highfreq_brush'),
+          direction = 'x',
+          delayType = 'debounce',
+          resetOnNew = TRUE
+        )
+      )
+    )
+  )
+}
+
+
+
+## Create the server function of the module ###############################################
+
+highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, parameters) {
+# Create the logic for the highFreqTimeSeries module
+# Parameters:
+#  - input, output, session: Default needed parameters to create a module
+#  - df: Data.frame, the high frequency data
+#  - dateRange: Reactive expression that returns the date range to filter the data with.
+#               Date range format must be a list containing:
+#               + min: Date, the lower bound to filter the date
+#               + max: Date, the upper bound to filter the data
+#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - parameters: Named list, contains high frequency data parameters info, cf data_preprocessing.R
+# 
+# Returns a reactive expression containing the updated date range with the same format as the input
+  
+  ## Stations update logic ########################################################
+  
+  # Create a reactive expression returning the selected sites
+  selectedSites <- reactive({input$sites})
+  
+  # Create a debounced reactive expression returning the selected sites
+  selectedSites_d <-  selectedSites %>% debounce(1000)
+  
+  
+  
+  ## Parameter logic ##############################################################
+  
+  # Create a reactive expression that returns the filtered parameters df
+  param <- reactive({
+    parameters$parameters %>% filter(param_name == input$param)
+  })
+  
+  
+  
+  ## Data manipulation logic ######################################################
+  
+  # Create a data reactive expression that return a subset of the data
+  # Using the dateRange, selectedSites_d and param reactive expressions
+  data <- reactive({
+    # Filter the data using the selected sites and the date range and parameter
+    df <- df %>% filter(
+      Site_ID %in% selectedSites_d(),
+      parameter == param()$data,
+      date >= as.POSIXct(dateRange()$min, tz = 'GMT'),
+      date <= as.POSIXct(dateRange()$max, tz = 'GMT')
+    )
+    
+    # If there is no data return NULL
+    if (dim(df)[1] == 0) return(NULL)
+    
+    # Pivot it to a long format
+    df <- df %>% pivot_longer(cols = c(measured, modeled), names_to = 'data_type', values_to = 'value')
+    
+    # Convert data_type to factor
+    df$data_type <- df$data_type %>% as.factor()
+    
+    # Return the formatted data
+    df
+  })
+  
+  
+  ## Plots output logic ###########################################################
+  
+  # Render the regular timeserie plot
+  output$highfreq <- renderPlot({
+    # If there are no data return NULL
+    if (data() %>% is.null()) return(NULL)
+    
+    # Create and return a timeSeriePlot
+    ggplot(data(), aes(date, value, color = Site_ID, linetype = data_type))+
+      geom_line(size = .5, na.rm = TRUE)+
+      ggtitle('HF Time serie')+
+      ylab(str_interp('${param()$param_name} [${param()$units}]'))+
+      xlab('Date')+
+      # Set the y axis limits
+      scale_y_continuous(limits = calculateYaxisLimits(min(data()$value, na.rm = TRUE), max(data()$value, na.rm = TRUE)))+
+      # Set theme
+      theme_bw()+
+      # Remove legend title, move legend to the bottom of the plot and set text size
+      theme(
+        plot.title = element_text(size = 16, face = 'bold'),
+        legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 10),
+        axis.title = element_text(size = 14), axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 11)
+      )
+  })
+  
+  
+  
+  
+  ## Plot hovering logic ##########################################################
+  
+  # Activate the hover widget for the regular timeserie plot
+  pointHoverWidgetServer(session, 'highfreq', data, reactive(input$highfreq_hover),
+                         x_label = 'Date', y_label = 'parameter')
+
+  
+  
+  
+  
+  ## Parameter description modal logic ############################################
+  
+  # Create an observeEvent that react to the parameter helper icon button
+  observeEvent(input$paramHelper, {
+    # Render the description UI in the modal
+    output$description <- renderUI(tags$p(
+      class = 'description',
+      param()$description
+    ))
+    
+    # Create modal with the corresponding htmlOutput
+    showModal(modalDialog(
+      title = 'Parameters description',
+      htmlOutput(session$ns('description')),
+      easyClose = TRUE
+    ))
+  })
+  
+  
+  
+  ## Update dateRange with plot brushing logic ####################################
+  
+  # Create a reactive expression that contains the new dateRange to be used globally
+  # With the same format as the input dateRange
+  # Should be returned by the module
+  # Converting number to date using the Linux epoch time as origin
+  updateDateRange <- reactive(list(
+    'min' = as.Date(as.POSIXct(input$highfreq_brush$xmin, origin = "1970-01-01", tz = "GMT")),
+    'max' = as.Date(as.POSIXct(input$highfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
+  ))
+  
+  
+  # Return the new dateRange values in order to update the outer module dateRangeInput
+  return(updateDateRange)
+}
+

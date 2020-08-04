@@ -51,13 +51,13 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI, ...) {
     sidebarLayout(
       # Create a sidebar with the innerModule first unit input UI elements inside
       sidebarPanel(
-        id = 'sidebar-inputs',
+        id = ns('sidebar-inputs'),
         innerModuleUIList$inputs,
         width = 3
       ),
       # Create the main panel with the innerModule first unit plot UI elements inside
       mainPanel(
-        id = 'main-plots',
+        id = ns('main-plots'),
         innerModuleUIList$plots,
         width = 9
       )
@@ -125,14 +125,14 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
     
     # Insert the new unit input UI elements in the sidebar
     insertUI(
-      '#sidebar-inputs', where = 'beforeEnd',
+      str_interp("#${session$ns('sidebar-inputs')}"), where = 'beforeEnd',
       ui = innerModuleUIList$inputs,
       immediate = TRUE
     )
     
     # Insert the new unit plot UI elements in the main panel
     insertUI(
-      '#main-plots', where = 'beforeEnd',
+      str_interp("#${session$ns('main-plots')}"), where = 'beforeEnd',
       ui = innerModuleUIList$plots,
       immediate = TRUE
     )
@@ -194,8 +194,8 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
     #  - mainPanelId: the main panel id defined in the UI
     #  - show: the new state of the sidebar
     messageJSON <- toJSON(list(
-      'sidebarId' = 'sidebar-inputs',
-      'mainPanelId' = 'main-plots',
+      'sidebarId' = session$ns('sidebar-inputs'),
+      'mainPanelId' = session$ns('main-plots'),
       'show' = sidebarVisible()
     ), auto_unbox = TRUE)
     

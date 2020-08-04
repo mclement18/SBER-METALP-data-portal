@@ -4,12 +4,12 @@ const Sidebar = {};
 
 // Get sidebar element with enclosing div used for layout
 Sidebar.getSidebar = function(id) {
-    return document.querySelector(`#${id}`).parentElement;
+    return document.querySelector(`#${CSS.escape(id)}`).parentElement;
 };
 
 // Get main panel
 Sidebar.getMainPanel = function(id) {
-    return document.querySelector(`#${id}`);
+    return document.querySelector(`#${CSS.escape(id)}`);
 }
 
 // Hide sidebar

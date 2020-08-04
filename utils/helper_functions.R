@@ -40,27 +40,27 @@ createStatsTable <- function(df) {
 # Function that create a data frame of multiple column with some summary statistics of a given data
 # Parameters:
 #  - df: Data.frame, data to get stats from, must have the following columns:
-#        + parameters: Factors, the parameter of the data point
-#        + values: Numeric, the data values to summarise
+#        + parameter: Factors, the parameter of the data point
+#        + value: Numeric, the data values to summarise
 # 
 # Returns a data frame containing the statistics values for each parameter as a column
   
   # Create a vector with the parameter data column name references
-  columns <- df$parameters %>% unique()
+  columns <- df$parameter %>% unique()
   
   # Create empty data frame
   statsTable <- data.frame()
   
-  # For each values in columns
+  # For each value in columns
   # Filter the data by parameter and get stats from the values
   for (dataColumn in columns) {
     # If statsTable is an empty data frame
     if (statsTable %>% dim() %>% sum() == 0) {
       # Assign the output to the statsTable
-      statsTable <- df %>% filter(parameters == dataColumn) %>% pull(values) %>% getStats(dataColumn)
+      statsTable <- df %>% filter(parameter == dataColumn) %>% pull(value) %>% getStats(dataColumn)
     } else {
       # Else combine both data frame
-      newCol <- df %>% filter(parameters == dataColumn) %>% pull(values) %>% getStats(dataColumn)
+      newCol <- df %>% filter(parameter == dataColumn) %>% pull(value) %>% getStats(dataColumn)
       statsTable <- cbind(statsTable, newCol)
     }
   }

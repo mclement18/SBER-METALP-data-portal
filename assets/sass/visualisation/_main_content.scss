@@ -13,9 +13,11 @@
         margin: 0;
     }
     
-    @include tablet {
-        display: grid;
-        grid-template-columns: repeat(2, 1 / 2 * 100%);
-    
+    &.two-plots{
+        @include tablet {
+            display: grid;
+            grid-template-columns: repeat(2, 1 / 2 * 100%);
+            
+        }
     }
 }

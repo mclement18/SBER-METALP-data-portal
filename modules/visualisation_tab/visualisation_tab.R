@@ -8,17 +8,18 @@ source('./utils/plotting_functions.R')
 # Load visualisation modules
 source('./modules/visualisation_tab/sidebar_input_layout.R')
 source('./modules/visualisation_tab/grab_samples_timeseries.R')
+source('./modules/visualisation_tab/high_frequency_timeseries.R')
 
 
 
 ## Create module UI ###############################################################
 
-visualisationTabUI <- function(id, grabSampleDf, hfDfList, sites, grabSampleParameters, hfParameters) {
+visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters) {
 # Create the UI for the visualisationTab module
 # Parameters:
 #  - id: String, the module id
 #  - grabSampleDf: Data.frame, the grab samples data
-#  - hfDfList: Named list of the sensors high frequency data of each station
+#  - hfDf: Data.frame, the sensors high frequency data
 #  - sites: Named list of sites info, cf data_preprocessing.R
 #  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
@@ -51,12 +52,14 @@ visualisationTabUI <- function(id, grabSampleDf, hfDfList, sites, grabSamplePara
       'Sensors',
       # Tab content
       # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
-      # sidebarInputLayoutUI(
-      #   ns('sensors-timeseries'),
-      #   minDate = min(hfDfList$AND$date, na.rm = TRUE), 
-      #   maxDate = max(hfDfList$AND$date, na.rm = TRUE),
-      #   innerModuleUI = highFreqTimeSeriesUI
-      # )
+      sidebarInputLayoutUI(
+        ns('sensors-timeseries'),
+        minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
+        maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
+        innerModuleUI = highFreqTimeSeriesUI,
+        sites = sites,
+        parameters = hfParameters
+      )
     ),
     # Create the exploratory analysis visualisation tab with dropdown menu
     navbarMenu(
@@ -73,13 +76,13 @@ visualisationTabUI <- function(id, grabSampleDf, hfDfList, sites, grabSamplePara
 
 ## Create module server function ##################################################
 
-visualisationTab <- function(input, output, session, grabSampleDf, hfDfList, sites, grabSampleParameters, hfParameters) {
+visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters) {
 # Create the logic for the visualisationTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
-#  - hfDfList: Named list of the sensors high frequency data of each station
+#  - hfDf: Data.frame, the sensors high frequency data
 #  - sites: Named list of sites info, cf data_preprocessing.R
 #  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
@@ -91,9 +94,9 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDfList, sit
              grabSamplesTimeSeries, grabSamplesTimeSeriesUI,
              list('inputs' = 'time-serie-plot-input', 'plots' = 'time-serie-plots'),
              df = grabSampleDf, sites = sites, parameters = grabSampleParameters)
-  # # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
-  # callModule(sidebarInputLayout, 'sensors-timeseries',
-  #            highFreqTimeSeries, highFreqTimeSeriesUI,
-  #            list('inputs' = 'time-serie-plot-input', 'plots' = 'time-serie-plots'),
-  #            hfDfList)
+  # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
+  callModule(sidebarInputLayout, 'sensors-timeseries',
+             highFreqTimeSeries, highFreqTimeSeriesUI,
+             list('inputs' = 'hf-time-serie-plot-input', 'plots' = 'hf-time-serie-plots'),
+             df = hfDf, sites = sites, parameters = hfParameters)
 }

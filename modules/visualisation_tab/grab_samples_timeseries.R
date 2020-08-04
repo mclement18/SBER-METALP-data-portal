@@ -7,7 +7,7 @@ grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
 # Parameters:
 #  - id: String, the module id
 #  - sites: Named list, contains all sites info, cf data_preprocessing.R
-#  - parameters: Named list, contains all sites info, cf data_preprocessing.R
+#  - parameters: Named list, contains grab samples parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
 #  - inputs: the inputs UI elements of the module
@@ -55,7 +55,7 @@ grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
     'plots' = div(
       # Set UI plots id and class
       id = str_interp('time-serie-plots-${id}'),
-      class = 'time-serie-plot point-hover-widget-plot',
+      class = 'time-serie-plot two-plots point-hover-widget-plot',
       # Create a plotOutput for the regular timeserie plot
       plotOutput(
         ns('lowfreq'),
@@ -91,7 +91,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
 #  - sites: Named list, contains all sites info, cf data_preprocessing.R
-#  - parameters: Named list, contains all sites info, cf data_preprocessing.R
+#  - parameters: Named list, contains grab samples parameters info, cf data_preprocessing.R
 # 
 # Returns a reactive expression containing the updated date range with the same format as the input
   
@@ -208,7 +208,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
     
     # Select all relevant data.frame columns and pivot it to a long format
     longDf <- filteredDf %>% select(Site_ID, DATETIME_GMT, all_of(paramCols), all_of(sdCols), all_of(minMaxCols)) %>% 
-      pivot_longer(cols = c(all_of(paramCols), all_of(minMaxCols)), names_to = 'parameters', values_to = 'values')
+      pivot_longer(cols = c(all_of(paramCols), all_of(minMaxCols)), names_to = 'parameter', values_to = 'value')
     
     # Delete the filteredDf variable to free memory
     rm(filteredDf)
@@ -260,11 +260,11 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
   
   # Activate the hover widget for the regular timeserie plot
   pointHoverWidgetServer(session, 'lowfreq', data, reactive(input$lowfreq_hover),
-                         x_label = 'Date', y_label = 'parameters')
+                         x_label = 'Date', y_label = 'parameter')
 
   # Activate the hover widget for the day of the year timeserie plot
   pointHoverWidgetServer(session, 'doy', data, reactive(input$doy_hover),
-                         x_label = 'Date', y_label = 'parameters',
+                         x_label = 'Date', y_label = 'parameter',
                          override.mapping = list('x' = 'DATETIME_GMT'))
   
   
@@ -298,7 +298,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
     
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
-      title = 'Parameters description',
+      title = 'Parameter description',
       htmlOutput(session$ns('description')),
       easyClose = TRUE
     ))

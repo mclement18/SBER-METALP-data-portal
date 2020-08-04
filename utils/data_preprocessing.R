@@ -36,51 +36,32 @@ loadHighFreqDf <- function() {
   VIU_df <- fread('./data/HF_data/VIU.csv', header = TRUE, sep = ',')
   
   
+  # Merge hf data into one df
+  hfDf <- rbind(
+    AND_df,
+    ANU_df,
+    FED_df,
+    FEU_df,
+    PEU_df,
+    RIC_df,
+    VAD_df,
+    VAU_df,
+    VEL_df,
+    VID_df,
+    VIM_df,
+    VIU_df
+  )
+
   # Convert date to POSIXct
-  AND_df$date <- AND_df$date %>% ymd_hms(tz = 'GMT')
-  ANU_df$date <- ANU_df$date %>% ymd_hms(tz = 'GMT')
-  FED_df$date <- FED_df$date %>% ymd_hms(tz = 'GMT')
-  FEU_df$date <- FEU_df$date %>% ymd_hms(tz = 'GMT')
-  PEU_df$date <- PEU_df$date %>% ymd_hms(tz = 'GMT')
-  RIC_df$date <- RIC_df$date %>% ymd_hms(tz = 'GMT')
-  VAD_df$date <- VAD_df$date %>% ymd_hms(tz = 'GMT')
-  VAU_df$date <- VAU_df$date %>% ymd_hms(tz = 'GMT')
-  VEL_df$date <- VEL_df$date %>% ymd_hms(tz = 'GMT')
-  VID_df$date <- VID_df$date %>% ymd_hms(tz = 'GMT')
-  VIM_df$date <- VIM_df$date %>% ymd_hms(tz = 'GMT')
-  VIU_df$date <- VIU_df$date %>% ymd_hms(tz = 'GMT')
+  hfDf$date <- hfDf$date %>% ymd_hms(tz = 'GMT')
   
   # Convert parameter to factor
-  AND_df$parameter <- AND_df$parameter %>% as.factor()
-  ANU_df$parameter <- ANU_df$parameter %>% as.factor()
-  FED_df$parameter <- FED_df$parameter %>% as.factor()
-  FEU_df$parameter <- FEU_df$parameter %>% as.factor()
-  PEU_df$parameter <- PEU_df$parameter %>% as.factor()
-  RIC_df$parameter <- RIC_df$parameter %>% as.factor()
-  VAD_df$parameter <- VAD_df$parameter %>% as.factor()
-  VAU_df$parameter <- VAU_df$parameter %>% as.factor()
-  VEL_df$parameter <- VEL_df$parameter %>% as.factor()
-  VID_df$parameter <- VID_df$parameter %>% as.factor()
-  VIM_df$parameter <- VIM_df$parameter %>% as.factor()
-  VIU_df$parameter <- VIU_df$parameter %>% as.factor()
+  hfDf$parameter <- hfDf$parameter %>% as.factor()
   
-  # Merge hf data into list
-  hfDfList <- list(
-    'AND' = AND_df,
-    'ANU' = ANU_df,
-    'FED' = FED_df,
-    'FEU' = FEU_df,
-    'PEU' = PEU_df,
-    'RIC' = RIC_df,
-    'VAD' = VAD_df,
-    'VAU' = VAU_df,
-    'VEL' = VEL_df,
-    'VID' = VID_df,
-    'VIM' = VIM_df,
-    'VIU' = VIU_df
-  )
+  # Convert Site_ID to factor
+  hfDf$Site_ID <- hfDf$Site_ID %>% as.factor()
   
-  return(hfDfList)
+  return(hfDf)
 }
 
 

@@ -25,8 +25,8 @@ basicPlot <- function(df, x, param, plotTitle, sites) {
 # Parameters:
 # - df: DataFrame in long format containing the following columns:
 #       + 'Site_ID': factor
-#       + 'values': numeric
-#       + 'parameters': factor
+#       + 'value': numeric
+#       + 'parameter': factor
 #       + x: POSIXct datetime (column name corresponding to the string passed through the argument 'x')
 # - x: String corresponding to the column name of a POSIXct datetime value of the df to use as x coordinates
 # - param: List or 1-row df containing the following values accessible with '$':
@@ -38,7 +38,7 @@ basicPlot <- function(df, x, param, plotTitle, sites) {
 # Returns a ggplot2 plot
   
   # Use !! to unquote the symbole returned by sym() -- trick to use string in ggplot2 aes()
-  p <- ggplot(df, aes(!!sym(x), values, color = Site_ID, linetype = parameters, shape = parameters))+
+  p <- ggplot(df, aes(!!sym(x), value, color = Site_ID, linetype = parameter, shape = parameter))+
     geom_point(size = 2, na.rm = TRUE)+
     # Use geom_line to plot LOESS curve in order to use linetype aes
     geom_line(stat="smooth", method = "loess", formula = y ~ x,
@@ -58,7 +58,7 @@ basicPlot <- function(df, x, param, plotTitle, sites) {
     # Change the linetype legend label to 'LOESS curve'
     scale_linetype(labels = 'LOESS curve')+
     # Set the y axis limits
-    scale_y_continuous(limits = calculateYaxisLimits(min(df$values, na.rm = TRUE), max(df$values, na.rm = TRUE)))+
+    scale_y_continuous(limits = calculateYaxisLimits(min(df$value, na.rm = TRUE), max(df$value, na.rm = TRUE)))+
     # Set theme
     theme_bw()+
     # Remove legend title, move legend to the bottom of the plot and set text size
@@ -78,8 +78,8 @@ sdPlot <- function(df, x, param, plotTitle, sites) {
 # Parameters:
 # - df: DataFrame in long format containing the following columns:
 #       + 'Site_ID': factor
-#       + 'values': numeric
-#       + 'parameters': factor
+#       + 'value': numeric
+#       + 'parameter': factor
 #       + x: POSIXct datetime (column name corresponding to the string passed through the argument 'x')
 #       + sd: numeric (column name corresponding to the string passed via 'param$sd')
 # - x: String corresponding to the column name of a POSIXct datetime value of the df to use as x coordinates
@@ -97,7 +97,7 @@ sdPlot <- function(df, x, param, plotTitle, sites) {
   # Create a basicPlot
   p <- basicPlot(df, x, param, plotTitle, sites)
   # Add error bars to the plot using the sd
-  p <- p + geom_errorbar(aes(ymin = values - !!sd, ymax = values + !!sd))
+  p <- p + geom_errorbar(aes(ymin = value - !!sd, ymax = value + !!sd))
   return(p)
 }
 
@@ -107,8 +107,8 @@ minMaxPlot <- function(df, x, param, plotTitle, sites) {
 # Parameters:
 # - df: DataFrame in long format containing the following columns:
 #       + 'Site_ID': factor
-#       + 'values': numeric
-#       + 'parameters': factor, 3 levels (the average, a min and a max)
+#       + 'value': numeric
+#       + 'parameter': factor, 3 levels (the average, a min and a max)
 #       + x: POSIXct datetime (column name corresponding to the string passed through the argument 'x')
 # - x: String corresponding to the column name of a POSIXct datetime value of the df to use as x coordinates
 # - param: List or 1-row df containing the following values accessible with '$':
@@ -137,8 +137,8 @@ multiPlot <- function(df, x, param, plotTitle, sites) {
 # Parameters:
 # - df: DataFrame in long format containing the following columns:
 #       + 'Site_ID': factor
-#       + 'values': numeric
-#       + 'parameters': factor
+#       + 'value': numeric
+#       + 'parameter': factor
 #       + x: POSIXct datetime (column name corresponding to the string passed through the argument 'x')
 # - x: String corresponding to the column name of a POSIXct datetime value of the df to use as x coordinates
 # - param: List or 1-row df containing the following values accessible with '$':
@@ -153,9 +153,9 @@ multiPlot <- function(df, x, param, plotTitle, sites) {
   p <- basicPlot(df, x, param, plotTitle, sites)
   p <- p +
     # Define the linetypes in case of multiple parameters
-    scale_linetype_manual(values = c(1, 3, 2), name = 'parameters')+
+    scale_linetype_manual(values = c(1, 3, 2), name = 'parameter')+
     # Define the point shapes in case of multiple parameters
-    scale_shape_manual(values = c(16, 15, 17), name = 'parameters')+
+    scale_shape_manual(values = c(16, 15, 17), name = 'parameter')+
     # Display the shape legend
     guides(shape = 'legend')
   return(p)
