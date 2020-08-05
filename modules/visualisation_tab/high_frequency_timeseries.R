@@ -46,7 +46,8 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
         parameters$selectOptions
-      )
+      ),
+      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE)
     ),
     # Create the UI plots
     'plots' = div(
@@ -126,6 +127,9 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     
     # Pivot it to a long format
     df <- df %>% pivot_longer(cols = c(measured, modeled), names_to = 'data_type', values_to = 'value')
+    
+    # Filter out modeled data if showModeledData is not checked
+    if (!input$showModeledData) df <- df %>% filter(data_type == 'measured')
     
     # Convert data_type to factor
     df$data_type <- df$data_type %>% as.factor()
