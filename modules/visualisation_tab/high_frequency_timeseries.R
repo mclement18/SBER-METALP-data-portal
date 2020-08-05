@@ -207,11 +207,16 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   
   # Create a reactive value that update each time the plot is double clicked
   # Used as trigger to reset the date range in the outer module
-  resetDateRange <- reactiveVal(0)
+  # Initialised to NULL to avoid a dateRange reset when a new unit is created
+  resetDateRange <- reactiveVal(NULL)
   
   # Create an observe event that react on plot double click to reset the date range
   observeEvent(input$highfreq_dblclick, {
-    resetDateRange(resetDateRange() + 1)
+    if (is.null(resetDateRange())) {
+      resetDateRange(1)
+    } else {
+      resetDateRange(resetDateRange() + 1)
+    }
   })
   
   # Return the new dateRange values and date range reset trigger in order to update the outer module dateRangeInput
