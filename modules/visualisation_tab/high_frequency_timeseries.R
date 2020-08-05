@@ -148,22 +148,17 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     # If there are no data return NULL
     if (data() %>% is.null()) return(NULL)
     
-    # Create and return a timeSeriePlot
-    ggplot(data(), aes(date, value, color = Site_ID, linetype = data_type))+
-      geom_line(size = .5, na.rm = TRUE)+
-      ggtitle('HF Time serie')+
-      ylab(str_interp('${param()$param_name} [${param()$units}]'))+
-      xlab('Date')+
-      # Set the y axis limits
-      scale_y_continuous(limits = calculateYaxisLimits(min(data()$value, na.rm = TRUE), max(data()$value, na.rm = TRUE)))+
-      # Set theme
-      theme_bw()+
-      # Remove legend title, move legend to the bottom of the plot and set text size
-      theme(
-        plot.title = element_text(size = 16, face = 'bold'),
-        legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 10),
-        axis.title = element_text(size = 14), axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 11)
-      )
+    # Get unitNb
+    splittedId <- str_split(session$ns('0'), '-') %>% unlist()
+    unitNb <- splittedId[length(splittedId) - 1]
+    
+    # Create and return a highFreqTimeSeriePlot
+    highFreqTimeSeriePlot(
+      df = data(),
+      parameter = param(),
+      plotTitle = str_interp('Sensors High Frequency Time Serie ${unitNb}'),
+      sites = sites$sites
+    )
   })
   
   

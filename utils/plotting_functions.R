@@ -218,3 +218,42 @@ DOYPlot <- function(df, x, parameter, siteName, sites) {
 }
 
 
+
+
+highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites) {
+# Function that create a time serie plot for the high frequency data
+# - df: DataFrame in long format containing the following columns:
+#       + 'Site_ID': factor
+#       + 'value': numeric
+#       + 'data_type': factor, either modeled or measured
+#       + 'date': POSIXct datetime
+# - param: List or 1-row df containing the following values accessible with '$':
+#          + param_name: String
+#          + units: String
+# - plotTitle: String containing the title of the plot
+# - sites: Data.frame, contains the sites info (e.i. sites_color)
+#
+# Returns a ggplot2 plot
+  
+  p <- ggplot(df, aes(date, value, color = Site_ID, linetype = data_type, alpha = data_type))+
+    geom_line(size = 1, na.rm = TRUE)+
+    ggtitle(plotTitle)+
+    ylab(str_interp('${parameter$param_name} [${parameter$units}]'))+
+    xlab('Date')+
+    # Set the y axis limits
+    scale_y_continuous(limits = calculateYaxisLimits(min(df$value, na.rm = TRUE), max(df$value, na.rm = TRUE)))+
+    # Set color of the data groups
+    scale_color_manual(values = siteColors(df, sites))+
+    # Set alpha values
+    scale_alpha_manual(values = c('measured' = 1, 'modeled' = 0.3))+
+    # Set theme
+    theme_bw()+
+    # Remove legend title, move legend to the bottom of the plot and set text size
+    theme(
+      plot.title = element_text(size = 16, face = 'bold'),
+      legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 10),
+      axis.title = element_text(size = 14), axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 11)
+    )
+  return(p)
+}
+
