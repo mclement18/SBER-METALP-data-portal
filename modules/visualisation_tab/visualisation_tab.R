@@ -93,10 +93,18 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
   callModule(sidebarInputLayout, 'grab-samples-timeseries',
              grabSamplesTimeSeries, grabSamplesTimeSeriesUI,
              list('inputs' = 'time-serie-plot-input', 'plots' = 'time-serie-plots'),
-             df = grabSampleDf, sites = sites, parameters = grabSampleParameters)
+             df = grabSampleDf,
+             minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
+             maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+             sites = sites,
+             parameters = grabSampleParameters)
   # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
   callModule(sidebarInputLayout, 'sensors-timeseries',
              highFreqTimeSeries, highFreqTimeSeriesUI,
              list('inputs' = 'hf-time-serie-plot-input', 'plots' = 'hf-time-serie-plots'),
-             df = hfDf, sites = sites, parameters = hfParameters)
+             df = hfDf,
+             minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
+             maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
+             sites = sites,
+             parameters = hfParameters)
 }

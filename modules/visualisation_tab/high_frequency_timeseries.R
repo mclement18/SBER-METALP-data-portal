@@ -66,7 +66,9 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
           direction = 'x',
           delayType = 'debounce',
           resetOnNew = TRUE
-        )
+        ),
+        # Make plot double clickable
+        dblclick = dblclickOpts(ns('highfreq_dblclick'))
       )
     )
   )
@@ -197,7 +199,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   
   
   
-  ## Update dateRange with plot brushing logic ####################################
+  ## Update dateRange with plot brushing and double click logic ####################################
   
   # Create a reactive expression that contains the new dateRange to be used globally
   # With the same format as the input dateRange
@@ -208,8 +210,19 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     'max' = as.Date(as.POSIXct(input$highfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
   ))
   
+  # Create a reactive value that update each time the plot is double clicked
+  # Used as trigger to reset the date range in the outer module
+  resetDateRange <- reactiveVal(0)
   
-  # Return the new dateRange values in order to update the outer module dateRangeInput
-  return(updateDateRange)
+  # Create an observe event that react on plot double click to reset the date range
+  observeEvent(input$highfreq_dblclick, {
+    resetDateRange(resetDateRange() + 1)
+  })
+  
+  # Return the new dateRange values and date range reset trigger in order to update the outer module dateRangeInput
+  return(list(
+    'update' = updateDateRange,
+    'reset' = resetDateRange
+  ))
 }
 
