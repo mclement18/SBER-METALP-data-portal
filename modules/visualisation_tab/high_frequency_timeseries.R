@@ -47,7 +47,8 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
         ),
         parameters$selectOptions
       ),
-      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE)
+      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
+      checkboxInput(ns('dailyAverage'), 'Plot daily average instead', value = FALSE)
     ),
     # Create the UI plots
     'plots' = div(
@@ -132,6 +133,9 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     # If there is no data return NULL
     if (dim(df)[1] == 0) return(NULL)
     
+    # If dailyAverage is checked, compute the daily average
+    if (input$dailyAverage) df <- dailyAverage(df)
+    
     # Return the formatted data
     df
   })
@@ -196,10 +200,19 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   # With the same format as the input dateRange
   # Should be returned by the module
   # Converting number to date using the Linux epoch time as origin
-  updateDateRange <- reactive(list(
-    'min' = as.Date(as.POSIXct(input$highfreq_brush$xmin, origin = "1970-01-01", tz = "GMT")),
-    'max' = as.Date(as.POSIXct(input$highfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
-  ))
+  updateDateRange <- reactive({
+    if (input$dailyAverage) {
+      list(
+        'min' = as_date(input$highfreq_brush$xmin),
+        'max' = as_date(input$highfreq_brush$xmax)
+      )  
+    } else {
+      list(
+        'min' = as.Date(as.POSIXct(input$highfreq_brush$xmin, origin = "1970-01-01", tz = "GMT")),
+        'max' = as.Date(as.POSIXct(input$highfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
+      )
+    }
+  })
   
   # Create a reactive value that update each time the plot is double clicked
   # Used as trigger to reset the date range in the outer module
