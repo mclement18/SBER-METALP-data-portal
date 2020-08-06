@@ -116,25 +116,21 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   # Create a data reactive expression that return a subset of the data
   # Using the dateRange, selectedSites_d and param reactive expressions
   data <- reactive({
-    # Filter the data using the selected sites and the date range and parameter
+    # Define data types to keep depending on the state of showModeledData
+    types <- c('measured')
+    if (input$showModeledData) types <- c(types, 'modeled')
+    
+    # Filter the data using the selected sites, the data type and the date range
+    # Then select the parameter and rename the column to 'value'
     df <- df %>% filter(
       Site_ID %in% selectedSites_d(),
-      parameter == param()$data,
+      data_type %in% types,
       date >= as.POSIXct(dateRange()$min, tz = 'GMT'),
       date <= as.POSIXct(dateRange()$max, tz = 'GMT')
-    )
+    ) %>% select(date, Site_ID, data_type, 'value' = param()$data)
     
     # If there is no data return NULL
     if (dim(df)[1] == 0) return(NULL)
-    
-    # Pivot it to a long format
-    df <- df %>% pivot_longer(cols = c(measured, modeled), names_to = 'data_type', values_to = 'value')
-    
-    # Filter out modeled data if showModeledData is not checked
-    if (!input$showModeledData) df <- df %>% filter(data_type == 'measured')
-    
-    # Convert data_type to factor
-    df$data_type <- df$data_type %>% as.factor()
     
     # Return the formatted data
     df

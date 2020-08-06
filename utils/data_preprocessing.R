@@ -55,8 +55,8 @@ loadHighFreqDf <- function() {
   # Convert date to POSIXct
   hfDf$date <- hfDf$date %>% ymd_hms(tz = 'GMT')
   
-  # Convert parameter to factor
-  hfDf$parameter <- hfDf$parameter %>% as.factor()
+  # Convert data_type to factor
+  hfDf$data_type <- hfDf$data_type %>% as.factor()
   
   # Convert Site_ID to factor
   hfDf$Site_ID <- hfDf$Site_ID %>% as.factor()
