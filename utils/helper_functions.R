@@ -184,3 +184,27 @@ dailyAverage <- function(df, dateCol = 'date', valueCol = 'value', siteCol = 'Si
   return(newDf)
 }
 
+
+lm_eqn <- function(df, x, y){
+# Function that compute the linear regression equation and r2 of a given dataset and variables
+# Parameters:
+#  - df: Data.frame, the data to perform the linear regression with
+#  - x: String, the column containing the x values
+#  - y: String, the column containing the y values
+# 
+# Returns a sgtring containg the formated linear regression equation and r2
+  
+  # If either x or y contains only NAs return an empty string
+  if (all(is.na(df[x])) | all(is.na(df[y]))) return('')
+  
+  # Compute the linear regression
+  m <- lm(as.formula(str_interp('${y} ~ ${x}')), df)
+  # Create the equation and r2 expression
+  eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+                   list(a = format(unname(coef(m)[1]), digits = 2),
+                        b = format(unname(coef(m)[2]), digits = 2),
+                        r2 = format(summary(m)$r.squared, digits = 3)))
+  # Convert it to string and return it
+  as.character(as.expression(eq))
+}
+
