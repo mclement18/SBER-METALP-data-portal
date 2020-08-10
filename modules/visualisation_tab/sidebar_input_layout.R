@@ -69,7 +69,9 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI, ...) {
 
 ## Create module server function ##################################################
 
-sidebarInputLayout <- function(input, output, session, innerModule, innerModuleUI, innerModulePrefixIds, df, minDate, maxDate, ...) {
+sidebarInputLayout <- function(input, output, session,
+                               innerModule, innerModuleUI, innerModulePrefixIds, df,
+                               plotDateRangeSelection = TRUE, minDate = NULL, maxDate = NULL, ...) {
 # Create the logic for the sidebarInputLayout module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -79,8 +81,11 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
 #                            + inputs: String, the prefix for the inner module inputs UI element
 #                            + plots: String, the prefix for the inner module plots UI element
 #  - df: Data.frame, the data to pass to the inner module
-#  - minDate: Date, the lower bound for the dateRangeInput
-#  - maxDate: Date, the upper bound for the dateRangeInput
+#  - plotDateRangeSelection: Boolean, indicates if the inner module plots are modifying the date range, default TRUE
+#  - minDate: Date, the lower bound for the dateRangeInput, default NULL
+#             Must be provided if plotDateRangeSelection is TRUE
+#  - maxDate: Date, the upper bound for the dateRangeInput, default NULL
+#             Must be provided if plotDateRangeSelection is TRUE
 #  - ...: All other arguments needed by the inner module function
 # 
 # Returns NULL
@@ -90,35 +95,38 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
   # Create dateRange reactive expression containing the min and max values of the dateRangeInput
   dateRange <- reactive(list('min' = input$time[1], 'max' = input$time[2]))
   
-  # Create a reactive value that track if the plot are zoomed
-  zoomed <- reactiveVal(FALSE)
+  # Create a reactive value that track if the plot are zoomed if the plot can be zoomed
+  if (plotDateRangeSelection) zoomed <- reactiveVal(FALSE)
   
   
   
   ## First unit module calling ####################################################
 
-  # Call the first unit of the innerModule and retrieve the named list containing:
+  # Call the first unit of the innerModule and retrieve, if any, the named list containing:
   #  - update: Reactive expression containing the updated dateRange
   #  - reset: Reactive value, updated each time the plot is double clicked, used as dateRange reset trigger
   dateRangeActions <- callModule(innerModule, '1', df, dateRange, ...)
   
-  # Add an observeEvent that track the plot brushing dateRange input for the first innerModule unit
-  observeEvent(dateRangeActions$update(), {
-    # Update the dateRangeInput accordingly
-    updateDateRangeInput(session, 'time', start = dateRangeActions$update()$min, end = dateRangeActions$update()$max)
-    # Set the zoomed value to TRUE
-    zoomed(TRUE)
-  })
+  # If the inner module plots are modifying the date range
+  if (plotDateRangeSelection) {
+    # Add an observeEvent that track the plot brushing dateRange input for the first innerModule unit
+    observeEvent(dateRangeActions$update(), {
+      # Update the dateRangeInput accordingly
+      updateDateRangeInput(session, 'time', start = dateRangeActions$update()$min, end = dateRangeActions$update()$max)
+      # Set the zoomed value to TRUE
+      zoomed(TRUE)
+    })
   
-  # Add an observeEvent that react to the first innerModule unit dateRange reset trigger
-  observeEvent(dateRangeActions$reset(), {
-    if (zoomed()) {
-      # Reset the dateRange to initial dates only if plots are zoomed
-      updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
-      # Set the zoomed value to FALSE
-      zoomed(FALSE)
-    }
-  })
+    # Add an observeEvent that react to the first innerModule unit dateRange reset trigger
+    observeEvent(dateRangeActions$reset(), {
+      if (zoomed()) {
+        # Reset the dateRange to initial dates only if plots are zoomed
+        updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
+        # Set the zoomed value to FALSE
+        zoomed(FALSE)
+      }
+    })
+  }
   
   
   
@@ -156,28 +164,30 @@ sidebarInputLayout <- function(input, output, session, innerModule, innerModuleU
       immediate = TRUE
     )
     
-    # Call new unit module function and retrieve the named list containing:
+    # Call new unit module function and retrieve, if any, the named list containing:
     #  - update: Reactive expression containing the updated dateRange
     #  - reset: Reactive value, updated each time the plot is double clicked, used as dateRange reset trigger
     dateRangeActions <- callModule(innerModule, unitsNb(), df, dateRange, ...)
     
-    # Add an observeEvent that track the plot brushing dateRange input for the new module unit
-    observeEvent(dateRangeActions$update(), {
-      # Update the dateRangeInput accordingly
-      updateDateRangeInput(session, 'time', start = dateRangeActions$update()$min, end = dateRangeActions$update()$max)
-      # Set the zoomed value to TRUE
-      zoomed(TRUE)
-    })
-    
-    # Add an observeEvent that react to the new module unit dateRange reset trigger
-    observeEvent(dateRangeActions$reset(), {
-      if (zoomed()) {
-        # Reset the dateRange to initial dates only if plots are zoomed
-        updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
-        # Set the zoomed value to FALSE
-        zoomed(FALSE)
-      }
-    })
+    if (plotDateRangeSelection) {
+      # Add an observeEvent that track the plot brushing dateRange input for the new module unit
+      observeEvent(dateRangeActions$update(), {
+        # Update the dateRangeInput accordingly
+        updateDateRangeInput(session, 'time', start = dateRangeActions$update()$min, end = dateRangeActions$update()$max)
+        # Set the zoomed value to TRUE
+        zoomed(TRUE)
+      })
+      
+      # Add an observeEvent that react to the new module unit dateRange reset trigger
+      observeEvent(dateRangeActions$reset(), {
+        if (zoomed()) {
+          # Reset the dateRange to initial dates only if plots are zoomed
+          updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
+          # Set the zoomed value to FALSE
+          zoomed(FALSE)
+        }
+      })
+    }
   })
   
   
