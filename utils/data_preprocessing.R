@@ -79,13 +79,17 @@ loadSites <- function() {
   # Create the options for the HF sites input
   sitesOptions <- parseOptions(sites, 'sites_short')
   
+  # Create the options for the sites select input
+  sitesSelectOptions <- parseOptionsWithSections(sites, 'sites_short', sectionColumn = 'catchments', optionColumn = 'sites_full')
+  
   # Return a list containing the sites info and the catchment options for select input
   # And the sites options for the HF checkbox input group
   return(
     list(
       'sites' = sites,
       'catchmentsOptions' = catchmentsOptions,
-      'sitesOptions' = sitesOptions
+      'sitesOptions' = sitesOptions,
+      'sitesSelectOptions' = sitesSelectOptions
     )
   )
 }

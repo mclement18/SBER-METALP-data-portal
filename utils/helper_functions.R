@@ -71,15 +71,17 @@ createStatsTable <- function(df) {
 
 
 
-parseOptionsWithSections <- function(optionsInfo, valueColumn) {
+parseOptionsWithSections <- function(optionsInfo, valueColumn, sectionColumn = 'section_name', optionColumn = 'option_name') {
 # Function to parse options for select input with section
 # Parameters:
 #  - optionsInfo: Data.frame, containing the info to create the select input options. Columns format:
-#                 + section_name: Containing the name of the section.
-#                 + option_name: Containing the name of the option.
+#                 + sectionColumn: Containing the name of the section.
+#                 + optionColumn: Containing the name of the option.
 #                 + valueColumn: A column with the same name as specified in valueColumn.
 #                                Containing the value of the option.
 #  - valueColumn: String, name of the column containing the options value
+#  - sectionColumn: String, name of the column containing the section names, default 'section_name'
+#  - optionColumn: String, name of the column containing the options names, default 'option_name'
 # 
 # Returns a named list of named lists to be used as choices parameter for shiny selectInput()
   
@@ -88,16 +90,19 @@ parseOptionsWithSections <- function(optionsInfo, valueColumn) {
   
   # For each row in the optionsInfo
   for (i in c(1:dim(optionsInfo)[1])) {
-    # Extract current row
+    # Extract current row, section, option and value
     currentRow <- optionsInfo[i,]
+    currentSection <- currentRow %>% pull(sectionColumn)
+    currentOption <- currentRow %>% pull(optionColumn)
+    currentValue <- currentRow %>% pull(valueColumn)
     
-    # Add a list to optionsList if the corresponding section_name list is not already created
-    if (optionsList[[currentRow$section_name]] %>% is.null()) {
-      optionsList[[currentRow$section_name]] <- list()
+    # Add a list to optionsList if the corresponding section name list is not already created
+    if (optionsList[[currentSection]] %>% is.null()) {
+      optionsList[[currentSection]] <- list()
     }
     
-    # Add the option to the corresponding section_name list
-    optionsList[[currentRow$section_name]][[currentRow$option_name]] <- currentRow[[valueColumn]]
+    # Add the option to the corresponding section name list
+    optionsList[[currentSection]][[currentOption]] <- currentValue
   }
   
   return(optionsList)
