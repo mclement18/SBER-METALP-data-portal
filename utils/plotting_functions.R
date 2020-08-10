@@ -227,7 +227,7 @@ highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites) {
 #       + 'value': numeric
 #       + 'data_type': factor, either modeled or measured
 #       + 'date': POSIXct datetime
-# - param: List or 1-row df containing the following values accessible with '$':
+# - parameter: List or 1-row df containing the following values accessible with '$':
 #          + param_name: String
 #          + units: String
 # - plotTitle: String containing the title of the plot
@@ -246,6 +246,47 @@ highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites) {
     scale_color_manual(values = siteColors(df, sites))+
     # Set alpha values
     scale_alpha_manual(values = c('measured' = 1, 'modeled' = 0.3))+
+    # Set theme
+    theme_bw()+
+    # Remove legend title, move legend to the bottom of the plot and set text size
+    theme(
+      plot.title = element_text(size = 16, face = 'bold'),
+      legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 10),
+      axis.title = element_text(size = 14), axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 11)
+    )
+  return(p)
+}
+
+
+onVsOnePlot <- function(df, x, y, parameterX, parameterY, plotTitle, color) {
+# Function that create a time serie plot for the high frequency data
+# - df: DataFrame in long format containing the following columns:
+#       + x: numeric
+#       + y: numeric
+# - x, y: String, df column names to use as x and y coordinates
+# - parameterX,
+#   parameterY: List or 1-row df containing the following values accessible with '$':
+#               + param_name: String
+#               + units: String
+# - plotTitle: String containing the title of the plot
+# - color: String, contains the site color
+#
+# Returns a ggplot2 plot
+  
+  p <- ggplot(df, aes(!!sym(x), !!sym(y)))+
+    # Plot the lm confidence interval
+    geom_smooth(method = lm, fill = color, alpha = .17, linetype = 0, na.rm = TRUE)+
+    # PLot the lm line
+    geom_line(stat = 'smooth', method = "lm", formula = y ~ x, size = 1.5, color = color, alpha = .5)+
+    # Plot the data points
+    geom_point(size = 2.5, color = color, na.rm = TRUE)+
+    # Add the lm equation and r2 on top left
+    annotate('text', -Inf, Inf, hjust = -.1, vjust = 1.5,
+             label = lm_eqn(df, x, y), parse = TRUE, size = 5)+
+    # Set plot title and axis names
+    ggtitle(str_interp(plotTitle))+
+    ylab(str_interp('${parameterY$param_name} [${parameterY$units}]'))+
+    xlab(str_interp('${parameterX$param_name} [${parameterX$units}]'))+
     # Set theme
     theme_bw()+
     # Remove legend title, move legend to the bottom of the plot and set text size
