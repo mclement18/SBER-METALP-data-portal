@@ -9,6 +9,7 @@ source('./utils/plotting_functions.R')
 source('./modules/visualisation_tab/sidebar_input_layout.R')
 source('./modules/visualisation_tab/grab_samples_timeseries.R')
 source('./modules/visualisation_tab/high_frequency_timeseries.R')
+source('./modules/visualisation_tab/grab_samples_comparison.R')
 
 
 
@@ -65,7 +66,20 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
     navbarMenu(
       'Exploratory analysis',
       # Create the grab samples comparison tab
-      tabPanel('Grab samples comparison'),
+      tabPanel(
+        # Tab title
+        'Grab samples comparison',
+        # Tab content
+        # Create a sidebarInputLayout UI with for the grabSamplesComparison module
+        sidebarInputLayoutUI(
+          ns('grab-vs-grab'),
+          minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
+          maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+          innerModuleUI = grabSamplesComparisonUI,
+          sites = sites,
+          parameters = grabSampleParameters
+        )
+      ),
       # Create the sensors vs grab samples comparison tab
       tabPanel('Sensors vs Grab samples comparison')
     )
@@ -98,6 +112,7 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
              sites = sites,
              parameters = grabSampleParameters)
+  
   # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
   callModule(sidebarInputLayout, 'sensors-timeseries',
              highFreqTimeSeries, highFreqTimeSeriesUI,
@@ -107,4 +122,13 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
              sites = sites,
              parameters = hfParameters)
+  
+  # Load the server logic for the grabSamplesComparison module inside the sidebarInputLayout module
+  callModule(sidebarInputLayout, 'grab-vs-grab',
+             grabSamplesComparison, grabSamplesComparisonUI,
+             list('inputs' = 'grab-vs-grab-plot-input', 'plots' = 'grab-vs-grab-plots'),
+             df = grabSampleDf,
+             plotDateRangeSelection = FALSE,
+             sites = sites,
+             parameters = grabSampleParameters)
 }
