@@ -129,6 +129,8 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              list('inputs' = 'grab-vs-grab-plot-input', 'plots' = 'grab-vs-grab-plots'),
              df = grabSampleDf,
              plotDateRangeSelection = FALSE,
+             minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
+             maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
              sites = sites,
              parameters = grabSampleParameters)
 }

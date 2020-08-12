@@ -33,6 +33,8 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI, ...) {
                      max = maxDate,
                      format = 'dd/mm/yyyy',
                      separator = '-'),
+      # Create a nutton to reset the date range
+      actionLink(ns('resetDateRange'), 'Reset', class = 'custom-links'),
       # Button group containing the global actions
       div(
         class = 'btn-group',
@@ -71,7 +73,7 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI, ...) {
 
 sidebarInputLayout <- function(input, output, session,
                                innerModule, innerModuleUI, innerModulePrefixIds, df,
-                               plotDateRangeSelection = TRUE, minDate = NULL, maxDate = NULL, ...) {
+                               plotDateRangeSelection = TRUE, minDate, maxDate, ...) {
 # Create the logic for the sidebarInputLayout module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -82,10 +84,8 @@ sidebarInputLayout <- function(input, output, session,
 #                            + plots: String, the prefix for the inner module plots UI element
 #  - df: Data.frame, the data to pass to the inner module
 #  - plotDateRangeSelection: Boolean, indicates if the inner module plots are modifying the date range, default TRUE
-#  - minDate: Date, the lower bound for the dateRangeInput, default NULL
-#             Must be provided if plotDateRangeSelection is TRUE
-#  - maxDate: Date, the upper bound for the dateRangeInput, default NULL
-#             Must be provided if plotDateRangeSelection is TRUE
+#  - minDate: Date, the lower bound for the dateRangeInput
+#  - maxDate: Date, the upper bound for the dateRangeInput
 #  - ...: All other arguments needed by the inner module function
 # 
 # Returns NULL
@@ -94,6 +94,12 @@ sidebarInputLayout <- function(input, output, session,
   
   # Create dateRange reactive expression containing the min and max values of the dateRangeInput
   dateRange <- reactive(list('min' = input$time[1], 'max' = input$time[2]))
+  
+  # Create an observeEvent that allows to reset the date range when resetDateRange is clicked
+  observeEvent(input$resetDateRange, {
+    updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
+  })
+  
   
   # Create a reactive value that track if the plot are zoomed if the plot can be zoomed
   if (plotDateRangeSelection) zoomed <- reactiveVal(FALSE)
@@ -169,6 +175,7 @@ sidebarInputLayout <- function(input, output, session,
     #  - reset: Reactive value, updated each time the plot is double clicked, used as dateRange reset trigger
     dateRangeActions <- callModule(innerModule, unitsNb(), df, dateRange, ...)
     
+    # If the inner module plots are modifying the date range
     if (plotDateRangeSelection) {
       # Add an observeEvent that track the plot brushing dateRange input for the new module unit
       observeEvent(dateRangeActions$update(), {
