@@ -235,8 +235,8 @@ highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites) {
 #
 # Returns a ggplot2 plot
   
-  p <- ggplot(df, aes(date, value, color = Site_ID, linetype = data_type, alpha = data_type))+
-    geom_line(size = 1, na.rm = TRUE)+
+  p <- ggplot(df, aes(date, value, color = Site_ID))+
+    geom_line(mapping = aes(linetype = data_type, alpha = data_type), size = 1, na.rm = TRUE)+
     ggtitle(plotTitle)+
     ylab(str_interp('${parameter$param_name} [${parameter$units}]'))+
     xlab('Date')+

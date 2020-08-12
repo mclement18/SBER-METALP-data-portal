@@ -10,6 +10,7 @@ source('./modules/visualisation_tab/sidebar_input_layout.R')
 source('./modules/visualisation_tab/grab_samples_timeseries.R')
 source('./modules/visualisation_tab/high_frequency_timeseries.R')
 source('./modules/visualisation_tab/grab_samples_comparison.R')
+source('./modules/visualisation_tab/sensor_grab_comparison.R')
 
 
 
@@ -39,7 +40,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
       # Tab content
       # Create a sidebarInputLayout UI with for the grabSamplesTimeSeries module 
       sidebarInputLayoutUI(
-        ns('grab-samples-timeseries'),
+        ns('grabSamplesTimeseries'),
         minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
         maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
         innerModuleUI = grabSamplesTimeSeriesUI,
@@ -54,7 +55,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
       # Tab content
       # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
       sidebarInputLayoutUI(
-        ns('sensors-timeseries'),
+        ns('sensorsTimeseries'),
         minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
         maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
         innerModuleUI = highFreqTimeSeriesUI,
@@ -72,7 +73,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
         # Tab content
         # Create a sidebarInputLayout UI with for the grabSamplesComparison module
         sidebarInputLayoutUI(
-          ns('grab-vs-grab'),
+          ns('grabVsGrab'),
           minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
           maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
           innerModuleUI = grabSamplesComparisonUI,
@@ -81,7 +82,20 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
         )
       ),
       # Create the sensors vs grab samples comparison tab
-      tabPanel('Sensors vs Grab samples comparison')
+      tabPanel(
+        # Tab title
+        'Sensors vs Grab samples comparison',
+        # Tab content
+        # Create a sidebarInputLayout UI with for the sensorGrabComparison module
+        sidebarInputLayoutUI(
+          ns('sensorVsGrab'),
+          minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
+          maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
+          innerModuleUI = sensorGrabComparisonUI,
+          sites = sites,
+          parameters = list('hf' = hfParameters)
+        )
+      )
     )
   )
 }
@@ -104,7 +118,7 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
 # Returns NULL
   
   # Load the server logic for the grabSamplesTimeSeries module inside the sidebarInputLayout module
-  callModule(sidebarInputLayout, 'grab-samples-timeseries',
+  callModule(sidebarInputLayout, 'grabSamplesTimeseries',
              grabSamplesTimeSeries, grabSamplesTimeSeriesUI,
              list('inputs' = 'time-serie-plot-input', 'plots' = 'time-serie-plots'),
              df = grabSampleDf,
@@ -114,7 +128,7 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              parameters = grabSampleParameters)
   
   # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
-  callModule(sidebarInputLayout, 'sensors-timeseries',
+  callModule(sidebarInputLayout, 'sensorsTimeseries',
              highFreqTimeSeries, highFreqTimeSeriesUI,
              list('inputs' = 'hf-time-serie-plot-input', 'plots' = 'hf-time-serie-plots'),
              df = hfDf,
@@ -124,7 +138,7 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              parameters = hfParameters)
   
   # Load the server logic for the grabSamplesComparison module inside the sidebarInputLayout module
-  callModule(sidebarInputLayout, 'grab-vs-grab',
+  callModule(sidebarInputLayout, 'grabVsGrab',
              grabSamplesComparison, grabSamplesComparisonUI,
              list('inputs' = 'grab-vs-grab-plot-input', 'plots' = 'grab-vs-grab-plots'),
              df = grabSampleDf,
@@ -133,4 +147,14 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
              sites = sites,
              parameters = grabSampleParameters)
+  
+  # Load the server logic for the sensorGrabComparison module inside the sidebarInputLayout module
+  callModule(sidebarInputLayout, 'sensorVsGrab',
+             sensorGrabComparison, sensorGrabComparisonUI,
+             list('inputs' = 'sensor-vs-grab-plot-input', 'plots' = 'sensor-vs-grab-plots'),
+             df = list('hf' = hfDf, 'grab' = grabSampleDf),
+             minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
+             maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
+             sites = sites,
+             parameters = list('hf' = hfParameters, 'grab' = grabSampleParameters))
 }

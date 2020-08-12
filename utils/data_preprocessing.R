@@ -126,11 +126,15 @@ loadHfParameters <- function() {
   # Create the options for the select input
   paramOptions <- parseOptionsWithSections(parameters, 'param_name')
   
+  # Create the options for the sensor vs grab select input
+  vsGrabParamOptions <- parseOptionsWithSections(filter(parameters, !is.na(grab_param_name)), 'param_name')
+  
   # Return a list containing the parameters info and options for a select input
   return(
     list(
       'parameters' = parameters,
-      'selectOptions' = paramOptions
+      'selectOptions' = paramOptions,
+      'vsGrabSelectOptions' = vsGrabParamOptions
     )
   )
 }
