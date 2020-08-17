@@ -241,24 +241,32 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       splittedId <- str_split(session$ns('0'), '-') %>% unlist()
       unitNb <- splittedId[length(splittedId) - 1]
       
-      # Create and return a highFreqTimeSeriePlot
+      # Create a highFreqTimeSeriePlot
       p <- highFreqTimeSeriePlot(
         df = hfDf(),
         parameter = paramHf(),
         plotTitle = str_interp('Sensors High Frequency Time Serie ${unitNb}'),
         sites = sites$sites
       )
+      
+      # If there are some grab sample data available
+      # Add them to the graph
       if (!is.null(grabDf())) {
-        p <- p + geom_point(data = grabDf(), mapping = aes(x = DATETIME_GMT, y = value), size = 3, color = 'black') +
-          scale_y_continuous(limits = calculateYaxisLimits(
-            min(min(grabDf()$value, na.rm = TRUE), min(hfDf()$value, na.rm = TRUE)),
-            max(max(grabDf()$value, na.rm = TRUE), max(hfDf()$value, na.rm = TRUE))
-          ))
+        p <- addGrabSamplePoints(
+          p = p,
+          df = grabDf(),
+          minHf = min(hfDf()$value, na.rm = TRUE),
+          maxHf = max(hfDf()$value, na.rm = TRUE)
+        )
       }
+      
+      # Return the graph
       p
     })
   })
 
+  
+  
   # Render the regular timeserie plot
   output$sensorVsGrab <- renderPlot({
     # Call grabDf reactive expression and isolate the remaining of the code

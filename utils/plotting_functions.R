@@ -258,6 +258,34 @@ highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites) {
 }
 
 
+
+
+addGrabSamplePoints <- function(p, df, minHf, maxHf) {
+# Function that add points to an highFreqTimeSeriePlot
+# - p: ggplot2 object, plot returned by the highFreqTimeSeriePlot function
+# - df: DataFrame in long format containing the following columns:
+#       + 'Site_ID': factor
+#       + 'value': numeric
+#       + 'DATETIME_GMT': POSIXct datetime
+# - minHf: numeric, the minimal plotted value of the HF data
+# - maxHf: numeric, the maximal plotted value of the HF data
+#
+# Returns a ggplot2 plot
+  
+  # Add the point to the graph
+  p <- p + geom_point(data = df, mapping = aes(x = DATETIME_GMT, y = value), size = 3, color = 'black') +
+    # Correct the y scale to display all the information
+    scale_y_continuous(limits = calculateYaxisLimits(
+      min(min(df$value, na.rm = TRUE), minHf),
+      max(max(df$value, na.rm = TRUE), maxHf)
+    ))
+  
+  return(p)
+}
+
+
+
+
 onVsOnePlot <- function(df, x, y, parameterX, parameterY, plotTitle, color) {
 # Function that create a time serie plot for the high frequency data
 # - df: DataFrame in long format containing the following columns:
