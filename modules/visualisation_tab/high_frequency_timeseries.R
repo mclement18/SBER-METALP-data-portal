@@ -126,8 +126,8 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     df <- df %>% filter(
       Site_ID %in% selectedSites_d(),
       data_type %in% types,
-      date >= as.POSIXct(dateRange()$min, tz = 'GMT'),
-      date <= as.POSIXct(dateRange()$max, tz = 'GMT')
+      date(date) >= dateRange()$min,
+      date(date) <= dateRange()$max
     ) %>% select(date, Site_ID, data_type, 'value' = param()$data)
     
     # If there is no data return NULL
@@ -201,7 +201,6 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   # Should be returned by the module
   # Converting number to date using the Linux epoch time as origin
   updateDateRange <- reactive({
-    req(input$dailyAverage)
     if (input$dailyAverage) {
       list(
         'min' = as_date(input$highfreq_brush$xmin),

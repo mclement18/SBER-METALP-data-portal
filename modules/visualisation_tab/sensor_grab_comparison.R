@@ -97,8 +97,10 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   
 
   ## Parameters update logic ###################################################
-
+  
+  # Create a reactive expression that returns the selected high frequency parameter info
   paramHf <- reactive({
+    # Run it only if input$paramHf is available
     req(input$paramHf)
     parameters$hf$parameters %>% filter(param_name == input$paramHf)
   })
@@ -114,6 +116,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
                        selected = grabParams[1])
   })
   
+  # Create a reactive expression that returns the selected grab sample parameter info
   paramGrab <- reactive({
     parameters$grab$parameters %>% filter(param_name == input$paramGrab)
   })
@@ -123,8 +126,10 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   
   ## Data manipulation logic ######################################################
   
-  # Create a data reactive expression that return a subset of the data
-  # Using the dateRange, sites and paramfilter reactive expressions
+  # Create a data reactive expressions that return a subsets of the HF and grab data
+  # Using the dateRange, sites and parameters reactive expressions
+  
+  # Create the high frequency data subset
   hfDf <- reactive({
     # Get high frequency data
     hfDf <- df$hf
@@ -138,8 +143,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     hfDf <- hfDf %>% filter(
       Site_ID == input$site,
       data_type %in% types,
-      date >= as.POSIXct(dateRange()$min, tz = 'GMT'),
-      date <= as.POSIXct(dateRange()$max, tz = 'GMT')
+      date(date) >= dateRange()$min,
+      date(date) <= dateRange()$max
     ) %>% select(date, Site_ID, data_type, 'value' = paramHf()$data)
     
     # If there is no data return NULL
@@ -149,7 +154,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     hfDf
   })
   
-  
+  # Create the grab data subset
   grabDf <- reactive({
     # If no grab parameter is selected return NULL
     if (nrow(paramGrab()) == 0) return(NULL)
@@ -157,6 +162,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     # Get grab samples data
     grabDf <- df$grab
     
+    # Filter the data using the selected sites and the date range
+    # Then select the parameter and rename the column to 'value'
     grabDf <- grabDf %>% filter(
       Site_ID == input$site,
       DATE_reading >= dateRange()$min,
@@ -170,32 +177,49 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     grabDf
   })
   
-  
+  # Create the grab vs HF data subset
   vsDf <- reactive({
+    # If grabDf or hfDf are NULL return NULL
     if (is.null(grabDf()) | is.null(hfDf())) return(NULL)
-    
-    vsDf <- grabDf()
+
+    # Get the non NA grab data rename the value column and add new empty columns
+    vsDf <- grabDf() %>% filter(!is.na(value))
     vsDf <- rename(vsDf, 'grab_value' = value)
     vsDf['hf_value'] <- rep(NA, nrow(vsDf))
     vsDf['hf_sd'] <- rep(NA, nrow(vsDf))
     
+    # For each grab data point calculate the corresponding HF data
     for (i in 1:nrow(vsDf)) {
+      # Define the HF data starting time, e.i. 2 hours after the grab sample
       startingTime <- vsDf[i, 'DATETIME_GMT'] + hours(2)
+      # Define the HF data ending time, e.i. 4 hours after the starting time
       endingTime <- startingTime + hours(4)
+      
+      # Filter the HF data using the interval
       filteredHf <- hfDf() %>% filter(date >= startingTime, date <= endingTime)
+      
+      # If showModeledData is true combine the measured and modeled HF data in one vector
+      # Else get the value (the modeled data are already filtered in hfDf)
       if (input$showModeledData) {
         filteredHf <- filteredHf %>% pivot_wider(names_from = data_type, values_from = value) %>% select(measured, modeled)
         valuesHf <- rowSums(filteredHf, na.rm=TRUE) * NA ^ !rowSums(!is.na(filteredHf))
       } else {
         valuesHf <- filteredHf %>% pull(value)
       }
+      
+      # Calculate the average and sd
       averageHf <- mean(valuesHf, na.rm = TRUE)
       sdHf <- sd(valuesHf, na.rm = TRUE)
       
+      # Set the values in the df
       vsDf[i, 'hf_value'] <- averageHf
       vsDf[i, 'hf_sd'] <- sdHf
     }
 
+    # If there are no HF data return NULL
+    if (all(is.na(vsDf$hf_value))) return(NULL)
+
+    # Return the df
     vsDf
   })
 
@@ -206,18 +230,16 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
 
   # Render the regular timeserie plot
   output$sensorGrabTimeserie <- renderPlot({
+    # Call grabDf reactive expression and isolate the remaining of the code
+    # To re-render the plot only once the grabDf is ready (otherwise re-render to twice)
     grabDf()
     isolate({
       # If there are no data return NULL
-      if (hfDf() %>% is.null() | grabDf() %>% is.null()) return(NULL)
+      if (hfDf() %>% is.null()) return(NULL)
       
       # Get unitNb
       splittedId <- str_split(session$ns('0'), '-') %>% unlist()
       unitNb <- splittedId[length(splittedId) - 1]
-      
-      # # Get current site name and color
-      # currentSite <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_full)
-      # currentColor <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_color)
       
       # Create and return a highFreqTimeSeriePlot
       p <- highFreqTimeSeriePlot(
@@ -226,13 +248,21 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
         plotTitle = str_interp('Sensors High Frequency Time Serie ${unitNb}'),
         sites = sites$sites
       )
-      p <- p + geom_point(data = grabDf(), mapping = aes(x = DATETIME_GMT, y = value), size = 3, color = 'black')
+      if (!is.null(grabDf())) {
+        p <- p + geom_point(data = grabDf(), mapping = aes(x = DATETIME_GMT, y = value), size = 3, color = 'black') +
+          scale_y_continuous(limits = calculateYaxisLimits(
+            min(min(grabDf()$value, na.rm = TRUE), min(hfDf()$value, na.rm = TRUE)),
+            max(max(grabDf()$value, na.rm = TRUE), max(hfDf()$value, na.rm = TRUE))
+          ))
+      }
       p
     })
   })
 
   # Render the regular timeserie plot
   output$sensorVsGrab <- renderPlot({
+    # Call grabDf reactive expression and isolate the remaining of the code
+    # To re-render the plot only once the grabDf is ready (otherwise re-render to twice)
     grabDf()
     isolate({
       # If there are no data return NULL
