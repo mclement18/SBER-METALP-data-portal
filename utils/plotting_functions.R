@@ -303,9 +303,9 @@ onVsOnePlot <- function(df, x, y, parameterX, parameterY, plotTitle, color) {
   
   p <- ggplot(df, aes(!!sym(x), !!sym(y)))+
     # Plot the lm confidence interval
-    geom_smooth(method = lm, fill = color, alpha = .17, linetype = 0, na.rm = TRUE)+
+    geom_smooth(method = lm, fill = color, alpha = .17, linetype = 0, na.rm = TRUE, fullrange = TRUE)+
     # PLot the lm line
-    geom_line(stat = 'smooth', method = "lm", formula = y ~ x, size = 1.5, color = color, alpha = .5)+
+    geom_line(stat = 'smooth', method = "lm", formula = y ~ x, size = 1.5, color = color, alpha = .5, fullrange = TRUE)+
     # Plot the data points
     geom_point(size = 2.5, color = color, na.rm = TRUE)+
     # Add the lm equation and r2 on top left
@@ -325,4 +325,32 @@ onVsOnePlot <- function(df, x, y, parameterX, parameterY, plotTitle, color) {
     )
   return(p)
 }
+
+
+
+
+
+addOneToOneLine <- function(p, minData, maxData) {
+# Function that add a one to one line to a oneVsOnePlot
+# - p: ggplot2 object, plot returned by the oneVsOnePlot function
+# - minData: numeric, the minimal plotted value of the data
+# - maxData: numeric, the maximal plotted value of the data
+#
+# Returns a ggplot2 plot
+  
+  # Add the on to one line
+  p <- p + geom_abline() +
+    # Set the plot limits large enough to extend both the fitting curve and se to the edge of the plot
+    xlim(calculateYaxisLimits(minData, maxData, perc = .5))+
+    ylim(calculateYaxisLimits(minData, maxData, perc = .5))+
+    # Set the visible area of the plot
+    coord_cartesian(
+      xlim = calculateYaxisLimits(minData, maxData),
+      ylim = calculateYaxisLimits(minData, maxData)
+    )
+  
+  # Return the updated plot
+  return(p)
+}
+
 

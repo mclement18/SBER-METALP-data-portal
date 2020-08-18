@@ -40,12 +40,14 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
         ),
         parameters$hf$vsGrabSelectOptions
       ),
+      # Create checkbox to show/hide modeled data
+      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
+      # Create radio buttons group to select grab parameter
       radioButtons(
         ns('paramGrab'), 
         'Grab sample parameter',
         choices = 'NULL'
-      ),
-      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE)
+      )
     ),
     # Create the UI plots
     'plots' = div(
@@ -133,7 +135,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   hfDf <- reactive({
     # Get high frequency data
     hfDf <- df$hf
-    
+
     # Define data types to keep depending on the state of showModeledData
     types <- c('measured')
     if (input$showModeledData) types <- c(types, 'modeled')
@@ -230,9 +232,10 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
 
   # Render the regular timeserie plot
   output$sensorGrabTimeserie <- renderPlot({
-    # Call grabDf reactive expression and isolate the remaining of the code
+    # Call grabDf reactive expression, input$showModeledData and isolate the remaining of the code
     # To re-render the plot only once the grabDf is ready (otherwise re-render to twice)
     grabDf()
+    input$showModeledData
     isolate({
       # If there are no data return NULL
       if (hfDf() %>% is.null()) return(NULL)
@@ -269,9 +272,10 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   
   # Render the regular timeserie plot
   output$sensorVsGrab <- renderPlot({
-    # Call grabDf reactive expression and isolate the remaining of the code
+    # Call grabDf reactive expression, input$showModeledData and isolate the remaining of the code
     # To re-render the plot only once the grabDf is ready (otherwise re-render to twice)
     grabDf()
+    input$showModeledData
     isolate({
       # If there are no data return NULL
       if (vsDf() %>% is.null()) return(NULL)
@@ -284,7 +288,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       currentSite <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_full)
       currentColor <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_color)
       
-      # Create and return a onVsOne plot
+      # Create a onVsOne plot add the one to one line and return the plot
       onVsOnePlot(
         df = vsDf(),
         x = 'grab_value',
@@ -293,9 +297,14 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
         parameterY  = paramHf(),
         plotTitle = str_interp('${currentSite} Sensor VS Grab ${unitNb}'),
         color = currentColor
+      ) %>% addOneToOneLine(
+        minData = min(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE),
+        maxData = max(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE)
       )
     })
   })
+  
+  
   
   
   ## Plot hovering logic ##########################################################
