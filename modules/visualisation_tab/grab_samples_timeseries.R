@@ -57,7 +57,7 @@ grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
       id = str_interp('time-serie-plots-${id}'),
       class = 'time-serie-plot two-plots point-hover-widget-plot',
       # Create a plotOutput for the regular timeserie plot
-      plotOutput(
+      spinnerPlotOutput(
         ns('lowfreq'),
         # Make data points hoverable
         hover = hoverOpts(ns('lowfreq_hover')),
@@ -74,7 +74,7 @@ grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
       ),
       # Create a plotOutput for the day of the Year timeserie plot
       # Make data points hoverable
-      plotOutput(ns('doy'),  hover = hoverOpts(ns('doy_hover')))
+      spinnerPlotOutput(ns('doy'),  hover = hoverOpts(ns('doy_hover')))
     )
   )
 }

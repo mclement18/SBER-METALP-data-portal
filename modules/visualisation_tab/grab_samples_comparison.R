@@ -78,7 +78,7 @@ grabSamplesComparisonUI <- function(id, sites, parameters) {
       id = str_interp('grab-vs-grab-plots-${id}'),
       class = 'time-serie-plot point-hover-widget-plot',
       # Create a plotOutput for the grab vs grab plot
-      plotOutput(
+      spinnerPlotOutput(
         ns('grabVsGrab'),
         # Make data points hoverable
         hover = hoverOpts(ns('grabVsGrab_hover'))

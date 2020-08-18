@@ -42,6 +42,20 @@ checkboxGroupInputWithClass <- function(checkboxGroupInput, class) {
 
 
 
+spinnerPlotOutput <- function(outputId, ...) {
+# Create a plotOutput that display a spinner when the plot is computing
+# Parameters:
+# - outputId: String, the id of the plotOutput
+# - ...: all other arguments accepted by the plotOutput function
+# 
+# Returns a plotOutput with a spinner
+  
+  # Add spinner to the plotOutput using the fading circle and the primary-color
+  addSpinner(plotOutput(outputId = outputId, ...), spin = "fading-circle", color = "#e24727")
+}
+
+
+
 
 ## Reusable server logic ##########################################################
 

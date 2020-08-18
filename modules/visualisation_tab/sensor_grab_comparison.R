@@ -55,7 +55,7 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
       id = str_interp('sensor-vs-grab-plots-${id}'),
       class = 'time-serie-plot two-plots point-hover-widget-plot',
       # Create a plotOutput for the grab vs grab plot
-      plotOutput(
+      spinnerPlotOutput(
         ns('sensorGrabTimeserie'),
         # Make data points hoverable
         hover = hoverOpts(ns('sensorGrabTimeserie_hover')),
@@ -70,7 +70,7 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
         # Make plot double clickable
         dblclick = dblclickOpts(ns('sensorGrabTimeserie_dblclick'))
       ),
-      plotOutput(
+      spinnerPlotOutput(
         ns('sensorVsGrab'),
         # Make data points hoverable
         hover = hoverOpts(ns('sensorVsGrab_hover'))

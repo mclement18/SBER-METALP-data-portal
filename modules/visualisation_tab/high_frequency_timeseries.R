@@ -56,7 +56,7 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
       id = str_interp('hf-time-serie-plots-${id}'),
       class = 'time-serie-plot point-hover-widget-plot',
       # Create a plotOutput for the regular timeserie plot
-      plotOutput(
+      spinnerPlotOutput(
         ns('highfreq'),
         # Make data points hoverable
         hover = hoverOpts(ns('highfreq_hover')),
