@@ -201,6 +201,8 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   # Should be returned by the module
   # Converting number to date using the Linux epoch time as origin
   updateDateRange <- reactive({
+    req(!is.null(input$dailyAverage))
+    
     if (input$dailyAverage) {
       list(
         'min' = as_date(input$highfreq_brush$xmin),
