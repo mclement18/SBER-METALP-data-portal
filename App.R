@@ -27,6 +27,7 @@
 ## Load Libraries #################################################################
 library(shiny)
 library(shinyjs)
+library(shinyWidgets)
 library(sass)
 library(jsonlite)
 library(stringr)
