@@ -248,7 +248,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       p <- highFreqTimeSeriePlot(
         df = hfDf(),
         parameter = paramHf(),
-        plotTitle = str_interp('Sensors High Frequency Time Serie ${unitNb}'),
+        plotTitle = str_interp('Sensor High Frequency Time Serie ${unitNb}'),
         sites = sites$sites
       )
       
@@ -310,9 +310,11 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   ## Plot hovering logic ##########################################################
 
   # Activate the hover widget for the regular timeserie plot
-  pointHoverWidgetServer(session, 'sensorGrabTimeserie', hfDf, reactive(input$sensorGrabTimeserie_hover))
+  pointHoverWidgetServer(session, 'sensorGrabTimeserie', hfDf, reactive(input$sensorGrabTimeserie_hover),
+                         x_label = 'Date', y_label = 'Parameter')
   # Activate the hover widget for the vs plot
-  pointHoverWidgetServer(session, 'sensorVsGrab', vsDf, reactive(input$sensorVsGrab_hover))
+  pointHoverWidgetServer(session, 'sensorVsGrab', vsDf, reactive(input$sensorVsGrab_hover),
+                         x_label = 'Grab Sample', y_label = 'Sensor')
 
   
   

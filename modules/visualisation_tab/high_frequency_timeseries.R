@@ -168,7 +168,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   
   # Activate the hover widget for the regular timeserie plot
   pointHoverWidgetServer(session, 'highfreq', data, reactive(input$highfreq_hover),
-                         x_label = 'Date', y_label = 'parameter')
+                         x_label = 'Date', y_label = 'Parameter')
 
   
   

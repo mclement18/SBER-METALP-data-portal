@@ -4,6 +4,8 @@
 
 .btn.custom-style {
     color: $secondary-color;
+    cursor: pointer;
+
     &:hover,
     &:focus {
         color: $primary-color;
@@ -18,6 +20,7 @@
     &:disabled {
         color: $secondary-color;
         background: none;
+        cursor: not-allowed;
     }
 }
 
