@@ -42,6 +42,16 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
       ),
       # Create checkbox to show/hide modeled data
       checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
+      # Create radio buttons to select the data frequency to display
+      checkboxGroupInputWithClass(
+        radioButtons(
+          ns('dataFreq'),
+          'Data frequency',
+          choices = list('10min (raw)' = '10min', '24H'),
+          selected = '24H'
+        ),
+        class = 'checkbox-grid'        
+      ),
       # Create radio buttons group to select grab parameter
       radioButtons(
         ns('paramGrab'), 
@@ -134,7 +144,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   # Create the high frequency data subset
   hfDf <- reactive({
     # Get high frequency data
-    hfDf <- df$hf$`10min`
+    hfDf <- df$hf[[input$dataFreq]]
 
     # Define data types to keep depending on the state of showModeledData
     types <- c('measured')
@@ -150,7 +160,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     ) %>% select(date, Site_ID, data_type, 'value' = paramHf()$data)
     
     # If there is no data return NULL
-    if (dim(hfDf)[1] == 0) return(NULL)
+    if (nrow(hfDf) == 0) return(NULL)
     
     # Return the formatted data
     hfDf
@@ -173,7 +183,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     ) %>% select(DATETIME_GMT, Site_ID, 'value' = paramGrab()$data)
     
     # If there is no data return NULL
-    if (dim(grabDf)[1] == 0) return(NULL)
+    if (nrow(grabDf) == 0) return(NULL)
     
     # Return the formatted data
     grabDf
@@ -181,14 +191,37 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   
   # Create the grab vs HF data subset
   vsDf <- reactive({
-    # If grabDf or hfDf are NULL return NULL
-    if (is.null(grabDf()) | is.null(hfDf())) return(NULL)
-
-    # Get the non NA grab data rename the value column and add new empty columns
+    # If grabDf is NULL or hfData is empty return NULL
+    if (is.null(grabDf())) return(NULL)
+    
+    # Get hf data
+    # Refilter HF data here to always get the 10min data and not rerender when changing the frequency
+    hfData <- df$hf$`10min`
+    
+    # Define data types to keep depending on the state of showModeledData
+    types <- c('measured')
+    if (input$showModeledData) types <- c(types, 'modeled')
+    
+    # Filter the data using the selected sites, the data type and the date range
+    # Then select the parameter and rename the column to 'value'
+    hfData <- hfData %>% filter(
+      Site_ID == input$site,
+      data_type %in% types,
+      date(date) >= dateRange()$min,
+      date(date) <= dateRange()$max
+    ) %>% select(date, Site_ID, data_type, 'value' = isolate(paramHf()$data)) # Isolate paramHF to avoid multiple rerender
+    
+    # If hfData is empty return NULL
+    if (nrow(hfData) == 0) return(NULL)
+    
+    # Get the non NA grab data, if empty return NULL
     vsDf <- grabDf() %>% filter(!is.na(value))
+    if (nrow(vsDf) == 0) return(NULL)
+    
+    # Rename the value column  and add new empty columns
     vsDf <- rename(vsDf, 'grab_value' = value)
     vsDf['hf_value'] <- rep(NA, nrow(vsDf))
-    vsDf['hf_sd'] <- rep(NA, nrow(vsDf))
+    # vsDf['hf_sd'] <- rep(NA, nrow(vsDf))
     
     # For each grab data point calculate the corresponding HF data
     for (i in 1:nrow(vsDf)) {
@@ -198,10 +231,13 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       endingTime <- startingTime + hours(4)
       
       # Filter the HF data using the interval
-      filteredHf <- hfDf() %>% filter(date >= startingTime, date <= endingTime)
+      filteredHf <- hfData %>% filter(date >= startingTime, date <= endingTime)
+      
+      # If no data proceed to next iteration
+      if (nrow(filteredHf) == 0) next
       
       # If showModeledData is true combine the measured and modeled HF data in one vector
-      # Else get the value (the modeled data are already filtered in hfDf)
+      # Else get the value (the modeled data are already filtered in hfData)
       if (input$showModeledData) {
         filteredHf <- filteredHf %>% pivot_wider(names_from = data_type, values_from = value) %>% select(measured, modeled)
         valuesHf <- rowSums(filteredHf, na.rm=TRUE) * NA ^ !rowSums(!is.na(filteredHf))
@@ -211,12 +247,15 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       
       # Calculate the average and sd
       averageHf <- mean(valuesHf, na.rm = TRUE)
-      sdHf <- sd(valuesHf, na.rm = TRUE)
+      # sdHf <- sd(valuesHf, na.rm = TRUE)
       
       # Set the values in the df
       vsDf[i, 'hf_value'] <- averageHf
-      vsDf[i, 'hf_sd'] <- sdHf
+      # vsDf[i, 'hf_sd'] <- sdHf
     }
+    
+    # Clear Hf data from memory
+    rm(hfData, filteredHf, valuesHf, averageHf)
 
     # If there are no HF data return NULL
     if (all(is.na(vsDf$hf_value))) return(NULL)
@@ -232,76 +271,75 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
 
   # Render the regular timeserie plot
   output$sensorGrabTimeserie <- renderPlot({
-    # Call grabDf reactive expression, input$showModeledData and isolate the remaining of the code
-    # To re-render the plot only once the grabDf is ready (otherwise re-render to twice)
-    grabDf()
+    # If no grab parameter is selected return NULL
+    if (nrow(paramGrab()) == 0) return(NULL)
+    
+    # Isolate HF data to avoid multiple rerender
+    hfData <- isolate(hfDf())
+    # Call inputs to rerender the plot
     input$showModeledData
-    isolate({
-      # If there are no data return NULL
-      if (hfDf() %>% is.null()) return(NULL)
-      
-      # Get unitNb
-      splittedId <- str_split(session$ns('0'), '-') %>% unlist()
-      unitNb <- splittedId[length(splittedId) - 1]
-      
-      # Create a highFreqTimeSeriePlot
-      p <- highFreqTimeSeriePlot(
-        df = hfDf(),
-        parameter = paramHf(),
-        plotTitle = str_interp('Sensor High Frequency Time Serie ${unitNb}'),
-        sites = sites$sites
+    input$dataFreq
+    
+    # If there are no data return NULL
+    if (hfData %>% is.null()) return(NULL)
+    
+    # Get unitNb
+    splittedId <- str_split(session$ns('0'), '-') %>% unlist()
+    unitNb <- splittedId[length(splittedId) - 1]
+    
+    # Create a highFreqTimeSeriePlot
+    p <- highFreqTimeSeriePlot(
+      df = hfData,
+      # Isolate paramHF to avoid multiple rerender
+      parameter = isolate(paramHf()),
+      plotTitle = str_interp('Sensor High Frequency Time Serie ${unitNb}'),
+      sites = sites$sites
+    )
+    
+    # If there are some grab sample data available
+    # Add them to the graph
+    if (!is.null(grabDf())) {
+      p <- addGrabSamplePoints(
+        p = p,
+        df = grabDf(),
+        minHf = min(hfData$value, na.rm = TRUE),
+        maxHf = max(hfData$value, na.rm = TRUE)
       )
-      
-      # If there are some grab sample data available
-      # Add them to the graph
-      if (!is.null(grabDf())) {
-        p <- addGrabSamplePoints(
-          p = p,
-          df = grabDf(),
-          minHf = min(hfDf()$value, na.rm = TRUE),
-          maxHf = max(hfDf()$value, na.rm = TRUE)
-        )
-      }
-      
-      # Return the graph
-      p
-    })
+    }
+    
+    # Return the graph
+    p
   })
 
   
   
-  # Render the regular timeserie plot
+  # Render on vs one plot
   output$sensorVsGrab <- renderPlot({
-    # Call grabDf reactive expression, input$showModeledData and isolate the remaining of the code
-    # To re-render the plot only once the grabDf is ready (otherwise re-render to twice)
-    grabDf()
-    input$showModeledData
-    isolate({
-      # If there are no data return NULL
-      if (vsDf() %>% is.null()) return(NULL)
-      
-      # Get unitNb
-      splittedId <- str_split(session$ns('0'), '-') %>% unlist()
-      unitNb <- splittedId[length(splittedId) - 1]
-      
-      # Get current site name and color
-      currentSite <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_full)
-      currentColor <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_color)
-      
-      # Create a onVsOne plot add the one to one line and return the plot
-      onVsOnePlot(
-        df = vsDf(),
-        x = 'grab_value',
-        y = 'hf_value',
-        parameterX = paramGrab(),
-        parameterY  = paramHf(),
-        plotTitle = str_interp('${currentSite} Sensor VS Grab ${unitNb}'),
-        color = currentColor
-      ) %>% addOneToOneLine(
-        minData = min(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE),
-        maxData = max(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE)
-      )
-    })
+    # If there are no data return NULL
+    if (vsDf() %>% is.null()) return(NULL)
+    
+    # Get unitNb
+    splittedId <- str_split(session$ns('0'), '-') %>% unlist()
+    unitNb <- splittedId[length(splittedId) - 1]
+    
+    # Get current site name and color
+    currentSite <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_full)
+    currentColor <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_color)
+    
+    # Create a onVsOne plot add the one to one line and return the plot
+    onVsOnePlot(
+      df = vsDf(),
+      x = 'grab_value',
+      y = 'hf_value',
+      parameterX = paramGrab(),
+      # Isolate paramHF to avoid multiple rerender
+      parameterY  = isolate(paramHf()),
+      plotTitle = str_interp('${currentSite} Sensor VS Grab ${unitNb}'),
+      color = currentColor
+    ) %>% addOneToOneLine(
+      minData = min(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE),
+      maxData = max(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE)
+    )
   })
   
   
