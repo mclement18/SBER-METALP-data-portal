@@ -21,7 +21,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
 # Parameters:
 #  - id: String, the module id
 #  - grabSampleDf: Data.frame, the grab samples data
-#  - hfDf: Data.frame, the sensors high frequency data
+#  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
 #  - sites: Named list of sites info, cf data_preprocessing.R
 #  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
@@ -56,8 +56,8 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
       # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
       sidebarInputLayoutUI(
         ns('sensorsTimeseries'),
-        minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
-        maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
+        minDate = min(hfDf$`24H`$date, na.rm = TRUE),
+        maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
         innerModuleUI = highFreqTimeSeriesUI,
         sites = sites,
         parameters = hfParameters
@@ -89,8 +89,8 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
         # Create a sidebarInputLayout UI with for the sensorGrabComparison module
         sidebarInputLayoutUI(
           ns('sensorVsGrab'),
-          minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
-          maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
+          minDate = min(hfDf$`24H`$date, na.rm = TRUE),
+          maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
           innerModuleUI = sensorGrabComparisonUI,
           sites = sites,
           parameters = list('hf' = hfParameters)
@@ -110,7 +110,7 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
 #  - input, output, session: Default needed parameters to create a module
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
-#  - hfDf: Data.frame, the sensors high frequency data
+#  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
 #  - sites: Named list of sites info, cf data_preprocessing.R
 #  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
@@ -132,8 +132,8 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              highFreqTimeSeries, highFreqTimeSeriesUI,
              list('inputs' = 'hf-time-serie-plot-input', 'plots' = 'hf-time-serie-plots'),
              df = hfDf,
-             minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
-             maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
+             minDate = min(hfDf$`24H`$date, na.rm = TRUE),
+             maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
              sites = sites,
              parameters = hfParameters)
   
@@ -153,8 +153,8 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              sensorGrabComparison, sensorGrabComparisonUI,
              list('inputs' = 'sensor-vs-grab-plot-input', 'plots' = 'sensor-vs-grab-plots'),
              df = list('hf' = hfDf, 'grab' = grabSampleDf),
-             minDate = as.Date(min(hfDf$date, na.rm = TRUE)),
-             maxDate = as.Date(max(hfDf$date, na.rm = TRUE)),
+             minDate = min(hfDf$`24H`$date, na.rm = TRUE),
+             maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
              sites = sites,
              parameters = list('hf' = hfParameters, 'grab' = grabSampleParameters))
 }

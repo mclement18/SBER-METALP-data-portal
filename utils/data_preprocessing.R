@@ -21,47 +21,74 @@ loadGrabSampleDf <- function() {
 ## Load HF data ###################################################################
 
 loadHighFreqDf <- function() {
-  # Load each site data
-  AND_df <- fread('./data/HF_data/AND.csv', header = TRUE, sep = ',')
-  ANU_df <- fread('./data/HF_data/ANU.csv', header = TRUE, sep = ',')
-  FED_df <- fread('./data/HF_data/FED.csv', header = TRUE, sep = ',')
-  FEU_df <- fread('./data/HF_data/FEU.csv', header = TRUE, sep = ',')
-  PEU_df <- fread('./data/HF_data/PEU.csv', header = TRUE, sep = ',')
-  RIC_df <- fread('./data/HF_data/RIC.csv', header = TRUE, sep = ',')
-  VAD_df <- fread('./data/HF_data/VAD.csv', header = TRUE, sep = ',')
-  VAU_df <- fread('./data/HF_data/VAU.csv', header = TRUE, sep = ',')
-  VEL_df <- fread('./data/HF_data/VEL.csv', header = TRUE, sep = ',')
-  VID_df <- fread('./data/HF_data/VID.csv', header = TRUE, sep = ',')
-  VIM_df <- fread('./data/HF_data/VIM.csv', header = TRUE, sep = ',')
-  VIU_df <- fread('./data/HF_data/VIU.csv', header = TRUE, sep = ',')
+  ## Loading 10min data ###########################################################
   
-  
-  # Merge hf data into one df
-  hfDf <- rbind(
-    AND_df,
-    ANU_df,
-    FED_df,
-    FEU_df,
-    PEU_df,
-    RIC_df,
-    VAD_df,
-    VAU_df,
-    VEL_df,
-    VID_df,
-    VIM_df,
-    VIU_df
-  )
+  hf_10min_df <- fread('./data/HF_data/10min_data.csv', header = TRUE, sep = ',')
 
   # Convert date to POSIXct
-  hfDf$date <- hfDf$date %>% ymd_hms(tz = 'GMT')
+  hf_10min_df$date <- hf_10min_df$date %>% ymd_hms(tz = 'GMT')
   
   # Convert data_type to factor
-  hfDf$data_type <- hfDf$data_type %>% as.factor()
+  hf_10min_df$data_type <- hf_10min_df$data_type %>% as.factor()
   
   # Convert Site_ID to factor
-  hfDf$Site_ID <- hfDf$Site_ID %>% as.factor()
+  hf_10min_df$Site_ID <- hf_10min_df$Site_ID %>% as.factor()
   
-  return(hfDf)
+  
+  
+  ## Loading 6H data ##############################################################
+  
+  hf_6H_df <- fread('./data/HF_data/6H_data.csv', header = TRUE, sep = ',')
+  
+  # Convert date to POSIXct
+  hf_6H_df$date <- hf_6H_df$date %>% ymd_hms(tz = 'GMT')
+  
+  # Convert data_type to factor
+  hf_6H_df$data_type <- hf_6H_df$data_type %>% as.factor()
+  
+  # Convert Site_ID to factor
+  hf_6H_df$Site_ID <- hf_6H_df$Site_ID %>% as.factor()
+  
+  
+  ## Loading the 12H data #########################################################
+  
+  hf_12H_df <- fread('./data/HF_data/12H_data.csv', header = TRUE, sep = ',')
+  
+  # Convert date to POSIXct
+  hf_12H_df$date <- hf_12H_df$date %>% ymd_hms(tz = 'GMT')
+  
+  # Convert data_type to factor
+  hf_12H_df$data_type <- hf_12H_df$data_type %>% as.factor()
+  
+  # Convert Site_ID to factor
+  hf_12H_df$Site_ID <- hf_12H_df$Site_ID %>% as.factor()
+  
+  
+  
+  ## Loading the 24H data #########################################################
+  
+  hf_24H_df <- fread('./data/HF_data/24H_data.csv', header = TRUE, sep = ',')
+  
+  # Convert date to POSIXct
+  hf_24H_df$date <- hf_24H_df$date %>% ymd(tz = 'GMT')
+  
+  # Convert data_type to factor
+  hf_24H_df$data_type <- hf_24H_df$data_type %>% as.factor()
+  
+  # Convert Site_ID to factor
+  hf_24H_df$Site_ID <- hf_24H_df$Site_ID %>% as.factor()
+  
+  
+  
+  ## Ruturning data ###############################################################
+  
+  # Return a list containing all the df
+  return(list(
+    '10min' = hf_10min_df,
+    '6H' = hf_6H_df,
+    '12H' = hf_12H_df,
+    '24H' = hf_24H_df
+  ))
 }
 
 

@@ -87,7 +87,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
 # Create the logic for the sensorGrabComparison module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
-#  - dfList: Named list of Data.frame, the grab samples and high frequency data
+#  - df: Named list of Data.frame, the grab samples and high frequency data
 #  - dateRange: Reactive expression that returns the date range to filter the data with.
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
@@ -134,7 +134,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   # Create the high frequency data subset
   hfDf <- reactive({
     # Get high frequency data
-    hfDf <- df$hf
+    hfDf <- df$hf$`10min`
 
     # Define data types to keep depending on the state of showModeledData
     types <- c('measured')

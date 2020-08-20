@@ -47,8 +47,7 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
         ),
         parameters$selectOptions
       ),
-      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
-      checkboxInput(ns('dailyAverage'), 'Plot daily average instead', value = FALSE)
+      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE)
     ),
     # Create the UI plots
     'plots' = div(
@@ -83,7 +82,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
 # Create the logic for the highFreqTimeSeries module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
-#  - df: Data.frame, the high frequency data
+#  - df: Named List of Data.frame, the sensors high frequency data at different frequency
 #  - dateRange: Reactive expression that returns the date range to filter the data with.
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
@@ -123,7 +122,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     
     # Filter the data using the selected sites, the data type and the date range
     # Then select the parameter and rename the column to 'value'
-    df <- df %>% filter(
+    df <- df$`10min` %>% filter(
       Site_ID %in% selectedSites_d(),
       data_type %in% types,
       date(date) >= dateRange()$min,
@@ -132,9 +131,6 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     
     # If there is no data return NULL
     if (dim(df)[1] == 0) return(NULL)
-    
-    # If dailyAverage is checked, compute the daily average
-    if (input$dailyAverage) df <- dailyAverage(df)
     
     # Return the formatted data
     df
@@ -201,19 +197,19 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   # Should be returned by the module
   # Converting number to date using the Linux epoch time as origin
   updateDateRange <- reactive({
-    req(!is.null(input$dailyAverage))
-    
-    if (input$dailyAverage) {
-      list(
-        'min' = as_date(input$highfreq_brush$xmin),
-        'max' = as_date(input$highfreq_brush$xmax)
-      )  
-    } else {
+    # req(!is.null(input$dailyAverage))
+    # 
+    # if (input$dailyAverage) {
+    #   list(
+    #     'min' = as_date(input$highfreq_brush$xmin),
+    #     'max' = as_date(input$highfreq_brush$xmax)
+    #   )  
+    # } else {
       list(
         'min' = as.Date(as.POSIXct(input$highfreq_brush$xmin, origin = "1970-01-01", tz = "GMT")),
         'max' = as.Date(as.POSIXct(input$highfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
       )
-    }
+    # }
   })
   
   # Create a reactive value that update each time the plot is double clicked

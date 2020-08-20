@@ -125,64 +125,6 @@ parseOptions <- function(optionsInfo, optionsColumn) {
 }
 
 
-dailyAverage <- function(df, dateCol = 'date', valueCol = 'value', siteCol = 'Site_ID', dataTypeCol = 'data_type') {
-# Function that compute the daily average of a parameter
-# Parameters:
-#  - df: Data.frame, the data to daily average
-#  - dateCol: String, the df column name containing the date, default: 'date'
-#  - valueCol: String, the df column name containing the values, default: 'value',
-#  - siteCol: String, the df column name containing the site info, default: 'Site_ID',
-#  - dataTypeCol: String, the df column name containing the data type, default: 'data_type'
-# 
-# Returns a data.frame with the daily average and standard deviation
-  
-  # Create a new date column and save the list of dates
-  df$days <- df %>% pull(dateCol) %>% date()
-  allDays <- df$days %>% unique()
-  
-  # Get the sites and data types
-  sites <- df %>% pull(siteCol) %>% unique()
-  types <- df %>% pull(dataTypeCol) %>% unique()
-  
-  # Create an new empty df
-  newDf <- data.frame()
-  
-  # For each date
-  for (currentDay in allDays) {
-    # Subset the df with the current date
-    dailyDf <- df %>% filter(days == currentDay)
-    # For each site
-    for (site in sites) {
-      # Subset the df with the current site
-      dailySiteDf <- dailyDf %>% filter(!!sym(siteCol) == site)
-      # for each data type
-      for (type in types) {
-        # Subset the df with the current data type
-        dailySiteTypeDf <- dailySiteDf %>% filter(!!sym(dataTypeCol) == type)
-        
-        # Calculate the daily mean and set it to 'NA' if 'NaN'
-        dailyMean <- dailySiteTypeDf %>% pull(valueCol) %>% mean(na.rm = TRUE)
-        if (is.nan(dailyMean)) dailyMean <- NA
-        
-        # Calculate the standard deviation
-        dailySd <- dailySiteTypeDf %>% pull(valueCol) %>% sd(na.rm = TRUE)
-        
-        # Create the new row and set the names
-        newRow <- data.frame(as_date(currentDay), site, type, dailyMean, dailySd)
-        colnames(newRow) <- c(dateCol, siteCol, dataTypeCol, valueCol, 'sd')
-        
-        # Add the new row to the new df
-        newDf <- bind_rows(newDf, newRow)
-      }
-    }
-  }
-  
-  # Convert the sites and data type columns to factors
-  newDf[siteCol] <- newDf %>% pull(siteCol) %>% as.factor()
-  newDf[dataTypeCol] <- newDf %>% pull(dataTypeCol) %>% as.factor()
-  
-  return(newDf)
-}
 
 
 lm_eqn <- function(df, x, y){
