@@ -47,7 +47,18 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
         ),
         parameters$selectOptions
       ),
-      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE)
+      # Create a checkbox to select or unselect modeled data
+      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
+      # Create radio buttons to select the data frequency to display
+      checkboxGroupInputWithClass(
+        radioButtons(
+          ns('dataFreq'),
+          'Data frequency',
+          choices = list('10min (raw)' = '10min', '6H', '12H', '24H'),
+          selected = '24H'
+        ),
+        class = 'checkbox-grid'        
+      )
     ),
     # Create the UI plots
     'plots' = div(
@@ -120,9 +131,12 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     types <- c('measured')
     if (input$showModeledData) types <- c(types, 'modeled')
     
+    # Select df
+    df <- df[[input$dataFreq]]
+    
     # Filter the data using the selected sites, the data type and the date range
     # Then select the parameter and rename the column to 'value'
-    df <- df$`10min` %>% filter(
+    df <- df %>% filter(
       Site_ID %in% selectedSites_d(),
       data_type %in% types,
       date(date) >= dateRange()$min,
@@ -196,21 +210,10 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   # With the same format as the input dateRange
   # Should be returned by the module
   # Converting number to date using the Linux epoch time as origin
-  updateDateRange <- reactive({
-    # req(!is.null(input$dailyAverage))
-    # 
-    # if (input$dailyAverage) {
-    #   list(
-    #     'min' = as_date(input$highfreq_brush$xmin),
-    #     'max' = as_date(input$highfreq_brush$xmax)
-    #   )  
-    # } else {
-      list(
-        'min' = as.Date(as.POSIXct(input$highfreq_brush$xmin, origin = "1970-01-01", tz = "GMT")),
-        'max' = as.Date(as.POSIXct(input$highfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
-      )
-    # }
-  })
+  updateDateRange <- reactive(list(
+    'min' = as.Date(as.POSIXct(input$highfreq_brush$xmin, origin = "1970-01-01", tz = "GMT")),
+    'max' = as.Date(as.POSIXct(input$highfreq_brush$xmax, origin = "1970-01-01", tz = "GMT"))
+  ))
   
   # Create a reactive value that update each time the plot is double clicked
   # Used as trigger to reset the date range in the outer module

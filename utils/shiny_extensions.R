@@ -30,6 +30,7 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
 
 checkboxGroupInputWithClass <- function(checkboxGroupInput, class) {
 # Create a shiny checkboxGroupInput with additional custom class names
+# Can be used with radioButtons as well
 # Parameters:
 # - checkboxGroupInput: Output of shiny checkboxGroupInput() function
 # - class: String, contains the class names to add, separated by space
