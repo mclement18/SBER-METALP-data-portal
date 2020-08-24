@@ -349,7 +349,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
 
   # Activate the hover widget for the regular timeserie plot
   pointHoverWidgetServer(session, 'sensorGrabTimeserie', hfDf, reactive(input$sensorGrabTimeserie_hover),
-                         x_label = 'Date', y_label = 'Parameter')
+                         x_label = 'Date', y_label = 'Parameter',
+                         secondDf = grabDf, secondX = 'DATETIME_GMT', secondY = 'value')
   # Activate the hover widget for the vs plot
   pointHoverWidgetServer(session, 'sensorVsGrab', vsDf, reactive(input$sensorVsGrab_hover),
                          x_label = 'Grab Sample', y_label = 'Sensor')

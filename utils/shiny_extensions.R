@@ -108,7 +108,8 @@ renderStatsTablePerSite <- function(session, output, id, data, sites, selectedSi
 
 pointHoverWidgetServer <- function(session, plotId, df, input,
                                    x_label = NULL, y_label = NULL,
-                                   override.mapping = NULL, threshold = 5) {
+                                   override.mapping = NULL, threshold = 5,
+                                   secondDf = NULL, secondX = NULL, secondY = NULL) {
 # Create an observeEvent that react to either an click or hover input on a plot and send information
 # to the client to create an info bubble for the closest point
 # Parameters:
@@ -121,6 +122,9 @@ pointHoverWidgetServer <- function(session, plotId, df, input,
 #  - override.mapping: Named list, containing the new mapping to use for the widget. Default NULL
 #                      (i.e. list('x' = 'new_x_mapping', 'y' = 'new_y_mapping'), list('x' = 'new_x_mapping'))
 #  - threshold: Int, threshold in pixels to determined the nearest point, default 5.
+#  - secondDf: Reactive expression returning a Data.frame, a secondary data frame used to draw additional points
+#  - secondX, secondY: String, the column name of the x or y data column of the secondDf
+# 
 # 
 # Returns an observeEvent
   
@@ -134,16 +138,33 @@ pointHoverWidgetServer <- function(session, plotId, df, input,
     
     # If there is a mapping
     if (length(mapping) > 0) {
+      altDf <- FALSE
+      
       # Get the nearest point
-      point <- nearPoints(df(), input(), maxpoints = 1, threshold = threshold)
+      # If a second df is specified look for a point in this one
+      if (!is.null(secondDf)) {
+        point <- nearPoints(secondDf(), input(), maxpoints = 1, threshold = threshold,
+                            xvar = secondX, yvar = secondY)
+        # If a point is fount set altDf to TRUE
+        if (nrow(point) == 1) altDf <- TRUE
+      }
+      
+      # If altDf is FALSE look for a point in the primary df
+      if (!altDf) point <- nearPoints(df(), input(), maxpoints = 1, threshold = threshold)
       
       # If there is a point process it and return
-      if (dim(point)[1] == 1) {
+      if (nrow(point) == 1) {
         
         # Correct the mapping if overrided
         if (typeof(override.mapping) == 'list') {
           if (!is.null(override.mapping$x)) mapping$x <- override.mapping$x
           if (!is.null(override.mapping$y)) mapping$y <- override.mapping$y
+        }
+        
+        # Correct the mapping for the secondary df
+        if (altDf) {
+          mapping$x <- secondX
+          mapping$y <- secondY
         }
         
         # Extract relevant point information
