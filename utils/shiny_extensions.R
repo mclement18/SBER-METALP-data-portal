@@ -56,6 +56,24 @@ spinnerPlotOutput <- function(outputId, ...) {
 }
 
 
+modalButtonWithClass <- function(label, icon = NULL, class) {
+# Create a shiny modalButton with additional custom class names
+# Parameters:
+# - label: String, the content of the button
+# - icon: Shiny icon, optional
+# - class: String, contains the class names to add, separated by space
+#
+# Returns an updated shiny modalButton UI element
+  
+  # Create modalButton
+  button <- modalButton(label = label, icon = icon)
+  # Add the additional class
+  button$attribs$class <- str_interp('${button$attribs$class} ${class}')
+  # Return the updated button
+  return(button)
+}
+
+
 
 
 ## Reusable server logic ##########################################################

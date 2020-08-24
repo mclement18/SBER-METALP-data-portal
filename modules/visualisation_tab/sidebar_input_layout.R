@@ -52,7 +52,7 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI, ...) {
           )
         ),
         # Create an icon button that trigger a modal to display the global help
-        actionButton(ns('help'), icon('question-circle'), class = 'icon-btn')
+        actionButton(ns('help'), 'Help', class = 'custom-style custom-style--primary')
       )
     ),
     # Create the sidebarLayout
@@ -277,6 +277,7 @@ sidebarInputLayout <- function(input, output, session,
     showModal(modalDialog(
       title = 'Global Help',
       htmlTemplate('./html_components/help_table.html'),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))
   })

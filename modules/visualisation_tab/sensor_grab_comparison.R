@@ -372,6 +372,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     showModal(modalDialog(
       title = 'Parameters description',
       htmlOutput(session$ns('description')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))
   })

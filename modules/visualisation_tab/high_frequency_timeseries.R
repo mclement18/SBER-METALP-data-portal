@@ -198,6 +198,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     showModal(modalDialog(
       title = 'Parameters description',
       htmlOutput(session$ns('description')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))
   })

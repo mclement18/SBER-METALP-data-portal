@@ -282,6 +282,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
     showModal(modalDialog(
       title = str_interp('Stats ${currentCatchment()} catchment'),
       htmlOutput(session$ns('stats'), class = 'stats-summary'),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))
   })
@@ -302,6 +303,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
     showModal(modalDialog(
       title = 'Parameter description',
       htmlOutput(session$ns('description')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))
   })
