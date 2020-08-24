@@ -36,7 +36,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
     # Create the grab samples timeserie visualisation tab
     tabPanel(
       # Tab title
-      'Grab Samples',
+      'Grab Samples Data',
       # Tab content
       # Create a sidebarInputLayout UI with for the grabSamplesTimeSeries module 
       sidebarInputLayoutUI(
@@ -51,7 +51,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
     # Create the Sensors timeserie visualisation tab
     tabPanel(
       # Tab title
-      'Sensors',
+      'Sensors Data',
       # Tab content
       # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
       sidebarInputLayoutUI(
@@ -63,38 +63,34 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
         parameters = hfParameters
       )
     ),
-    # Create the exploratory analysis visualisation tab with dropdown menu
-    navbarMenu(
-      'Exploratory analysis',
-      # Create the grab samples comparison tab
-      tabPanel(
-        # Tab title
-        'Grab samples comparison',
-        # Tab content
-        # Create a sidebarInputLayout UI with for the grabSamplesComparison module
-        sidebarInputLayoutUI(
-          ns('grabVsGrab'),
-          minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
-          maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
-          innerModuleUI = grabSamplesComparisonUI,
-          sites = sites,
-          parameters = grabSampleParameters
-        )
-      ),
-      # Create the sensors vs grab samples comparison tab
-      tabPanel(
-        # Tab title
-        'Sensors vs Grab samples comparison',
-        # Tab content
-        # Create a sidebarInputLayout UI with for the sensorGrabComparison module
-        sidebarInputLayoutUI(
-          ns('sensorVsGrab'),
-          minDate = min(hfDf$`24H`$date, na.rm = TRUE),
-          maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
-          innerModuleUI = sensorGrabComparisonUI,
-          sites = sites,
-          parameters = list('hf' = hfParameters)
-        )
+    # Create the grab samples comparison tab
+    tabPanel(
+      # Tab title
+      'Grab samples comparison',
+      # Tab content
+      # Create a sidebarInputLayout UI with for the grabSamplesComparison module
+      sidebarInputLayoutUI(
+        ns('grabVsGrab'),
+        minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
+        maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+        innerModuleUI = grabSamplesComparisonUI,
+        sites = sites,
+        parameters = grabSampleParameters
+      )
+    ),
+    # Create the sensors vs grab samples comparison tab
+    tabPanel(
+      # Tab title
+      'Sensors vs Grab samples comparison',
+      # Tab content
+      # Create a sidebarInputLayout UI with for the sensorGrabComparison module
+      sidebarInputLayoutUI(
+        ns('sensorVsGrab'),
+        minDate = min(hfDf$`24H`$date, na.rm = TRUE),
+        maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
+        innerModuleUI = sensorGrabComparisonUI,
+        sites = sites,
+        parameters = list('hf' = hfParameters)
       )
     )
   )

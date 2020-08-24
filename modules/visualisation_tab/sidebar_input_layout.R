@@ -35,18 +35,24 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI, ...) {
                      separator = '-'),
       # Create a nutton to reset the date range
       actionButton(ns('resetDateRange'), 'Reset Date', class = 'custom-style'),
-      # Button group containing the global actions
+      # div grouping main actions to the left
       div(
-        class = 'btn-group',
-        # Button to toggle sidebar visibility
-        actionButton(ns('toggleSidebar'), 'Hide inputs', class = 'custom-style'),
-        # Button to add an additional unit
-        actionButton(ns('addUnit'), 'Add Unit', class = 'custom-style'),
-        # Button to remove an unit
-        # Disable by default because at least one unit is displayed
-        disabled(
-          actionButton(ns('removeUnit'), 'Remove Unit', class = 'custom-style')
-        )
+        class = 'main-actions',
+        # Button group containing the global actions
+        div(
+          class = 'btn-group',
+          # Button to toggle sidebar visibility
+          actionButton(ns('toggleSidebar'), 'Hide inputs', class = 'custom-style'),
+          # Button to add an additional unit
+          actionButton(ns('addUnit'), 'Add Unit', class = 'custom-style'),
+          # Button to remove an unit
+          # Disable by default because at least one unit is displayed
+          disabled(
+            actionButton(ns('removeUnit'), 'Remove Unit', class = 'custom-style')
+          )
+        ),
+        # Create an icon button that trigger a modal to display the global help
+        actionButton(ns('help'), icon('question-circle'), class = 'icon-btn')
       )
     ),
     # Create the sidebarLayout
@@ -259,5 +265,19 @@ sidebarInputLayout <- function(input, output, session,
     
     # Update toggling button label
     updateActionButton(session, 'toggleSidebar', label = newBtnLabel)
+  })
+  
+  
+  
+  ## Help modal logic #############################################################
+  
+  # Create an observeEvent that react to the help button
+  observeEvent(input$help, {
+    # Create modal with the corresponding htmlOutput
+    showModal(modalDialog(
+      title = 'Global Help',
+      htmlTemplate('./html_components/help_table.html'),
+      easyClose = TRUE
+    ))
   })
 }
