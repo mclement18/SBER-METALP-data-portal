@@ -1,0 +1,28 @@
+// ####################################
+// Download tab layout
+// ####################################
+
+.download-main {
+    margin: 1.5em 0 0 0;
+
+    @include laptop {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        column-gap: 10px;
+    }
+}
+
+.download__inputs {
+    @include tablet{
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include laptop {
+        display: block;
+    }
+}
+
+.download__data-preview {
+    margin: 0 0 2em;
+}

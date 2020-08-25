@@ -73,6 +73,7 @@ source('./utils/shiny_extensions.R')
 
 ## Load tabs modules ##############################################################
 source('./modules/visualisation_tab/visualisation_tab.R')
+source('./modules/download_tab/download_tab.R')
 
 
 
@@ -134,7 +135,15 @@ ui <- tagList(
       # Create the download tab
       tabPanel(
         # Create a tab title with an icon
-        tags$span(icon('download'),tags$span('Download', class = 'navbar-menu-name'))
+        tags$span(icon('download'),tags$span('Download', class = 'navbar-menu-name')),
+        downloadTabUI(
+          '1',
+          minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$date), na.rm = TRUE),
+          maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$date), na.rm = TRUE),
+          sites = sites,
+          grabSampleParameters = grabSampleParameters,
+          hfParameters = hfParameters
+        )
       )
     ),
     # Add footer to navbarPageWithWrapper
@@ -149,6 +158,9 @@ ui <- tagList(
 server <- function(input, output, session) {
   # Load visualisationTab module server logic
   callModule(visualisationTab, '1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
+  
+  # Load downloadTab module server logic
+  callModule(downloadTab, '1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
 }
 
 

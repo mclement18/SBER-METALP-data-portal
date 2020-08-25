@@ -62,6 +62,16 @@
     color: $primary-color;
 }
 
+.selectize-control.multi .selectize-input > div,
+.selectize-control.multi .selectize-input > div.active {
+    background: $primary-color;
+    color: $white;
+    
+    .remove {
+        color: $secondary-color;
+    }
+}
+
 // ####################################
 // Shiny datepicker style overriding
 // ####################################
