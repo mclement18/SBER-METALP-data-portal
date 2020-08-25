@@ -5,6 +5,7 @@
 .btn.custom-style {
     color: $secondary-color;
     cursor: pointer;
+    font-variant: small-caps;
 
     &:hover,
     &:focus {
