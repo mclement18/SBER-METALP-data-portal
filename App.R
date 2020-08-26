@@ -89,6 +89,7 @@ ui <- tagList(
     # Add script for each js file
     includeScript('./assets/js/sidebar_actions.js'),
     includeScript('./assets/js/point_hover_widget.js'),
+    includeScript('./assets/js/download_button_state.js'),
     # Important to had the shiny custom events in last
     includeScript('./assets/js/shiny_custom_events.js')
   ),

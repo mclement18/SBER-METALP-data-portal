@@ -149,7 +149,8 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
       class = 'download__actions',
       # Download button initially disabled
       disabled(
-        downloadButton(ns('download'), class = 'custom-style custom-style--primary')
+        # Add "onclick = 'return false;'" additional attribute to disable the button which is in reality a hyper link
+        downloadButton(ns('download'), class = 'custom-style custom-style--primary', onclick = 'return false;')
       ),
       # Clear form button
       actionButton(ns('clear'), 'Clear', class = 'custom-style')
@@ -355,11 +356,33 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   # Create an observeEvent that react to data change to set downloadButton state
   observeEvent(selectedData(), ignoreInit = TRUE, {
+    # Create message to send to client in as a list containing:
+    #  - id: the downloadButton id defined in the UI
+    #  - disable: boolean, indicate is the button is disabled
+    messageList <- list(
+      'id' = session$ns('download'),
+      'disable' = FALSE
+    )
+    
+    
     if (nrow(selectedData()) >= 1) {
+      # Style the button
       enable('download')
+      # Inform UI that button needs to be enabled
+      messageList$disable <- FALSE
     } else {
+      # Style the button
       disable('download')
+      # Inform UI that button needs disabled
+      messageList$disable <- TRUE
     }
+    
+    # Convert the list message to JSON
+    messageJSON <- toJSON(messageList, auto_unbox = TRUE)
+    
+    # Send the shiny custom message to toggle downloadButton state
+    # Linked to some JavaScript defined in './assets/js/download_button_state.js'
+    session$sendCustomMessage('toggleDownloadButton', messageJSON)
   })
   
   
