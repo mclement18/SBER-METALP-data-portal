@@ -160,7 +160,11 @@ server <- function(input, output, session) {
   callModule(visualisationTab, '1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
   
   # Load downloadTab module server logic
-  callModule(downloadTab, '1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
+  callModule(downloadTab, '1',
+             grabSampleDf, hfDf,
+             minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$date), na.rm = TRUE),
+             maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$date), na.rm = TRUE),
+             sites, grabSampleParameters, hfParameters)
 }
 
 

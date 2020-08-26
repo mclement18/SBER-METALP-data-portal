@@ -10,6 +10,8 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
 # Create the UI for the downloadTab module
 # Parameters:
 #  - id: String, the module id
+#  - minDate: Date, the lower bound for the dateRangeInput
+#  - maxDate: Date, the upper bound for the dateRangeInput
 #  - grabSampleDf: Data.frame, the grab samples data
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
 #  - sites: Named list of sites info, cf data_preprocessing.R
@@ -31,14 +33,20 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
       div(
         class = 'download__global-inputs',
         # Date selection
-        dateRangeInput(
-          ns('time'), 'Date range:',
-          start = minDate,
-          end = maxDate,
-          min = minDate,
-          max = maxDate,
-          format = 'dd/mm/yyyy',
-          separator = '-'
+        div(
+          class = 'download__date-range',
+          # Create data range
+          dateRangeInput(
+            ns('time'), 'Date range:',
+            start = minDate,
+            end = maxDate,
+            min = minDate,
+            max = maxDate,
+            format = 'dd/mm/yyyy',
+            separator = '-'
+          ),
+          # Create a nutton to reset the date range
+          actionButton(ns('resetDateRange'), 'Reset Date', class = 'custom-style')
         ),
         # Site selection
         selectizeInput(
@@ -134,7 +142,7 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
     # Create the data preview table output
     div(
       class = 'download__data-preview',
-      tableOutput(ns('preview'))
+      verbatimTextOutput(ns('preview'))
     ),
     # Create the download actions
     div(
@@ -151,13 +159,15 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
 
 ## Create module server function ##################################################
 
-downloadTab <- function(input, output, session, grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters) {
+downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, maxDate, sites, grabSampleParameters, hfParameters) {
 # Create the logic for the downloadTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
+#  - minDate: Date, the lower bound for the dateRangeInput
+#  - maxDate: Date, the upper bound for the dateRangeInput
 #  - sites: Named list of sites info, cf data_preprocessing.R
 #  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
@@ -173,4 +183,132 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, sites, grabS
     toggleElement(selector = '#download-hf-inputs', condition = df == 'hfDf')
     toggleElement(selector = '#download-grab-inputs', condition = df == 'grabDf')
   }, ignoreInit = TRUE)
+  
+  
+  
+  ## Data filtering logic #########################################################
+  
+  # Create a reactive expression returning the selected data
+  selectedData <- reactive({
+    # Select df and correct parameter input
+    inputDf <- input$data
+    
+    if (inputDf == 'hfDf') {
+      df <- hfDf[[input$hfDataFreq]]
+      parameters <- hfParameters$parameters %>% filter(param_name %in% input$hfParam) %>% pull(data)
+      # Add data_type column to selected ones
+      parameters <- c(parameters, 'data_type')
+    } else if (inputDf == 'grabDf') {
+      df <- grabSampleDf
+      df <- df %>% rename(date = DATETIME_GMT)
+      parameters <- grabSampleParameters$parameters %>% filter(param_name %in% input$grabParam) %>% pull(data)
+    } else {
+      return(data.table())
+    }
+    
+    
+    # Filter rows and select columns
+    df <- df %>% filter(
+      date(date) >= input$time[1],
+      date(date) <= input$time[2],
+      Site_ID %in% input$sites
+    ) %>% select(date, Site_ID, all_of(parameters))
+    
+    # Add modeled data if needed
+    if (inputDf == 'hfDf' & input$addModeledData) {
+      # For each parameter create a measured and a modeled column
+      df <- df %>% pivot_wider(names_from = data_type, values_from = all_of(parameters[parameters != 'data_type']))
+      
+      # For each parameter create a combined column
+      for (column in parameters[parameters != 'data_type']) {
+        tmpDf <- df %>% select(starts_with(column))
+        newcolName <- str_interp('${column}_combined')
+        df[newcolName] <- rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf))
+      }
+      
+      # Remove the tmpDf
+      rm(tmpDf)
+    } else if (inputDf == 'hfDf' & !input$addModeledData) {
+      # Keep only the measured value and remove the data_type column
+      df <- df %>% filter(data_type == 'measured') %>% select(-data_type)
+    }
+    
+    # Convert df to data.table for print output
+    df <- as.data.table(df)
+    
+    # Return the filtered df
+    return(df)
+  })
+  
+  
+  
+  
+  ## Preview table rendering logic ################################################
+  
+  # Render the preview table and summary
+  output$preview <- renderPrint({
+    cat('# Selected data preview:', '\n\n')
+    print(selectedData(), topn = 15, nrows = 40)
+    cat('\n\n')
+    cat('---------------------------------------------------------------------------')
+    cat('\n\n')
+    cat('# Data summary:', '\n\n')
+    summary(selectedData())
+  })
+  
+  
+  ## Parameter description modal logic ############################################
+  
+  # Create an observeEvent that react to the HF parameter helper icon button
+  observeEvent(input$hfParamHelper | input$grabParamHelper, ignoreInit = TRUE, {
+    # Select the correct parameters df
+    if (input$data == 'hfDf') {
+      parameters <- hfParameters$parameters
+    } else if (input$data == 'grabDf') {
+      parameters <- grabSampleParameters$parameters
+    }
+    
+    # Render the descriptions UI in the modal
+    output$description <- renderUI({
+      descriptions <- tagList()
+      
+      # For each selected parameter
+      for (i in c(1:nrow(parameters))) {
+        descriptions <- tagList(
+          descriptions,
+          # Add the parameter name ad its description
+          div(
+            class = 'description-group',
+            h5(parameters %>% slice(i) %>% pull(option_name)),
+            p(
+              class = 'description',
+              parameters %>% slice(i) %>% pull(description)
+            )
+          )
+        )
+      }
+      
+      # Return the descriptions
+      return(descriptions)
+    })
+      
+    
+    # Create modal with the corresponding htmlOutput
+    showModal(modalDialog(
+      title = 'Parameter description',
+      htmlOutput(session$ns('description')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
+      easyClose = TRUE
+    ))
+  })
+  
+  
+  
+  
+  ## Date resetting logic #########################################################
+  
+  # Create an observeEvent that allows to reset the date range when resetDateRange is clicked
+  observeEvent(input$resetDateRange, {
+    updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
+  })
 }
