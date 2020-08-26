@@ -308,7 +308,38 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   ## Date resetting logic #########################################################
   
   # Create an observeEvent that allows to reset the date range when resetDateRange is clicked
-  observeEvent(input$resetDateRange, {
+  observeEvent(input$resetDateRange, ignoreInit = TRUE, {
     updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
+  })
+  
+  
+  
+  
+  ## Clear form logic #############################################################
+  
+  # Create an observeEvent that react to clear button
+  observeEvent(input$clear, ignoreInit = TRUE, {
+    # Clear data selection
+    updateSelectInput(session, 'data', selected = '')
+    
+    # Reset date range
+    updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
+    
+    # Clear sites selection
+    updateSelectizeInput(session, 'sites', selected = '')
+    
+    # HF specific clearing
+    
+    # Reset data frequency and modeled data selection
+    updateRadioButtons(session, 'hfDataFreq', selected = '10min')
+    updateCheckboxInput(session, 'addModeledData', value = FALSE)
+    
+    # Clear parameters selection
+    updateSelectizeInput(session, 'hfParam', selected = '')
+    
+    # Grab specific clearing
+    
+    # Clear parameters selection
+    updateSelectizeInput(session, 'grabParam', selected = '')
   })
 }
