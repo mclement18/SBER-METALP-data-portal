@@ -219,7 +219,11 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     # Add modeled data if needed
     if (inputDf == 'hfDf' & input$addModeledData) {
       # For each parameter create a measured and a modeled column
-      df <- df %>% pivot_wider(names_from = data_type, values_from = all_of(parameters[parameters != 'data_type']))
+      df <- df %>% pivot_wider(
+        names_from = data_type,
+        values_from = all_of(parameters[parameters != 'data_type']),
+        names_glue = "{.value}_{data_type}"
+      )
       
       # For each parameter create a combined column
       for (column in parameters[parameters != 'data_type']) {
