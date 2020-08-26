@@ -147,8 +147,10 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
     # Create the download actions
     div(
       class = 'download__actions',
-      # Download button
-      actionButton(ns('download'), 'Download', class = 'custom-style custom-style--primary'),
+      # Download button initially disabled
+      disabled(
+        downloadButton(ns('download'), class = 'custom-style custom-style--primary')
+      ),
       # Clear form button
       actionButton(ns('clear'), 'Clear', class = 'custom-style')
     )
@@ -342,4 +344,27 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     # Clear parameters selection
     updateSelectizeInput(session, 'grabParam', selected = '')
   })
+  
+  
+  
+  ## Download data logic ###########################################################
+  
+  # Create an observeEvent that react to data change to set downloadButton state
+  observeEvent(selectedData(), ignoreInit = TRUE, {
+    if (nrow(selectedData()) >= 1) {
+      enable('download')
+    } else {
+      disable('download')
+    }
+  })
+  
+  
+  # Create a download handler that takes care of the download process
+  # Use the output created by the downloadButton
+  output$download <- downloadHandler(
+    filename = 'metalp_data.csv',
+    content = function(file) {
+      write.csv(selectedData(), file, row.names = FALSE)
+    }
+  )
 }

@@ -34,16 +34,20 @@
             color: $white;
             background: darken($primary-color, 7);
             border: 1px solid darken($primary-color, 15);
-            // color: $primary-color;
-            // background: $secondary-color;
-            // border: 1px solid $primary-color;
         }
     
         &:active {
             color: $secondary-color;
             background: darken($primary-color, 10);
-            // color: $primary-color;
-            // background: darken($secondary-color, 5);
+        }
+
+        &:disabled,
+        &[disabled] {
+            cursor: not-allowed;
+            pointer-events: auto;
+            color: $white;
+            background: $primary-color;
+            border: 1px solid darken($primary-color, 10);
         }
     }
 }
