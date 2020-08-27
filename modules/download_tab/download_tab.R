@@ -254,13 +254,70 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   # Render the preview table and summary
   output$preview <- renderPrint({
+    # Get selected data column names
+    columnsNames <- colnames(selectedData())
+    
+    # If date is present, display the min and max dates
+    # Else display NAs
+    if ('date' %in% columnsNames) {
+      dateSummary <- selectedData() %>% summarise_if(is.POSIXct, list(
+        'Min' = min,
+        'Max' = max
+      ), na.rm = TRUE) %>% pivot_longer(everything(), names_to = 'Stat', values_to = 'Date') %>% 
+        as.data.table()
+    } else {
+      dateSummary <- data.table('Stats' = c('Min', 'Max'), 'Date' = c(NA, NA))
+    }
+    
+    # If Site_ID is present, display the selected stations and there number of observation
+    # Else display NAs
+    if ('Site_ID' %in% columnsNames) {
+      sitesSummary <- selectedData() %>% pull(Site_ID) %>% fct_count() %>%
+        rename(Station = 'f', N = 'n') %>% filter(N != 0) %>% as.data.table()
+    } else {
+      sitesSummary <- data.table('Station' = c(NA), 'N' = c(NA))
+    }
+    
+    # If there are more than 2 columns (i.e. seleceted parameters)
+    # Summarise each parameter
+    # Else display only Stat column
+    if (length(columnsNames) > 2) {
+      parametersSummary <- selectedData() %>% summarise_if(is.numeric, list(
+        'Min' = ~ min(.x, na.rm = TRUE),
+        'Mean' = ~ mean(.x, na.rm = TRUE),
+        'Max' = ~ max(.x, na.rm = TRUE),
+        'NAs' = ~ sum(is.na(.x))
+      ))
+      
+      # If there is only one parameter set manually the summary columns names
+      # Else get them programmatically
+      if (length(columnsNames) == 3) {
+        parametersSummary %<>% pivot_longer(everything(), names_to = 'Stat', values_to = columnsNames[3])
+      } else {
+        parametersSummary %<>% pivot_longer(everything(), names_to = c('.value', 'Stat'), names_pattern = '(.*)_(.*)')
+      }
+      
+      # Convert summary to data.table
+      parametersSummary %<>% as.data.table()
+    } else {
+      parametersSummary <- data.table('Stat' = c('Min', 'Mean', 'Max', 'NAs'))
+    }
+    
+    # Create print layout
     cat('# Data summary:', '\n\n')
-    summary(selectedData())
+    cat('## Date info', '\n\n')
+    print(dateSummary)
+    cat('\n')
+    cat('## Stations info', '\n\n')
+    print(sitesSummary)
+    cat('\n')
+    cat('## Parameters info', '\n\n')
+    print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)
     cat('\n\n')
     cat('---------------------------------------------------------------------------')
     cat('\n\n')
     cat('# Selected data preview:', '\n\n')
-    print(selectedData(), topn = 10, nrows = 30)
+    print(selectedData(), topn = 5, nrows = 15)
   })
   
   
