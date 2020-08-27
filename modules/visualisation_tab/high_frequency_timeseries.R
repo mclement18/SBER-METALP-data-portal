@@ -136,7 +136,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     
     # Filter the data using the selected sites, the data type and the date range
     # Then select the parameter and rename the column to 'value'
-    df <- df %>% filter(
+    df %<>% filter(
       Site_ID %in% selectedSites_d(),
       data_type %in% types,
       date(date) >= dateRange()$min,

@@ -199,28 +199,25 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
     }
     
     # Filter the data using the selected sites and the date range
-    filteredDf <- df %>% filter(
+    df %<>% filter(
       Site_ID %in% selectedSites_d(),
       DATE_reading >= dateRange()$min,
       DATE_reading <= dateRange()$max
     )
     
     # If there is no data return NULL
-    if (dim(filteredDf)[1] == 0) return(NULL)
+    if (nrow(df) == 0) return(NULL)
     
     # Select all relevant data.frame columns and pivot it to a long format
-    longDf <- filteredDf %>% select(Site_ID, DATETIME_GMT, all_of(paramCols), all_of(sdCols), all_of(minMaxCols)) %>% 
+    df %<>% select(Site_ID, DATETIME_GMT, all_of(paramCols), all_of(sdCols), all_of(minMaxCols)) %>% 
       pivot_longer(cols = c(all_of(paramCols), all_of(minMaxCols)), names_to = 'parameter', values_to = 'value')
     
-    # Delete the filteredDf variable to free memory
-    rm(filteredDf)
-    
     # Create a new DATE column with the same arbitrary year for all the samples to plot all the results on one year
-    longDf <- longDf %>% mutate(DATETIME_month_day_time_GMT = DATETIME_GMT)
-    year(longDf$DATETIME_month_day_time_GMT) <- 2020
+    df %<>% mutate(DATETIME_month_day_time_GMT = DATETIME_GMT)
+    year(df$DATETIME_month_day_time_GMT) <- 2020
     
     # Return the formatted data
-    longDf
+    df
   })
   
   

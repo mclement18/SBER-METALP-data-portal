@@ -137,7 +137,7 @@ lm_eqn <- function(df, x, y){
 # Returns a sgtring containg the formated linear regression equation and r2
   
   # If either x or y contains only NAs return an empty string
-  if (all(is.na(df[x])) | all(is.na(df[y]))) return('')
+  if (all(is.na(pull(df, all_of(x)))) | all(is.na(pull(df, all_of(y))))) return('')
   
   # Compute the linear regression
   m <- lm(as.formula(str_interp('${y} ~ ${x}')), df)

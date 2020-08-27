@@ -203,7 +203,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       parameters <- c(parameters, 'data_type')
     } else if (inputDf == 'grabDf') {
       df <- grabSampleDf
-      df <- df %>% rename(date = DATETIME_GMT)
+      df %<>% rename(date = DATETIME_GMT)
       parameters <- grabSampleParameters$parameters %>% filter(param_name %in% input$grabParam) %>% pull(data)
     } else {
       return(data.table())
@@ -211,7 +211,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     
     
     # Filter rows and select columns
-    df <- df %>% filter(
+    df %<>% filter(
       date(date) >= input$time[1],
       date(date) <= input$time[2],
       Site_ID %in% input$sites
@@ -220,7 +220,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     # Add modeled data if needed
     if (inputDf == 'hfDf' & input$addModeledData) {
       # For each parameter create a measured and a modeled column
-      df <- df %>% pivot_wider(
+      df %<>% pivot_wider(
         names_from = data_type,
         values_from = all_of(parameters[parameters != 'data_type']),
         names_glue = "{.value}_{data_type}"
@@ -230,14 +230,14 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       for (column in parameters[parameters != 'data_type']) {
         tmpDf <- df %>% select(starts_with(column))
         newcolName <- str_interp('${column}_combined')
-        df[newcolName] <- rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf))
+        df %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
       }
       
       # Remove the tmpDf
       rm(tmpDf)
     } else if (inputDf == 'hfDf' & !input$addModeledData) {
       # Keep only the measured value and remove the data_type column
-      df <- df %>% filter(data_type == 'measured') %>% select(-data_type)
+      df %<>% filter(data_type == 'measured') %>% select(-data_type)
     }
     
     # Convert df to data.table for print output
@@ -254,13 +254,13 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   # Render the preview table and summary
   output$preview <- renderPrint({
-    cat('# Selected data preview:', '\n\n')
-    print(selectedData(), topn = 15, nrows = 40)
+    cat('# Data summary:', '\n\n')
+    summary(selectedData())
     cat('\n\n')
     cat('---------------------------------------------------------------------------')
     cat('\n\n')
-    cat('# Data summary:', '\n\n')
-    summary(selectedData())
+    cat('# Selected data preview:', '\n\n')
+    print(selectedData(), topn = 10, nrows = 30)
   })
   
   

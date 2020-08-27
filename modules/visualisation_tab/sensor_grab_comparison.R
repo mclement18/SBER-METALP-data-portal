@@ -152,7 +152,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     
     # Filter the data using the selected sites, the data type and the date range
     # Then select the parameter and rename the column to 'value'
-    hfDf <- hfDf %>% filter(
+    hfDf %<>% filter(
       Site_ID == input$site,
       data_type %in% types,
       date(date) >= dateRange()$min,
@@ -176,7 +176,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     
     # Filter the data using the selected sites and the date range
     # Then select the parameter and rename the column to 'value'
-    grabDf <- grabDf %>% filter(
+    grabDf %<>% filter(
       Site_ID == input$site,
       DATE_reading >= dateRange()$min,
       DATE_reading <= dateRange()$max
@@ -204,7 +204,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     
     # Filter the data using the selected sites, the data type and the date range
     # Then select the parameter and rename the column to 'value'
-    hfData <- hfData %>% filter(
+    hfData %<>% filter(
       Site_ID == input$site,
       data_type %in% types,
       date(date) >= dateRange()$min,
@@ -220,13 +220,13 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     
     # Rename the value column  and add new empty columns
     vsDf <- rename(vsDf, 'grab_value' = value)
-    vsDf['hf_value'] <- rep(NA, nrow(vsDf))
+    vsDf %<>%  mutate(hf_value = as.numeric(rep(NA, nrow(vsDf))))
     # vsDf['hf_sd'] <- rep(NA, nrow(vsDf))
     
     # For each grab data point calculate the corresponding HF data
     for (i in 1:nrow(vsDf)) {
       # Define the HF data starting time, e.i. 2 hours after the grab sample
-      startingTime <- vsDf[i, 'DATETIME_GMT'] + hours(2)
+      startingTime <- vsDf$DATETIME_GMT[i] + hours(2)
       # Define the HF data ending time, e.i. 4 hours after the starting time
       endingTime <- startingTime + hours(4)
       
@@ -239,7 +239,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       # If showModeledData is true combine the measured and modeled HF data in one vector
       # Else get the value (the modeled data are already filtered in hfData)
       if (input$showModeledData) {
-        filteredHf <- filteredHf %>% pivot_wider(names_from = data_type, values_from = value) %>% select(measured, modeled)
+        filteredHf %<>% pivot_wider(names_from = data_type, values_from = value) %>% select(measured, modeled)
         valuesHf <- rowSums(filteredHf, na.rm=TRUE) * NA ^ !rowSums(!is.na(filteredHf))
       } else {
         valuesHf <- filteredHf %>% pull(value)
@@ -249,8 +249,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       averageHf <- mean(valuesHf, na.rm = TRUE)
       # sdHf <- sd(valuesHf, na.rm = TRUE)
       
-      # Set the values in the df
-      vsDf[i, 'hf_value'] <- averageHf
+      # Set the values in the df (data.table)
+      vsDf[i, hf_value := averageHf]
       # vsDf[i, 'hf_sd'] <- sdHf
     }
     

@@ -150,9 +150,10 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
   #  - param(X|Y): the parameter info
   paramfilter <- reactive({
     # Save the parameter and sub parameters into variables
-    inputParamX <- input$paramX
+    # Isolate the parameters to recompute only when sub parameters are updated
+    inputParamX <- isolate(input$paramX)
     paramToDisplayX <- input$paramfilterX
-    inputParamY <- input$paramY
+    inputParamY <- isolate(input$paramY)
     paramToDisplayY <- input$paramfilterY
     
     # If either paramToDisplay(X|Y) or inputParam(X|Y) is NULL
@@ -191,7 +192,7 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
     if (is.null(paramColsX) | is.null(paramColsY)) return(NULL)
     
     # Filter the data using the selected sites and the date range
-    df <- df %>% filter(
+    df %<>% filter(
       Site_ID %in% input$site,
       DATE_reading >= dateRange()$min,
       DATE_reading <= dateRange()$max
@@ -201,7 +202,7 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
     if (dim(df)[1] == 0) return(NULL)
     
     # Select all relevant data.frame columns
-    df <- df %>% select(Site_ID, DATETIME_GMT, all_of(c(paramColsX, paramColsY)))
+    df %<>% select(Site_ID, DATETIME_GMT, all_of(c(paramColsX, paramColsY)))
     
     # Return the formatted data
     df
@@ -216,6 +217,9 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
     # If there are no data return NULL
     if (data() %>% is.null()) return(NULL)
 
+    # Isolate paramfilter to rerender only when data is ready
+    paramfilter <- isolate(paramfilter())
+    
     # Get unitNb
     splittedId <- str_split(session$ns('0'), '-') %>% unlist()
     unitNb <- splittedId[length(splittedId) - 1]
@@ -227,10 +231,10 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
     # Create and return a onVsOne plot
     onVsOnePlot(
       df = data(),
-      x = paramfilter()$filterX,
-      y = paramfilter()$filterY,
-      parameterX = paramfilter()$paramX,
-      parameterY  = paramfilter()$paramY,
+      x = paramfilter$filterX,
+      y = paramfilter$filterY,
+      parameterX = paramfilter$paramX,
+      parameterY  = paramfilter$paramY,
       plotTitle = str_interp('${currentSite} Grab VS Grab ${unitNb}'),
       color = currentColor
     )
