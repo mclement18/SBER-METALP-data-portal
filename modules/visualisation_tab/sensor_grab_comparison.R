@@ -180,7 +180,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       Site_ID == input$site,
       DATE_reading >= dateRange()$min,
       DATE_reading <= dateRange()$max
-    ) %>% select(DATETIME_GMT, Site_ID, 'value' = paramGrab()$data)
+    ) %>% select(DATETIME_GMT, Site_ID, 'value' = unlist(str_split(paramGrab()$data, ','))[1])
     
     # If there is no data return NULL
     if (nrow(grabDf) == 0) return(NULL)

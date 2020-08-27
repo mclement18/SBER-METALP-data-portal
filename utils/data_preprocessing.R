@@ -4,7 +4,7 @@
 
 loadGrabSampleDf <- function() {
   # Load data
-  grabSampleDf <- read.csv('./data/Metalp_grab_20200717_ND.csv', header = TRUE, na.strings=c(""," ","NA", "<0.05"))
+  grabSampleDf <- fread('./data/Metalp_grab_20200717_ND.csv', header = TRUE, na.strings=c("", "NA", "<0.05"))
   
   # Convert Date to Date data type and create a DATETIME_GMT POSIXct column
   grabSampleDf$DATETIME_GMT <- paste(grabSampleDf$DATE_reading, grabSampleDf$TIME_reading_GMT) %>% dmy_hms(tz = 'GMT')
