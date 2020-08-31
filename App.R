@@ -28,6 +28,8 @@
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
+library(shinybusy)
+library(shinycssloaders)
 library(sass)
 library(jsonlite)
 library(stringr)

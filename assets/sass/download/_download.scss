@@ -25,6 +25,10 @@
 
 .download__data-preview {
     margin: 0 0 2em;
+
+    .shiny-bound-output.shiny-spinner-hidden {
+        position: absolute;
+    }
 }
 
 .download__date-range {
@@ -32,5 +36,11 @@
 
     .shiny-date-range-input {
         margin: 0 0 .5em;
+    }
+}
+
+.shinybusy-modal {
+    .sk-cube-grid {
+        margin: 0;
     }
 }

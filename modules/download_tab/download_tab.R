@@ -142,7 +142,8 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
     # Create the data preview table output
     div(
       class = 'download__data-preview',
-      verbatimTextOutput(ns('preview'))
+      # Create a text output with a spinner
+      withSpinner(verbatimTextOutput(ns('preview')), type = 4, color = "#e24727", size = .5)
     ),
     # Create the download actions
     div(
@@ -383,6 +384,10 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   # Create an observeEvent that react to clear button
   observeEvent(input$clear, ignoreInit = TRUE, {
+    # Add modal spinner to block user interaction
+    show_modal_spinner(spin = 'cube-grid', color = '#e24727',
+                       text = 'Clearing form...')
+    
     # Clear data selection
     updateSelectInput(session, 'data', selected = '')
     
@@ -405,6 +410,9 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     
     # Clear parameters selection
     updateSelectizeInput(session, 'grabParam', selected = '')
+    
+    # Remove modal when finished
+    remove_modal_spinner()
   })
   
   
