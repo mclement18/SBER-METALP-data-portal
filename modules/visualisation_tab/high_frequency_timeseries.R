@@ -47,8 +47,10 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
         ),
         parameters$selectOptions
       ),
-      # Create a checkbox to select or unselect modeled data
-      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
+      # Create a checkbox to select or unselect modeled data, hidden by default
+      hidden(
+        checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE)
+      ),
       # Create radio buttons to select the data frequency to display
       checkboxGroupInputWithClass(
         radioButtons(
@@ -122,26 +124,49 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   
   
   
+  
+  ## Modeled data selection logic #################################################
+  
+  # Create observeEvent that react to frequence update
+  # Display showModeledData checkbox if the selected data frequence is 10min
+  observeEvent(input$dataFreq, ignoreInit = TRUE, {
+    toggleElement('showModeledData', condition = input$dataFreq == '10min')
+  })
+  
+  
+  
+  
   ## Data manipulation logic ######################################################
   
   # Create a data reactive expression that return a subset of the data
   # Using the dateRange, selectedSites_d and param reactive expressions
   data <- reactive({
-    # Define data types to keep depending on the state of showModeledData
-    types <- c('measured')
-    if (input$showModeledData) types <- c(types, 'modeled')
-    
     # Select df
     df <- df[[input$dataFreq]]
     
-    # Filter the data using the selected sites, the data type and the date range
-    # Then select the parameter and rename the column to 'value'
-    df %<>% filter(
-      Site_ID %in% selectedSites_d(),
-      data_type %in% types,
-      date(date) >= dateRange()$min,
-      date(date) <= dateRange()$max
-    ) %>% select(date, Site_ID, data_type, 'value' = param()$data)
+    # If the raw data is selected filter also for modeled data
+    if (input$dataFreq == '10min') {
+      # Define data types to keep depending on the state of showModeledData
+      types <- c('measured')
+      if (input$showModeledData) types <- c(types, 'modeled')
+      
+      # Filter the data using the selected sites, the data type and the date range
+      # Then select the parameter and rename the column to 'value'
+      df %<>% filter(
+        Site_ID %in% selectedSites_d(),
+        data_type %in% types,
+        date(date) >= dateRange()$min,
+        date(date) <= dateRange()$max
+      ) %>% select(date, Site_ID, data_type, 'value' = param()$data)
+    } else {
+      # Filter the data using the selected sites and the date range
+      # Then select the parameter and rename the column to 'value'
+      df %<>% filter(
+        Site_ID %in% selectedSites_d(),
+        date(date) >= dateRange()$min,
+        date(date) <= dateRange()$max
+      ) %>% select(date, Site_ID, 'value' = param()$data)
+    }
     
     # If there is no data return NULL
     if (dim(df)[1] == 0) return(NULL)
@@ -167,7 +192,8 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
       df = data(),
       parameter = param(),
       plotTitle = str_interp('Sensors High Frequency Time Serie ${unitNb}'),
-      sites = sites$sites
+      sites = sites$sites,
+      modeledData = 'data_type' %in% colnames(data())
     )
   })
   

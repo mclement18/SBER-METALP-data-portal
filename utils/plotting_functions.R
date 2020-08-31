@@ -220,24 +220,34 @@ DOYPlot <- function(df, x, parameter, siteName, sites) {
 
 
 
-highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites) {
+highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites, modeledData = FALSE) {
 # Function that create a time serie plot for the high frequency data
 # - df: DataFrame in long format containing the following columns:
 #       + 'Site_ID': factor
 #       + 'value': numeric
-#       + 'data_type': factor, either modeled or measured
+#       + 'data_type': factor, either modeled or measured, if modeledData = TRUE
 #       + 'date': POSIXct datetime
 # - parameter: List or 1-row df containing the following values accessible with '$':
 #          + param_name: String
 #          + units: String
 # - plotTitle: String containing the title of the plot
 # - sites: Data.frame, contains the sites info (e.i. sites_color)
+# - modeledData: Boolean, indicates if df contains modeled data column, default FALSE
 #
 # Returns a ggplot2 plot
   
-  p <- ggplot(df, aes(date, value, color = Site_ID))+
-    geom_line(mapping = aes(linetype = data_type, alpha = data_type), size = 1, na.rm = TRUE)+
-    ggtitle(plotTitle)+
+  # Create plot base
+  p <- ggplot(df, aes(date, value, color = Site_ID))
+  
+  # If df contains modeled data add some additional aes to geom_line
+  if (modeledData) {
+    p <- p + geom_line(mapping = aes(linetype = data_type, alpha = data_type), size = 1, na.rm = TRUE)
+  } else {
+    p <- p + geom_line(size = 1, na.rm = TRUE)
+  }
+  
+  # Finished plot construction
+  p <- p + ggtitle(plotTitle)+
     ylab(str_interp('${parameter$param_name} [${parameter$units}]'))+
     xlab('Date')+
     # Set the y axis limits

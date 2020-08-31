@@ -146,18 +146,29 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     # Get high frequency data
     hfDf <- df$hf[[input$dataFreq]]
 
-    # Define data types to keep depending on the state of showModeledData
-    types <- c('measured')
-    if (input$showModeledData) types <- c(types, 'modeled')
-    
-    # Filter the data using the selected sites, the data type and the date range
-    # Then select the parameter and rename the column to 'value'
-    hfDf %<>% filter(
-      Site_ID == input$site,
-      data_type %in% types,
-      date(date) >= dateRange()$min,
-      date(date) <= dateRange()$max
-    ) %>% select(date, Site_ID, data_type, 'value' = paramHf()$data)
+    # If the raw data is selected filter also for modeled data
+    if (input$dataFreq == '10min') {
+      # Define data types to keep depending on the state of showModeledData
+      types <- c('measured')
+      if (input$showModeledData) types <- c(types, 'modeled')
+      
+      # Filter the data using the selected sites, the data type and the date range
+      # Then select the parameter and rename the column to 'value'
+      hfDf %<>% filter(
+        Site_ID == input$site,
+        data_type %in% types,
+        date(date) >= dateRange()$min,
+        date(date) <= dateRange()$max
+      ) %>% select(date, Site_ID, data_type, 'value' = paramHf()$data)
+    } else {
+      # Filter the data using the selected sites and the date range
+      # Then select the parameter and rename the column to 'value'
+      hfDf %<>% filter(
+        Site_ID == input$site,
+        date(date) >= dateRange()$min,
+        date(date) <= dateRange()$max
+      ) %>% select(date, Site_ID, 'value' = paramHf()$data)
+    }
     
     # If there is no data return NULL
     if (nrow(hfDf) == 0) return(NULL)
@@ -277,8 +288,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     # Isolate HF data to avoid multiple rerender
     hfData <- isolate(hfDf())
     # Call inputs to rerender the plot
-    input$showModeledData
-    input$dataFreq
+    if (input$dataFreq == '10min') input$showModeledData
     
     # If there are no data return NULL
     if (hfData %>% is.null()) return(NULL)
@@ -293,7 +303,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       # Isolate paramHF to avoid multiple rerender
       parameter = isolate(paramHf()),
       plotTitle = str_interp('Sensor High Frequency Time Serie ${unitNb}'),
-      sites = sites$sites
+      sites = sites$sites,
+      modeledData = 'data_type' %in% colnames(hfData)
     )
     
     # If there are some grab sample data available

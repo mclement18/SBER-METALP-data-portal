@@ -191,6 +191,17 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   
   
+  ## Modeled data selection logic #################################################
+  
+  # Create observeEvent that react to frequence update
+  # Display addModeledData checkbox if the selected data frequence is 10min
+  observeEvent(input$hfDataFreq, ignoreInit = TRUE, {
+    toggleElement('addModeledData', condition = input$hfDataFreq == '10min')
+  })
+  
+  
+  
+  
   ## Multi selection inputs debouncing ############################################
   
   # Debouce sites select input
@@ -218,8 +229,8 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     if (inputDf == 'hfDf') {
       df <- hfDf[[input$hfDataFreq]]
       parameters <- hfParameters$parameters %>% filter(param_name %in% hfParamReactive_d()) %>% pull(data)
-      # Add data_type column to selected ones
-      parameters <- c(parameters, 'data_type')
+      # Add data_type column to selected ones if raw data
+      if (input$hfDataFreq == '10min') parameters <- c(parameters, 'data_type')
     } else if (inputDf == 'grabDf') {
       df <- grabSampleDf
       df %<>% rename(date = DATETIME_GMT)
@@ -236,27 +247,30 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       Site_ID %in% sitesReactive_d()
     ) %>% select(date, Site_ID, all_of(parameters))
     
-    # Add modeled data if needed
-    if (inputDf == 'hfDf' & input$addModeledData) {
-      # For each parameter create a measured and a modeled column
-      df %<>% pivot_wider(
-        names_from = data_type,
-        values_from = all_of(parameters[parameters != 'data_type']),
-        names_glue = "{.value}_{data_type}"
-      )
-      
-      # For each parameter create a combined column
-      for (column in parameters[parameters != 'data_type']) {
-        tmpDf <- df %>% select(starts_with(column))
-        newcolName <- str_interp('${column}_combined')
-        df %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
+    # If the selected data is the raw HF data
+    if (inputDf == 'hfDf' & input$hfDataFreq == '10min') {
+      # Add modeled data if needed
+      if (input$addModeledData) {
+        # For each parameter create a measured and a modeled column
+        df %<>% pivot_wider(
+          names_from = data_type,
+          values_from = all_of(parameters[parameters != 'data_type']),
+          names_glue = "{.value}_{data_type}"
+        )
+        
+        # For each parameter create a combined column
+        for (column in parameters[parameters != 'data_type']) {
+          tmpDf <- df %>% select(starts_with(column))
+          newcolName <- str_interp('${column}_combined')
+          df %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
+        }
+        
+        # Remove the tmpDf
+        rm(tmpDf)
+      } else {
+        # Keep only the measured value and remove the data_type column
+        df %<>% filter(data_type == 'measured') %>% select(-data_type)
       }
-      
-      # Remove the tmpDf
-      rm(tmpDf)
-    } else if (inputDf == 'hfDf' & !input$addModeledData) {
-      # Keep only the measured value and remove the data_type column
-      df %<>% filter(data_type == 'measured') %>% select(-data_type)
     }
     
     # Convert df to data.table for print output
