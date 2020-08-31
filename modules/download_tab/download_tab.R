@@ -190,6 +190,24 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   
   
+  
+  ## Multi selection inputs debouncing ############################################
+  
+  # Debouce sites select input
+  sitesReactive <- reactive(input$sites)
+  sitesReactive_d <- debounce(sitesReactive, 1000)
+  
+  # Debounce HF parameters selection
+  hfParamReactive <- reactive(input$hfParam)
+  hfParamReactive_d <- debounce(hfParamReactive, 1000)
+  
+  # Debounce Grab parameters selection
+  grabParamReactive <- reactive(input$grabParam)
+  grabParamReactive_d <- debounce(grabParamReactive, 1000)
+  
+  
+  
+  
   ## Data filtering logic #########################################################
   
   # Create a reactive expression returning the selected data
@@ -199,13 +217,13 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     
     if (inputDf == 'hfDf') {
       df <- hfDf[[input$hfDataFreq]]
-      parameters <- hfParameters$parameters %>% filter(param_name %in% input$hfParam) %>% pull(data)
+      parameters <- hfParameters$parameters %>% filter(param_name %in% hfParamReactive_d()) %>% pull(data)
       # Add data_type column to selected ones
       parameters <- c(parameters, 'data_type')
     } else if (inputDf == 'grabDf') {
       df <- grabSampleDf
       df %<>% rename(date = DATETIME_GMT)
-      parameters <- grabSampleParameters$parameters %>% filter(param_name %in% input$grabParam) %>% pull(data)
+      parameters <- grabSampleParameters$parameters %>% filter(param_name %in% grabParamReactive_d()) %>% pull(data)
     } else {
       return(data.table())
     }
@@ -215,7 +233,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     df %<>% filter(
       date(date) >= input$time[1],
       date(date) <= input$time[2],
-      Site_ID %in% input$sites
+      Site_ID %in% sitesReactive_d()
     ) %>% select(date, Site_ID, all_of(parameters))
     
     # Add modeled data if needed
