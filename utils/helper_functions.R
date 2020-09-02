@@ -150,3 +150,28 @@ lm_eqn <- function(df, x, y){
   as.character(as.expression(eq))
 }
 
+
+
+
+js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd()) {
+  inputDir <- file.path(wd, inputDir)
+  outputDir <- file.path(wd, outputDir)
+  
+  manifest <- read_json(file.path(inputDir, 'manifest.json'), simplifyVector = TRUE)
+  
+  compiled <- ''
+  
+  for (filename in manifest) {
+    compiled <- paste0(compiled, read_file(file.path(inputDir, filename)))  
+  }
+  
+  tmp <- tempfile()
+  
+  write_file(compiled, tmp)
+  
+  outputFile = file.path(outputDir, 'metalpdataportal.js')
+  
+  processx::run(command = 'terser', args = c(tmp, '-c', '-o', outputFile))
+  
+  file.remove(tmp)
+}

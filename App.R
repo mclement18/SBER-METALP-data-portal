@@ -52,8 +52,14 @@ sass(
 
 
 
+
 ## Load helper functions ##########################################################
 source('./utils/helper_functions.R')
+
+
+
+## Compile and minify JavaScript ##################################################
+js_parser()
 
 
 
@@ -91,12 +97,8 @@ ui <- tagList(
   tags$head(
     # Add link to main.css stylesheet
     tags$link(href = 'main.css', rel = 'stylesheet', type = 'text/css'),
-    # Add script for each js file
-    includeScript('./assets/js/sidebar_actions.js'),
-    includeScript('./assets/js/point_hover_widget.js'),
-    includeScript('./assets/js/download_button_state.js'),
-    # Important to had the shiny custom events in last
-    includeScript('./assets/js/shiny_custom_events.js')
+    # Add link for js script
+    tags$script(src = 'metalpdataportal.js')
   ),
   # Add a class to the body element to keep the footer at the bottom of the page
   tags$body(class = 'footer-to-bottom-container'),
