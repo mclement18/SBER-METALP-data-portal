@@ -47,17 +47,15 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
         ),
         parameters$selectOptions
       ),
-      # Create a checkbox to select or unselect modeled data, hidden by default
-      hidden(
-        checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE)
-      ),
+      # Create a checkbox to select or unselect modeled data
+      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
       # Create radio buttons to select the data frequency to display
       checkboxGroupInputWithClass(
         radioButtons(
           ns('dataFreq'),
           'Data frequency',
           choices = list('10min (raw)' = '10min', '6H', '12H', '24H'),
-          selected = '24H'
+          selected = '10min'
         ),
         class = 'checkbox-grid'        
       )
@@ -146,18 +144,29 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     
     # If the raw data is selected filter also for modeled data
     if (input$dataFreq == '10min') {
-      # Define data types to keep depending on the state of showModeledData
-      types <- c('measured')
-      if (input$showModeledData) types <- c(types, 'modeled')
+      # Define data types to remove depending on the state of showModeledData
+      # If nothing to remove, set to 'NULL' as string to avoid match error
+      typesToRemove <- c('modeled')
+      if (input$showModeledData) typesToRemove <- 'NULL'
       
-      # Filter the data using the selected sites, the data type and the date range
-      # Then select the parameter and rename the column to 'value'
+      # Filter the data using the selected sites and the date range
       df %<>% filter(
         Site_ID %in% selectedSites_d(),
-        data_type %in% types,
         date(date) >= dateRange()$min,
         date(date) <= dateRange()$max
-      ) %>% select(date, Site_ID, data_type, 'value' = param()$data)
+      ) %>%
+        # Select the date, Site_ID, all the parameter specific columns and remove modeled column not used
+        select(date, Site_ID, starts_with(param()$data), -ends_with(typesToRemove)) %>% 
+        # Pivot longer the data to get a data_type and a value column
+        pivot_longer(
+          ends_with(c('measured', 'modeled')),
+          names_to = 'data_type',
+          names_pattern = '.*_(.*)',
+          names_transform = list('data_type' = as.factor),
+          values_to = 'value'
+        ) %>% 
+        # Rename with singlePoint column
+        rename(singlePoint = ends_with('singlePoint'))
     } else {
       # Filter the data using the selected sites and the date range
       # Then select the parameter and rename the column to 'value'

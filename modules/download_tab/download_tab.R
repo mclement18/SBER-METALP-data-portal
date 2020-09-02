@@ -90,6 +90,8 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
             ),
             # Select for modeled data
             checkboxInput(ns('addModeledData'), 'Add modeled data', value = FALSE),
+            # Select for single points info
+            checkboxInput(ns('addSinglePointInfo'), 'Add single point info', value = FALSE),
             # Select HF parameters
             selectizeInput(
               inputId =  ns('hfParam'),
@@ -191,12 +193,13 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   
   
-  ## Modeled data selection logic #################################################
+  ## Modeled data and single points info selection logic #################################################
   
   # Create observeEvent that react to frequence update
   # Display addModeledData checkbox if the selected data frequence is 10min
   observeEvent(input$hfDataFreq, ignoreInit = TRUE, {
     toggleElement('addModeledData', condition = input$hfDataFreq == '10min')
+    toggleElement('addSinglePointInfo', condition = input$hfDataFreq == '10min')
   })
   
   
@@ -229,8 +232,6 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     if (inputDf == 'hfDf') {
       df <- hfDf[[input$hfDataFreq]]
       parameters <- hfParameters$parameters %>% filter(param_name %in% hfParamReactive_d()) %>% pull(data)
-      # Add data_type column to selected ones if raw data
-      if (input$hfDataFreq == '10min') parameters <- c(parameters, 'data_type')
     } else if (inputDf == 'grabDf') {
       df <- grabSampleDf
       df %<>% rename(date = DATETIME_GMT)
@@ -240,37 +241,52 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     }
     
     
-    # Filter rows and select columns
+    # Filter rows
     df %<>% filter(
       date(date) >= input$time[1],
       date(date) <= input$time[2],
       Site_ID %in% sitesReactive_d()
-    ) %>% select(date, Site_ID, all_of(parameters))
+    )
     
     # If the selected data is the raw HF data
     if (inputDf == 'hfDf' & input$hfDataFreq == '10min') {
-      # Add modeled data if needed
+      # If add modeled data is selected
       if (input$addModeledData) {
-        # For each parameter create a measured and a modeled column
-        df %<>% pivot_wider(
-          names_from = data_type,
-          values_from = all_of(parameters[parameters != 'data_type']),
-          names_glue = "{.value}_{data_type}"
-        )
+        # Create a new df with the date and sites columns
+        newDf <- df %>% select(date, Site_ID)
         
         # For each parameter create a combined column
-        for (column in parameters[parameters != 'data_type']) {
-          tmpDf <- df %>% select(starts_with(column))
-          newcolName <- str_interp('${column}_combined')
-          df %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
+        for (parameter in parameters) {
+          # Select the parameter columns
+          tmpDf <- df %>% select(starts_with(parameter), -ends_with('singlePoint'))
+          # Create combined column name
+          newcolName <- str_interp('${parameter}_combined')
+          # Create the combined column
+          tmpDf %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
+          # Add parameter columns to the new df
+          newDf <- bind_cols(newDf, tmpDf)
+          
+          if(input$addSinglePointInfo) {
+            tmpSPCol <- df %>% select(starts_with(parameter) & ends_with('singlePoint'))
+            newDf <- bind_cols(newDf, tmpSPCol)
+          }
         }
         
-        # Remove the tmpDf
-        rm(tmpDf)
+        # Assigne the new df to the df
+        df <- newDf
+
+        # Remove the tmpDf and newDf
+        rm(tmpDf, newDf, tmpSPCol)
       } else {
-        # Keep only the measured value and remove the data_type column
-        df %<>% filter(data_type == 'measured') %>% select(-data_type)
+        removeSPCol <- 'singlePoint'
+        if (input$addSinglePointInfo) removeSPCol <- 'NULL'
+        # Keep only the measured value and rename the columns
+        df %<>% select(date, Site_ID, starts_with(parameters), -ends_with(c('modeled', removeSPCol)))
       }
+    } else {
+      # For anything else than HF 10min data
+      # Select date, stations and all parameters
+      df %<>% select(date, Site_ID, all_of(parameters))
     }
     
     # Convert df to data.table for print output
@@ -287,8 +303,9 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   # Render the preview table and summary
   output$preview <- renderPrint({
-    # Get selected data column names
+    # Get selected data column names and parameters
     columnsNames <- colnames(selectedData())
+    parameters <- selectedData() %>% select(where(is.numeric)) %>% gsub('(.*)_(modeled|measured)$', '\\1', .) %>% unique()
     
     # If date is present, display the min and max dates
     # Else display NAs
@@ -311,10 +328,10 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       sitesSummary <- data.table('Station' = c(NA), 'N' = c(NA))
     }
     
-    # If there are more than 2 columns (i.e. seleceted parameters)
+    # If there is at least one parameter selected
     # Summarise each parameter
     # Else display only Stat column
-    if (length(columnsNames) > 2) {
+    if (length(parameters) > 0) {
       parametersSummary <- selectedData() %>% summarise_if(is.numeric, list(
         'Min' = ~ min(.x, na.rm = TRUE),
         'Mean' = ~ mean(.x, na.rm = TRUE),
@@ -322,9 +339,9 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
         'NAs' = ~ sum(is.na(.x))
       ))
       
-      # If there is only one parameter set manually the summary columns names
+      # If there is only one parameter and three or four columns set manually the summary columns names
       # Else get them programmatically
-      if (length(columnsNames) == 3) {
+      if (length(parameters) == 1 & length(columnsNames) %in% c(3, 4)) {
         parametersSummary %<>% pivot_longer(everything(), names_to = 'Stat', values_to = columnsNames[3])
       } else {
         parametersSummary %<>% pivot_longer(everything(), names_to = c('.value', 'Stat'), names_pattern = '(.*)_(.*)')
@@ -334,6 +351,11 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       parametersSummary %<>% as.data.table()
     } else {
       parametersSummary <- data.table('Stat' = c('Min', 'Mean', 'Max', 'NAs'))
+    }
+    
+    if (any(grepl('singlePoint', columnsNames))) {
+      singlePointsSummary <- selectedData() %>% select(ends_with('singlePoint')) %>%
+        summarise(across(everything(), ~ sum(as.numeric(as.character(.x))))) %>% as.data.table()
     }
     
     # Create print layout
@@ -346,6 +368,11 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     cat('\n')
     cat('## Parameters info', '\n\n')
     print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)
+    if (any(grepl('singlePoint', columnsNames))) {
+      cat('\n')
+      cat('## Single points info', '\n\n')
+      print(singlePointsSummary)
+    }
     cat('\n\n')
     cat('---------------------------------------------------------------------------')
     cat('\n\n')

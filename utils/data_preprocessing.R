@@ -28,8 +28,11 @@ loadHighFreqDf <- function() {
   # Convert date to POSIXct
   hf_10min_df$date <- hf_10min_df$date %>% ymd_hms(tz = 'GMT')
   
-  # Convert data_type to factor
-  hf_10min_df$data_type <- hf_10min_df$data_type %>% as.factor()
+  # Convert singlePoint columns to factor
+  hf_10min_df %<>% mutate(across(ends_with('singlePoint'), as.factor))
+  
+  # Convert measured or modeled data columns to numeric
+  hf_10min_df %<>% mutate(across(ends_with('measured') | ends_with('modeled'), as.numeric)) 
   
   # Convert Site_ID to factor
   hf_10min_df$Site_ID <- hf_10min_df$Site_ID %>% as.factor()
@@ -43,9 +46,6 @@ loadHighFreqDf <- function() {
   # Convert date to POSIXct
   hf_6H_df$date <- hf_6H_df$date %>% ymd_hms(tz = 'GMT')
   
-  # Convert data_type to factor
-  hf_6H_df$data_type <- hf_6H_df$data_type %>% as.factor()
-  
   # Convert Site_ID to factor
   hf_6H_df$Site_ID <- hf_6H_df$Site_ID %>% as.factor()
   
@@ -56,9 +56,6 @@ loadHighFreqDf <- function() {
   
   # Convert date to POSIXct
   hf_12H_df$date <- hf_12H_df$date %>% ymd_hms(tz = 'GMT')
-  
-  # Convert data_type to factor
-  hf_12H_df$data_type <- hf_12H_df$data_type %>% as.factor()
   
   # Convert Site_ID to factor
   hf_12H_df$Site_ID <- hf_12H_df$Site_ID %>% as.factor()
@@ -71,9 +68,6 @@ loadHighFreqDf <- function() {
   
   # Convert date to POSIXct
   hf_24H_df$date <- hf_24H_df$date %>% ymd(tz = 'GMT')
-  
-  # Convert data_type to factor
-  hf_24H_df$data_type <- hf_24H_df$data_type %>% as.factor()
   
   # Convert Site_ID to factor
   hf_24H_df$Site_ID <- hf_24H_df$Site_ID %>% as.factor()

@@ -148,18 +148,29 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
 
     # If the raw data is selected filter also for modeled data
     if (input$dataFreq == '10min') {
-      # Define data types to keep depending on the state of showModeledData
-      types <- c('measured')
-      if (input$showModeledData) types <- c(types, 'modeled')
+      # Define data types to remove depending on the state of showModeledData
+      # If nothing to remove, set to 'NULL' as string to avoid match error
+      typesToRemove <- c('modeled')
+      if (input$showModeledData) typesToRemove <- 'NULL'
       
-      # Filter the data using the selected sites, the data type and the date range
-      # Then select the parameter and rename the column to 'value'
+      # Filter the data using the selected sites and the date range
       hfDf %<>% filter(
         Site_ID == input$site,
-        data_type %in% types,
         date(date) >= dateRange()$min,
         date(date) <= dateRange()$max
-      ) %>% select(date, Site_ID, data_type, 'value' = paramHf()$data)
+      ) %>%
+        # Select the date, Site_ID, all the parameter specific columns and remove modeled column not used
+        select(date, Site_ID, starts_with(paramHf()$data), -ends_with(typesToRemove)) %>% 
+        # Pivot longer the data to get a data_type and a value column
+        pivot_longer(
+          ends_with(c('measured', 'modeled')),
+          names_to = 'data_type',
+          names_pattern = '.*_(.*)',
+          names_transform = list('data_type' = as.factor),
+          values_to = 'value'
+        ) %>% 
+        # Rename with singlePoint column
+        rename(singlePoint = ends_with('singlePoint'))
     } else {
       # Filter the data using the selected sites and the date range
       # Then select the parameter and rename the column to 'value'
@@ -209,18 +220,29 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     # Refilter HF data here to always get the 10min data and not rerender when changing the frequency
     hfData <- df$hf$`10min`
     
-    # Define data types to keep depending on the state of showModeledData
-    types <- c('measured')
-    if (input$showModeledData) types <- c(types, 'modeled')
+    # Define data types to remove depending on the state of showModeledData
+    # If nothing to remove, set to 'NULL' as string to avoid match error
+    typesToRemove <- c('modeled')
+    if (input$showModeledData) typesToRemove <- 'NULL'
     
-    # Filter the data using the selected sites, the data type and the date range
-    # Then select the parameter and rename the column to 'value'
+    # Filter the data using the selected sites and the date range
     hfData %<>% filter(
       Site_ID == input$site,
-      data_type %in% types,
       date(date) >= dateRange()$min,
       date(date) <= dateRange()$max
-    ) %>% select(date, Site_ID, data_type, 'value' = isolate(paramHf()$data)) # Isolate paramHF to avoid multiple rerender
+    ) %>%
+      # Select the date, Site_ID, all the parameter specific columns
+      # And remove the singlePoint column and the modeled one if needed
+      # Isolate paramHF to avoid multiple rerender
+      select(date, Site_ID, starts_with(isolate(paramHf()$data)), -ends_with(c(typesToRemove, 'singlePoint'))) %>% 
+      # Pivot longer the data to get a data_type and a value column
+      pivot_longer(
+        ends_with(c('measured', 'modeled')),
+        names_to = 'data_type',
+        names_pattern = '.*_(.*)',
+        names_transform = list('data_type' = as.factor),
+        values_to = 'value'
+      )
     
     # If hfData is empty return NULL
     if (nrow(hfData) == 0) return(NULL)
