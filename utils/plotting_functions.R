@@ -241,7 +241,10 @@ highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites, modeledData =
   
   # If df contains modeled data add some additional aes to geom_line
   if (modeledData) {
-    p <- p + geom_line(mapping = aes(linetype = data_type, alpha = data_type), size = 1, na.rm = TRUE)
+    p <- p + geom_line(mapping = aes(linetype = data_type, alpha = data_type), size = 1, na.rm = TRUE)+
+      geom_point(mapping = aes(size = singlePoint, shape = data_type, alpha = data_type), na.rm = TRUE)+
+      scale_size_manual(values = c('0' = 0, '1' = 1.5), guide = 'none')+
+      scale_shape_manual(values = c('measured' = 16, 'modeled' = 15))
   } else {
     p <- p + geom_line(size = 1, na.rm = TRUE)
   }

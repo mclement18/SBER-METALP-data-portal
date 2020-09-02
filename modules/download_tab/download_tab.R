@@ -222,6 +222,23 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   
   
+  
+  ## Parameters selection logic ###################################################
+  
+  # Create a rective expression that retrive the selected parameters
+  parameters <- reactive({
+    inputDf <- input$data
+    if (inputDf == 'hfDf') {
+      hfParameters$parameters %>% filter(param_name %in% hfParamReactive_d()) %>% pull(data)
+    } else if (inputDf == 'grabDf') {
+      grabSampleParameters$parameters %>% filter(param_name %in% grabParamReactive_d()) %>% pull(data)
+    }
+  })
+  
+  
+  
+  
+  
   ## Data filtering logic #########################################################
   
   # Create a reactive expression returning the selected data
@@ -231,11 +248,9 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     
     if (inputDf == 'hfDf') {
       df <- hfDf[[input$hfDataFreq]]
-      parameters <- hfParameters$parameters %>% filter(param_name %in% hfParamReactive_d()) %>% pull(data)
     } else if (inputDf == 'grabDf') {
       df <- grabSampleDf
       df %<>% rename(date = DATETIME_GMT)
-      parameters <- grabSampleParameters$parameters %>% filter(param_name %in% grabParamReactive_d()) %>% pull(data)
     } else {
       return(data.table())
     }
@@ -256,7 +271,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
         newDf <- df %>% select(date, Site_ID)
         
         # For each parameter create a combined column
-        for (parameter in parameters) {
+        for (parameter in parameters()) {
           # Select the parameter columns
           tmpDf <- df %>% select(starts_with(parameter), -ends_with('singlePoint'))
           # Create combined column name
@@ -281,12 +296,12 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
         removeSPCol <- 'singlePoint'
         if (input$addSinglePointInfo) removeSPCol <- 'NULL'
         # Keep only the measured value and rename the columns
-        df %<>% select(date, Site_ID, starts_with(parameters), -ends_with(c('modeled', removeSPCol)))
+        df %<>% select(date, Site_ID, starts_with(parameters()), -ends_with(c('modeled', removeSPCol)))
       }
     } else {
       # For anything else than HF 10min data
       # Select date, stations and all parameters
-      df %<>% select(date, Site_ID, all_of(parameters))
+      df %<>% select(date, Site_ID, all_of(parameters()))
     }
     
     # Convert df to data.table for print output
@@ -303,9 +318,8 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   # Render the preview table and summary
   output$preview <- renderPrint({
-    # Get selected data column names and parameters
+    # Get selected data column names
     columnsNames <- colnames(selectedData())
-    parameters <- selectedData() %>% select(where(is.numeric)) %>% gsub('(.*)_(modeled|measured)$', '\\1', .) %>% unique()
     
     # If date is present, display the min and max dates
     # Else display NAs
@@ -331,7 +345,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     # If there is at least one parameter selected
     # Summarise each parameter
     # Else display only Stat column
-    if (length(parameters) > 0) {
+    if (length(parameters()) > 0) {
       parametersSummary <- selectedData() %>% summarise_if(is.numeric, list(
         'Min' = ~ min(.x, na.rm = TRUE),
         'Mean' = ~ mean(.x, na.rm = TRUE),
@@ -341,7 +355,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       
       # If there is only one parameter and three or four columns set manually the summary columns names
       # Else get them programmatically
-      if (length(parameters) == 1 & length(columnsNames) %in% c(3, 4)) {
+      if (length(parameters()) == 1 & length(columnsNames) %in% c(3, 4)) {
         parametersSummary %<>% pivot_longer(everything(), names_to = 'Stat', values_to = columnsNames[3])
       } else {
         parametersSummary %<>% pivot_longer(everything(), names_to = c('.value', 'Stat'), names_pattern = '(.*)_(.*)')
@@ -357,7 +371,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       singlePointsSummary <- selectedData() %>% select(ends_with('singlePoint')) %>%
         summarise(across(everything(), ~ sum(as.numeric(as.character(.x))))) %>% as.data.table()
     }
-    
+
     # Create print layout
     cat('# Data summary:', '\n\n')
     cat('## Date info', '\n\n')
