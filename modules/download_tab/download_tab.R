@@ -1,7 +1,8 @@
 ## This module contains the UI and server code for the Download tab
 
 ## Source needed files ############################################################
-
+source('./modules/download_tab/download_data.R')
+source('./modules/download_tab/request_data.R')
 
 
 ## Create module UI ###############################################################
@@ -150,11 +151,11 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
     # Create the download actions
     div(
       class = 'download__actions',
-      # Download button initially disabled
-      disabled(
-        # Add "onclick = 'return false;'" additional attribute to disable the button which is in reality a hyper link
-        downloadButton(ns('download'), class = 'custom-style custom-style--primary', onclick = 'return false;')
-      ),
+      if (F) {
+        downloadDataUI(ns('download'))
+      } else {
+        requestDataUI(ns('request'))
+      },
       # Clear form button
       actionButton(ns('clear'), 'Clear', class = 'custom-style')
     )
@@ -490,46 +491,32 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   
   
-  ## Download data logic ###########################################################
+  ## Download and request data logic ###########################################################
   
-  # Create an observeEvent that react to data change to set downloadButton state
-  observeEvent(selectedData(), ignoreInit = TRUE, {
-    # Create message to send to client in as a list containing:
-    #  - id: the downloadButton id defined in the UI
-    #  - disable: boolean, indicate is the button is disabled
-    messageList <- list(
-      'id' = session$ns('download'),
-      'disable' = FALSE
-    )
+  if (F) {
+    callModule(downloadData, 'download', selectedData)
+  } else {
     
+    dataSelectionInput <- reactive({
+      if (input$data == 'hfDf') {
+        data <- 'sensor'
+      } else {
+        data <- 'grab samples'
+      }
+      
+      list(
+        'min' = input$time[1],
+        'max' = input$time[2],
+        'data' = data,
+        'dataFreq' = input$hfDataFreq,
+        'modeled' = input$addModeledData,
+        'singelPoint' = input$addSinglePointInfo,
+        'sites' = sitesReactive_d(),
+        'parameters' = parameters()
+      )
+    })
     
-    if (nrow(selectedData()) >= 1) {
-      # Style the button
-      enable('download')
-      # Inform UI that button needs to be enabled
-      messageList$disable <- FALSE
-    } else {
-      # Style the button
-      disable('download')
-      # Inform UI that button needs disabled
-      messageList$disable <- TRUE
-    }
-    
-    # Convert the list message to JSON
-    messageJSON <- toJSON(messageList, auto_unbox = TRUE)
-    
-    # Send the shiny custom message to toggle downloadButton state
-    # Linked to some JavaScript defined in './assets/js/download_button_state.js'
-    session$sendCustomMessage('toggleDownloadButton', messageJSON)
-  })
+    callModule(requestData, 'request', selectedData, dataSelectionInput)
+  }
   
-  
-  # Create a download handler that takes care of the download process
-  # Use the output created by the downloadButton
-  output$download <- downloadHandler(
-    filename = 'metalp_data.csv',
-    content = function(file) {
-      write.csv(selectedData(), file, row.names = FALSE)
-    }
-  )
 }
