@@ -151,6 +151,7 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
     # Create the download actions
     div(
       class = 'download__actions',
+      # Add the download or request button
       if (F) {
         downloadDataUI(ns('download'))
       } else {
@@ -281,7 +282,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
           tmpDf %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
           # Add parameter columns to the new df
           newDf <- bind_cols(newDf, tmpDf)
-          
+          # If the single point info is selected add it to the data
           if(input$addSinglePointInfo) {
             tmpSPCol <- df %>% select(starts_with(parameter) & ends_with('singlePoint'))
             newDf <- bind_cols(newDf, tmpSPCol)
@@ -294,6 +295,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
         # Remove the tmpDf and newDf
         rm(tmpDf, newDf, tmpSPCol)
       } else {
+        # Define if the single point info is selected or not
         removeSPCol <- 'singlePoint'
         if (input$addSinglePointInfo) removeSPCol <- 'NULL'
         # Keep only the measured value and rename the columns
@@ -368,6 +370,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       parametersSummary <- data.table('Stat' = c('Min', 'Mean', 'Max', 'NAs'))
     }
     
+    # If the single point info is selected create a summary for it
     if (any(grepl('singlePoint', columnsNames))) {
       singlePointsSummary <- selectedData() %>% select(ends_with('singlePoint')) %>%
         summarise(across(everything(), ~ sum(as.numeric(as.character(.x))))) %>% as.data.table()
@@ -493,17 +496,20 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   ## Download and request data logic ###########################################################
   
+  # Call the downloadData or requestData module
   if (F) {
     callModule(downloadData, 'download', selectedData)
   } else {
-    
+    # Create a reactive expression returning a list of the data selection inputs
     dataSelectionInput <- reactive({
+      # Define the selected data
       if (input$data == 'hfDf') {
         data <- 'sensor'
       } else {
         data <- 'grab samples'
       }
       
+      # Create the returned list with all the inputs info
       list(
         'min' = input$time[1],
         'max' = input$time[2],
@@ -516,6 +522,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       )
     })
     
+    # Call the module
     callModule(requestData, 'request', selectedData, dataSelectionInput)
   }
   

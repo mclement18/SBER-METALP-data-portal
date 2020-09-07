@@ -152,34 +152,55 @@ lm_eqn <- function(df, x, y){
 
 
 
-
 js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd()) {
+# Parse and combine all JavaScript files present referenced in the assets/js/manifest.json file
+# Minify it and saves it in the www/ folder as metalpdataportal.js
+# Parameters:
+#  - inputDir: String, the path to the input directory, default: 'assets/js'
+#  - outputDir: String, the path to the output directory, default: 'www'
+#  - wd: String, the the full path to the working directory, default: getwd()
+# 
+# Returns NULL
+  
+  # Create full path using the wd
   inputDir <- file.path(wd, inputDir)
   outputDir <- file.path(wd, outputDir)
   
+  # Load the manifest file
   manifest <- read_json(file.path(inputDir, 'manifest.json'), simplifyVector = TRUE)
   
+  # Create an empty variable for the compiled JS
   compiled <- ''
   
+  # For each file in in the manifest
+  # Read the file and append the content to the compiled variable
   for (filename in manifest) {
     compiled <- paste0(compiled, read_file(file.path(inputDir, filename)))  
   }
   
+  # Create a temporary file with the compiled JS
   tmp <- tempfile()
-  
   write_file(compiled, tmp)
   
+  # Create the full path to the output file
   outputFile = file.path(outputDir, 'metalpdataportal.js')
   
+  # Minify the compiled JS and saves it in the output file
   processx::run(command = 'terser', args = c(tmp, '-c', '-o', outputFile))
   
+  # Delete the temporary file
   file.remove(tmp)
 }
 
 
 
-
 isValidEmail <- function(x) {
+# Check if string is valid email format
+# Parameters:
+#  - x: String, email to verify
+# 
+# Return a boolean value
+  
   grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>", as.character(x), ignore.case=TRUE)
 }
 

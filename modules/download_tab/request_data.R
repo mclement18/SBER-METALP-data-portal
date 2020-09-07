@@ -47,21 +47,31 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
   
   # Create an observeEvent that react to the requestData button press
   observeEvent(input$requestData, ignoreInit = TRUE, {
+    # Display a modal containing the form asking for the requisitor information
     showModal(
+      # Create the modal form
       modalDialog(
         title = 'Requisitor Informations',
+        # Create the form
         div(
           class = 'modal-form',
+          # Name
           textInput(session$ns('requisitorName'), 'Name*', placeholder = 'Otto Octavius'),
+          # Email
           textInput(session$ns('requisitorEmail'), 'Email*', placeholder = 'otto.octavius@octaviusindustries.com'),
+          # Institution
           textInput(session$ns('requisitoInstitution'), 'Institution / Company*', placeholder = 'Octavius Industries'),
+          # Reasons
           textAreaInput(session$ns('requisitorReason'), 'Motivations*', resize = 'vertical', placeholder = 'Kill Spider-Man, Destroy Oscorp, Take revenge on Norman Osborn'),
           p('* mendatory fields')
         ),
+        # Create footer buttons
         footer = tagList(
+          # Send request button disabled by default
           disabled(
             actionButton(session$ns('sendRequest'), 'Send Request', class = 'custom-style custom-style--primary')
           ),
+          # Cancel button
           modalButtonWithClass('Cancel', class = 'custom-style')
         )
       )
@@ -82,7 +92,7 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
   ))
   
   # Debounce checks to avoid it to rerun for every single character typed
-  checkInputs_d <- debounce(checkInputs, 250)
+  checkInputs_d <- debounce(checkInputs, 400)
   
   # Create an observeEvent that react to the inputs check and toggle the send request button state accordingly
   observeEvent(checkInputs_d(), ignoreInit = TRUE, toggleState('sendRequest', condition = all(checkInputs_d())))
@@ -94,23 +104,34 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
   
   # Create an observeEvent that react to sendRequest button
   observeEvent(input$sendRequest, ignoreInit = TRUE, {
+    # Run only if all fields are filled and correct
     req(input$requisitorName, isValidEmail(input$requisitorEmail), input$requisitoInstitution, input$requisitorReason)
     
+    # Set the sender email address
     from <- 'yourdummysenderemail@epfl.ch'
+    # Set the recipient email address
     to <- 'metalp-poeple@epfl.ch'
+    # Set the reply to email address, i.e. the requisitor
     replyTo <- paste0('Reply to ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
+    # Create the email subject
     subject <- paste0('Data Request from ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
+    # Create the email body
     body <- paste(
+      # Add the requisitor's name and institution
       paste0(input$requisitorName, ' from ', input$requisitoInstitution, ' would like to get the following data:'),
       '',
+      # Add the date range and data type requested
       paste0('Date Range: ', dataSelectionInput()$min, ' - ', dataSelectionInput()$max),
       paste0('Data Type: ', dataSelectionInput()$data),
       sep = '\n'
     )
     
+    # If sensor data are requested
     if (dataSelectionInput()$data == 'sensor') {
+      # Append to the body
       body <- paste(
         body,
+        # The data interval frequency, modeled data and single point info
         paste0('Data frequency: ', dataSelectionInput()$dataFreq),
         paste0('Modeled Data: ', dataSelectionInput()$modeled),
         paste0('Single Points Info: ', dataSelectionInput()$singelPoint),
@@ -118,20 +139,25 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
       )
     }
     
+    # Finally append to the body
     body <- paste(
       body,
+      # The selected parameters and stations
       paste0('Stations: [', paste(dataSelectionInput()$sites, collapse = ', '), ']'),
       paste0('Parameters: [', paste(dataSelectionInput()$parameters, collapse = ', '), ']'),
       '\n',
+      # And the reasons for the request
       'For the following reasons:',
       '',
       input$requisitorReason,
       sep = '\n')
-    smtp <- list(host.name = "smtp.server.ch", port = 25, 
+    
+    # Add the smtp host informations
+    smtp <- list(host.name = "mail.epfl.ch", port = 465,
                  user.name = "********",            
                  passwd = "******", ssl = TRUE)
   
-    
+    # Send the email
     send.mail(
       from = from,
       to = to,
