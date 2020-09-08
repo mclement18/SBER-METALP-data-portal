@@ -82,8 +82,12 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
             id = 'download-hf-inputs',
             checkboxGroupInputWithClass(
               radioButtons(
-                ns('hfDataFreq'),
-                'Data frequency',
+                inputId = ns('hfDataFreq'),
+                label = tags$span(
+                  'Data frequency',
+                  # Create an icon button that trigger a modal to display the parameter description
+                  actionButton(ns('hfFreqHelper'), icon('question-circle'), class = 'icon-btn')
+                ),
                 choices = list('10min (raw)' = '10min', '6H', '12H', '24H'),
                 selected = '10min'
               ),
@@ -439,6 +443,21 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     showModal(modalDialog(
       title = 'Parameter description',
       htmlOutput(session$ns('description')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
+      easyClose = TRUE
+    ))
+  })
+  
+  
+  
+  
+  ## Data Frequency helper logic ####################################################
+  
+  # Create an observeEvent that react to the data freq helper button
+  observeEvent(input$hfFreqHelper, ignoreInit = TRUE, {
+    showModal(modalDialog(
+      title = 'Sensor Data Frequency Selection',
+      htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))

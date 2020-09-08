@@ -45,8 +45,12 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
       # Create radio buttons to select the data frequency to display
       checkboxGroupInputWithClass(
         radioButtons(
-          ns('dataFreq'),
-          'Data frequency',
+          inputId = ns('dataFreq'),
+          label = tags$span(
+            'Data frequency',
+            # Create an icon button that trigger a modal to display the parameter description
+            actionButton(ns('hfFreqHelper'), icon('question-circle'), class = 'icon-btn')
+          ),
           choices = list('10min (raw)' = '10min', '24H'),
           selected = '24H'
         ),
@@ -405,6 +409,21 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     showModal(modalDialog(
       title = 'Parameters description',
       htmlOutput(session$ns('description')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
+      easyClose = TRUE
+    ))
+  })
+  
+  
+  
+  
+  ## Data Frequency helper logic ####################################################
+  
+  # Create an observeEvent that react to the data freq helper button
+  observeEvent(input$hfFreqHelper, ignoreInit = TRUE, {
+    showModal(modalDialog(
+      title = 'Sensor Data Frequency Selection',
+      htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))

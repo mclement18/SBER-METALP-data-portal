@@ -52,8 +52,12 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
       # Create radio buttons to select the data frequency to display
       checkboxGroupInputWithClass(
         radioButtons(
-          ns('dataFreq'),
-          'Data frequency',
+          inputId = ns('dataFreq'),
+          label = tags$span(
+            'Data frequency',
+            # Create an icon button that trigger a modal to display the parameter description
+            actionButton(ns('freqHelper'), icon('question-circle'), class = 'icon-btn')
+          ),
           choices = list('10min (raw)' = '10min', '6H', '12H', '24H'),
           selected = '10min'
         ),
@@ -237,6 +241,21 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
       easyClose = TRUE
     ))
   })
+  
+  
+  
+  ## Data Frequency helper logic ####################################################
+  
+  # Create an observeEvent that react to the data freq helper button
+  observeEvent(input$freqHelper, ignoreInit = TRUE, {
+    showModal(modalDialog(
+      title = 'Sensor Data Frequency Selection',
+      htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
+      easyClose = TRUE
+    ))
+  })
+  
   
   
   
