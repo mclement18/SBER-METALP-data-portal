@@ -62,7 +62,9 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
           selected = '10min'
         ),
         class = 'checkbox-grid'        
-      )
+      ),
+      # Show stats button
+      actionButton(ns('showStats'), 'Show Stats', class = 'custom-style')
     ),
     # Create the UI plots
     'plots' = div(
@@ -255,6 +257,82 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
       easyClose = TRUE
     ))
   })
+  
+  
+  
+  
+  ## Show stats logic #############################################################
+  
+  # Create a reactive expression returning the the summarised data
+  statsData <- reactive({
+    # Take the 10min data and filter by sites and date
+    df$`10min` %>% filter(
+      Site_ID %in% selectedSites_d(),
+      date(date) >= dateRange()$min,
+      date(date) <= dateRange()$max
+      # Select the date, sites and selected parameter columns
+    ) %>% select(
+      date,
+      Site_ID,
+      starts_with(param()$data),
+      -ends_with('singlePoint')
+      # Pivot longer to summarise easily
+    ) %>% pivot_longer(
+      ends_with(c('measured', 'modeled')),
+      names_to = 'data_type',
+      names_pattern = '.*_(.*)',
+      names_transform = list('data_type' = as.factor),
+      values_to = 'value'
+      # Group by sites and data_type
+    )%>% group_by(
+      Site_ID, data_type
+      # Get the number of values per data_type and site
+    ) %>% summarise(
+      n = sum(!is.na(value))
+      # Pivot wider again to compute some info easily
+    ) %>% pivot_wider(
+      names_from = data_type,
+      values_from = n
+      # Add a total column
+    ) %>% mutate(
+      total = sum(measured, modeled)
+      # Add percentage columns
+    ) %>% mutate(
+      measured_pct = measured / total * 100,
+      modeled_pct = modeled / total * 100
+      # Pivot wider to get the site in columns
+    ) %>% pivot_wider(
+      names_from = Site_ID,
+      values_from = -c(Site_ID),
+      names_glue = "{Site_ID}_{.value}"
+      # Pivot longer to get the stats in rows
+    ) %>% pivot_longer(
+      everything(),
+      names_to = c('.value', 'Stats'),
+      names_pattern = '^([A-Z]*)_(.*)'
+      # Capitalize the stats name
+    ) %>% mutate(Stats = str_to_title(Stats))
+  })
+  
+  # Render the stats tables in the modal
+  output$sensorStats <- renderStatsTables(
+    elements = unique(sites$sites$catchments),
+    data = statsData,
+    sites = sites$sites,
+    tableFunction = createSensorStatsTable
+  )
+  
+  # Create an observeEvent that react to the show stats button
+  observeEvent(input$showStats, ignoreInit = TRUE, {
+    # Create a moadal containing the stats output
+    showModal(modalDialog(
+      title = 'Sensors Stats',
+      htmlOutput(session$ns('sensorStats'), class = 'stats-summary'),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
+      easyClose = TRUE
+    ))
+  })
+  
   
   
   

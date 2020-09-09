@@ -270,11 +270,16 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
   
   ## Stats summary modal logic ####################################################
   
+  # Render the stats tables in the modal
+  output$stats <- renderStatsTables(
+    elements = selectedSites_d,
+    data = data,
+    sites = sites$sites,
+    tableFunction = createStatsTablePerSite
+  )
+  
   # Create an observeEvent that react to show stats button
   observeEvent(input$showstats, {
-    # Render the statsTables in the modal
-    output$stats <- renderStatsTablePerSite(session, output, 'statstable', data, sites$sites, selectedSites_d)
-    
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
       title = str_interp('Stats ${currentCatchment()} catchment'),
