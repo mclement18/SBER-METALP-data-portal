@@ -158,11 +158,11 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
       # Filter the data using the selected sites and the date range
       df %<>% filter(
         Site_ID %in% selectedSites_d(),
-        date(date) >= dateRange()$min,
-        date(date) <= dateRange()$max
+        date(Date) >= dateRange()$min,
+        date(Date) <= dateRange()$max
       ) %>%
         # Select the date, Site_ID, all the parameter specific columns and remove modeled column not used
-        select(date, Site_ID, starts_with(param()$data), -ends_with(typesToRemove)) %>% 
+        select(Date, Site_ID, starts_with(param()$data), -ends_with(typesToRemove)) %>% 
         # Pivot longer the data to get a data_type and a value column
         pivot_longer(
           ends_with(c('measured', 'modeled')),
@@ -178,9 +178,9 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
       # Then select the parameter and rename the column to 'value'
       df %<>% filter(
         Site_ID %in% selectedSites_d(),
-        date(date) >= dateRange()$min,
-        date(date) <= dateRange()$max
-      ) %>% select(date, Site_ID, 'value' = param()$data)
+        date(Date) >= dateRange()$min,
+        date(Date) <= dateRange()$max
+      ) %>% select(Date, Site_ID, 'value' = param()$data)
     }
     
     # If there is no data return NULL
@@ -268,11 +268,11 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     # Take the 10min data and filter by sites and date
     df$`10min` %>% filter(
       Site_ID %in% selectedSites_d(),
-      date(date) >= dateRange()$min,
-      date(date) <= dateRange()$max
+      date(Date) >= dateRange()$min,
+      date(Date) <= dateRange()$max
       # Select the date, sites and selected parameter columns
     ) %>% select(
-      date,
+      Date,
       Site_ID,
       starts_with(param()$data),
       -ends_with('singlePoint')

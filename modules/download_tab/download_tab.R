@@ -256,7 +256,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       df <- hfDf[[input$hfDataFreq]]
     } else if (inputDf == 'grabDf') {
       df <- grabSampleDf
-      df %<>% rename(date = DATETIME_GMT)
+      df %<>% rename(Date = DATETIME_GMT)
     } else {
       return(data.table())
     }
@@ -264,8 +264,8 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     
     # Filter rows
     df %<>% filter(
-      date(date) >= input$time[1],
-      date(date) <= input$time[2],
+      date(Date) >= input$time[1],
+      date(Date) <= input$time[2],
       Site_ID %in% sitesReactive_d()
     )
     
@@ -274,7 +274,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       # If add modeled data is selected
       if (input$addModeledData) {
         # Create a new df with the date and sites columns
-        newDf <- df %>% select(date, Site_ID)
+        newDf <- df %>% select(Date, Site_ID)
         
         # For each parameter create a combined column
         for (parameter in parameters()) {
@@ -303,12 +303,12 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
         removeSPCol <- 'singlePoint'
         if (input$addSinglePointInfo) removeSPCol <- 'NULL'
         # Keep only the measured value and rename the columns
-        df %<>% select(date, Site_ID, starts_with(parameters()), -ends_with(c('modeled', removeSPCol)))
+        df %<>% select(Date, Site_ID, starts_with(parameters()), -ends_with(c('modeled', removeSPCol)))
       }
     } else {
       # For anything else than HF 10min data
       # Select date, stations and all parameters
-      df %<>% select(date, Site_ID, all_of(parameters()))
+      df %<>% select(Date, Site_ID, all_of(parameters()))
     }
     
     # Convert df to data.table for print output
@@ -330,7 +330,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     
     # If date is present, display the min and max dates
     # Else display NAs
-    if ('date' %in% columnsNames) {
+    if ('Date' %in% columnsNames) {
       dateSummary <- selectedData() %>% summarise_if(is.POSIXct, list(
         'Min' = min,
         'Max' = max

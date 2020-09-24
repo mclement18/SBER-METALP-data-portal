@@ -148,8 +148,8 @@ ui <- tagList(
         tags$span(icon('download'),tags$span('Download', class = 'navbar-menu-name')),
         downloadTabUI(
           '1',
-          minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$date), na.rm = TRUE),
-          maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$date), na.rm = TRUE),
+          minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
+          maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
           sites = sites,
           grabSampleParameters = grabSampleParameters,
           hfParameters = hfParameters
@@ -172,8 +172,8 @@ server <- function(input, output, session) {
   # Load downloadTab module server logic
   callModule(downloadTab, '1',
              grabSampleDf, hfDf,
-             minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$date), na.rm = TRUE),
-             maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$date), na.rm = TRUE),
+             minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
+             maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
              sites, grabSampleParameters, hfParameters)
 }
 

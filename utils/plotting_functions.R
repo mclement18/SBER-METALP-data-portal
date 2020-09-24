@@ -226,7 +226,7 @@ highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites, modeledData =
 #       + 'Site_ID': factor
 #       + 'value': numeric
 #       + 'data_type': factor, either modeled or measured, if modeledData = TRUE
-#       + 'date': POSIXct datetime
+#       + 'Date': POSIXct datetime
 # - parameter: List or 1-row df containing the following values accessible with '$':
 #          + param_name: String
 #          + units: String
@@ -237,7 +237,7 @@ highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites, modeledData =
 # Returns a ggplot2 plot
   
   # Create plot base
-  p <- ggplot(df, aes(date, value, color = Site_ID))
+  p <- ggplot(df, aes(Date, value, color = Site_ID))
   
   # If df contains modeled data add some additional aes to geom_line
   if (modeledData) {

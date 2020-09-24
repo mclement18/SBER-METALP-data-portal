@@ -56,8 +56,8 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
       # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
       sidebarInputLayoutUI(
         ns('sensorsTimeseries'),
-        minDate = min(hfDf$`24H`$date, na.rm = TRUE),
-        maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
+        minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+        maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
         innerModuleUI = highFreqTimeSeriesUI,
         sites = sites,
         parameters = hfParameters
@@ -86,8 +86,8 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
       # Create a sidebarInputLayout UI with for the sensorGrabComparison module
       sidebarInputLayoutUI(
         ns('sensorVsGrab'),
-        minDate = min(hfDf$`24H`$date, na.rm = TRUE),
-        maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
+        minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+        maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
         innerModuleUI = sensorGrabComparisonUI,
         sites = sites,
         parameters = list('hf' = hfParameters)
@@ -128,8 +128,8 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              highFreqTimeSeries, highFreqTimeSeriesUI,
              list('inputs' = 'hf-time-serie-plot-input', 'plots' = 'hf-time-serie-plots'),
              df = hfDf,
-             minDate = min(hfDf$`24H`$date, na.rm = TRUE),
-             maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
+             minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+             maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
              sites = sites,
              parameters = hfParameters)
   
@@ -149,8 +149,8 @@ visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, 
              sensorGrabComparison, sensorGrabComparisonUI,
              list('inputs' = 'sensor-vs-grab-plot-input', 'plots' = 'sensor-vs-grab-plots'),
              df = list('hf' = hfDf, 'grab' = grabSampleDf),
-             minDate = min(hfDf$`24H`$date, na.rm = TRUE),
-             maxDate = max(hfDf$`24H`$date, na.rm = TRUE),
+             minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+             maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
              sites = sites,
              parameters = list('hf' = hfParameters, 'grab' = grabSampleParameters))
 }

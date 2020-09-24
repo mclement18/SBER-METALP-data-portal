@@ -160,11 +160,11 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       # Filter the data using the selected sites and the date range
       hfDf %<>% filter(
         Site_ID == input$site,
-        date(date) >= dateRange()$min,
-        date(date) <= dateRange()$max
+        date(Date) >= dateRange()$min,
+        date(Date) <= dateRange()$max
       ) %>%
         # Select the date, Site_ID, all the parameter specific columns and remove modeled column not used
-        select(date, Site_ID, starts_with(paramHf()$data), -ends_with(typesToRemove)) %>% 
+        select(Date, Site_ID, starts_with(paramHf()$data), -ends_with(typesToRemove)) %>% 
         # Pivot longer the data to get a data_type and a value column
         pivot_longer(
           ends_with(c('measured', 'modeled')),
@@ -180,9 +180,9 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       # Then select the parameter and rename the column to 'value'
       hfDf %<>% filter(
         Site_ID == input$site,
-        date(date) >= dateRange()$min,
-        date(date) <= dateRange()$max
-      ) %>% select(date, Site_ID, 'value' = paramHf()$data)
+        date(Date) >= dateRange()$min,
+        date(Date) <= dateRange()$max
+      ) %>% select(Date, Site_ID, 'value' = paramHf()$data)
     }
     
     # If there is no data return NULL
@@ -232,13 +232,13 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     # Filter the data using the selected sites and the date range
     hfData %<>% filter(
       Site_ID == input$site,
-      date(date) >= dateRange()$min,
-      date(date) <= dateRange()$max
+      date(Date) >= dateRange()$min,
+      date(Date) <= dateRange()$max
     ) %>%
       # Select the date, Site_ID, all the parameter specific columns
       # And remove the singlePoint column and the modeled one if needed
       # Isolate paramHF to avoid multiple rerender
-      select(date, Site_ID, starts_with(isolate(paramHf()$data)), -ends_with(c(typesToRemove, 'singlePoint'))) %>% 
+      select(Date, Site_ID, starts_with(isolate(paramHf()$data)), -ends_with(c(typesToRemove, 'singlePoint'))) %>% 
       # Pivot longer the data to get a data_type and a value column
       pivot_longer(
         ends_with(c('measured', 'modeled')),
@@ -268,7 +268,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       endingTime <- startingTime + hours(4)
       
       # Filter the HF data using the interval
-      filteredHf <- hfData %>% filter(date >= startingTime, date <= endingTime)
+      filteredHf <- hfData %>% filter(Date >= startingTime, Date <= endingTime)
       
       # If no data proceed to next iteration
       if (nrow(filteredHf) == 0) next

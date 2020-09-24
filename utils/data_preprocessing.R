@@ -26,7 +26,7 @@ loadHighFreqDf <- function() {
   hf_10min_df <- fread('./data/HF_data/10min_data.csv', header = TRUE, sep = ',')
 
   # Convert date to POSIXct
-  hf_10min_df$date <- hf_10min_df$date %>% ymd_hms(tz = 'GMT')
+  hf_10min_df$Date <- hf_10min_df$Date %>% ymd_hms(tz = 'GMT')
   
   # Convert singlePoint columns to factor
   hf_10min_df %<>% mutate(across(ends_with('singlePoint'), as.factor))
@@ -44,7 +44,7 @@ loadHighFreqDf <- function() {
   hf_6H_df <- fread('./data/HF_data/6H_data.csv', header = TRUE, sep = ',')
   
   # Convert date to POSIXct
-  hf_6H_df$date <- hf_6H_df$date %>% ymd_hms(tz = 'GMT')
+  hf_6H_df$Date <- hf_6H_df$Date %>% ymd_hms(tz = 'GMT')
   
   # Convert Site_ID to factor
   hf_6H_df$Site_ID <- hf_6H_df$Site_ID %>% as.factor()
@@ -55,7 +55,7 @@ loadHighFreqDf <- function() {
   hf_12H_df <- fread('./data/HF_data/12H_data.csv', header = TRUE, sep = ',')
   
   # Convert date to POSIXct
-  hf_12H_df$date <- hf_12H_df$date %>% ymd_hms(tz = 'GMT')
+  hf_12H_df$Date <- hf_12H_df$Date %>% ymd_hms(tz = 'GMT')
   
   # Convert Site_ID to factor
   hf_12H_df$Site_ID <- hf_12H_df$Site_ID %>% as.factor()
@@ -67,7 +67,7 @@ loadHighFreqDf <- function() {
   hf_24H_df <- fread('./data/HF_data/24H_data.csv', header = TRUE, sep = ',')
   
   # Convert date to POSIXct
-  hf_24H_df$date <- hf_24H_df$date %>% ymd(tz = 'GMT')
+  hf_24H_df$Date <- hf_24H_df$Date %>% ymd(tz = 'GMT')
   
   # Convert Site_ID to factor
   hf_24H_df$Site_ID <- hf_24H_df$Site_ID %>% as.factor()
