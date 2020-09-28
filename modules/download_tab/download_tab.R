@@ -231,13 +231,28 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   ## Parameters selection logic ###################################################
   
-  # Create a rective expression that retrive the selected parameters
+  # Create a reactive expression that retrieve the selected parameters
   parameters <- reactive({
     inputDf <- input$data
     if (inputDf == 'hfDf') {
-      hfParameters$parameters %>% filter(param_name %in% hfParamReactive_d()) %>% pull(data)
+      hfParameters$parameters %>%
+        filter(param_name %in% hfParamReactive_d()) %>%
+        pull(data)
     } else if (inputDf == 'grabDf') {
-      grabSampleParameters$parameters %>% filter(param_name %in% grabParamReactive_d()) %>% pull(data)
+      # Get parameters
+      raw_params <- grabSampleParameters$parameters %>%
+        filter(param_name %in% grabParamReactive_d()) %>%
+        pull(data)
+      
+      # Create an empty vector
+      params <- c()
+      # For each parameter unlist them and concatenate to params vector
+      for (param in raw_params) {
+        params <- c(params, unlist(str_split(param, ',')))
+      }
+      
+      # Return parameters
+      params
     }
   })
   
