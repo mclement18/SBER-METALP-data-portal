@@ -185,8 +185,12 @@ js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd()) {
   # Create the full path to the output file
   outputFile = file.path(outputDir, 'metalpdataportal.js')
   
+  # Get the correct terser command depending on the OS
+  command <- 'terser'
+  if (Sys.info()["sysname"] == 'Windows') command <- paste0(command, '.cmd')
+  
   # Minify the compiled JS and saves it in the output file
-  processx::run(command = 'terser', args = c(tmp, '-c', '-o', outputFile))
+  processx::run(command = command, args = c(tmp, '-c', '-o', outputFile))
   
   # Delete the temporary file
   file.remove(tmp)
