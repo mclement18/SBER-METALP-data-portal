@@ -131,10 +131,9 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
       # Append to the body
       body <- paste(
         body,
-        # The data interval frequency, modeled data and single point info
+        # The data interval frequency and modeled data
         paste0('Data frequency: ', dataSelectionInput()$dataFreq),
         paste0('Modeled Data: ', dataSelectionInput()$modeled),
-        paste0('Single Points Info: ', dataSelectionInput()$singelPoint),
         sep = '\n'
       )
     }

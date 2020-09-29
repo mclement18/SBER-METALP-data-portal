@@ -95,8 +95,6 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
             ),
             # Select for modeled data
             checkboxInput(ns('addModeledData'), 'Add modeled data', value = FALSE),
-            # Select for single points info
-            checkboxInput(ns('addSinglePointInfo'), 'Add single point info', value = FALSE),
             # Select HF parameters
             selectizeInput(
               inputId =  ns('hfParam'),
@@ -199,13 +197,12 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   
   
   
-  ## Modeled data and single points info selection logic #################################################
+  ## Modeled data selection logic #################################################
   
   # Create observeEvent that react to frequence update
   # Display addModeledData checkbox if the selected data frequence is 10min
   observeEvent(input$hfDataFreq, ignoreInit = TRUE, {
     toggleElement('addModeledData', condition = input$hfDataFreq == '10min')
-    toggleElement('addSinglePointInfo', condition = input$hfDataFreq == '10min')
   })
   
   
@@ -301,11 +298,6 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
           tmpDf %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
           # Add parameter columns to the new df
           newDf <- bind_cols(newDf, tmpDf)
-          # If the single point info is selected add it to the data
-          if(input$addSinglePointInfo) {
-            tmpSPCol <- df %>% select(starts_with(parameter) & ends_with('singlePoint'))
-            newDf <- bind_cols(newDf, tmpSPCol)
-          }
         }
         
         # Assigne the new df to the df
@@ -314,11 +306,8 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
         # Remove the tmpDf and newDf
         rm(tmpDf, newDf, tmpSPCol)
       } else {
-        # Define if the single point info is selected or not
-        removeSPCol <- 'singlePoint'
-        if (input$addSinglePointInfo) removeSPCol <- 'NULL'
         # Keep only the measured value and rename the columns
-        df %<>% select(Date, Site_ID, starts_with(parameters()), -ends_with(c('modeled', removeSPCol)))
+        df %<>% select(Date, Site_ID, starts_with(parameters()), -ends_with(c('modeled', 'singlePoint')))
       }
     } else {
       # For anything else than HF 10min data
@@ -389,11 +378,6 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       parametersSummary <- data.table('Stat' = c('Min', 'Mean', 'Max', 'NAs'))
     }
     
-    # If the single point info is selected create a summary for it
-    if (any(grepl('singlePoint', columnsNames))) {
-      singlePointsSummary <- selectedData() %>% select(ends_with('singlePoint')) %>%
-        summarise(across(everything(), ~ sum(as.numeric(as.character(.x))))) %>% as.data.table()
-    }
 
     # Create print layout
     cat('# Data summary:', '\n\n')
@@ -405,11 +389,6 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     cat('\n')
     cat('## Parameters info', '\n\n')
     print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)
-    if (any(grepl('singlePoint', columnsNames))) {
-      cat('\n')
-      cat('## Single points info', '\n\n')
-      print(singlePointsSummary)
-    }
     cat('\n\n')
     cat('---------------------------------------------------------------------------')
     cat('\n\n')
@@ -550,7 +529,6 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
         'data' = data,
         'dataFreq' = input$hfDataFreq,
         'modeled' = input$addModeledData,
-        'singelPoint' = input$addSinglePointInfo,
         'sites' = sitesReactive_d(),
         'parameters' = parameters()
       )
