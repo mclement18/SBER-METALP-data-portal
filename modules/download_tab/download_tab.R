@@ -4,6 +4,8 @@
 source('./modules/download_tab/download_data.R')
 source('./modules/download_tab/request_data.R')
 
+fake_login_status <- TRUE
+
 
 ## Create module UI ###############################################################
 
@@ -154,7 +156,7 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
     div(
       class = 'download__actions',
       # Add the download or request button
-      if (F) {
+      if (fake_login_status) {
         downloadDataUI(ns('download'))
       } else {
         requestDataUI(ns('request'))
@@ -355,7 +357,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     
     
     # If user as the right to see
-    if (F) {
+    if (fake_login_status) {
       # If there is at least one parameter selected
       # Summarise each parameter
       # Else display only Stat column
@@ -393,7 +395,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     cat('\n')
     cat('## Parameters info', '\n\n')
     # If user as the right to see it
-    if (F) {
+    if (fake_login_status) {
       print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)
       cat('\n\n')
       cat('---------------------------------------------------------------------------')
@@ -519,7 +521,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   ## Download and request data logic ###########################################################
   
   # Call the downloadData or requestData module
-  if (F) {
+  if (fake_login_status) {
     callModule(downloadData, 'download', selectedData)
   } else {
     # Create a reactive expression returning a list of the data selection inputs
