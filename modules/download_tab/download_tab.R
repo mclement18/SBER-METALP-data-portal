@@ -353,29 +353,33 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
       sitesSummary <- data.table('Station' = c(NA), 'N' = c(NA))
     }
     
-    # If there is at least one parameter selected
-    # Summarise each parameter
-    # Else display only Stat column
-    if (length(parameters()) > 0) {
-      parametersSummary <- selectedData() %>% summarise_if(is.numeric, list(
-        'Min' = ~ min(.x, na.rm = TRUE),
-        'Mean' = ~ mean(.x, na.rm = TRUE),
-        'Max' = ~ max(.x, na.rm = TRUE),
-        'NAs' = ~ sum(is.na(.x))
-      ))
-      
-      # If there is only one parameter and three or four columns set manually the summary columns names
-      # Else get them programmatically
-      if (length(parameters()) == 1 & length(columnsNames) %in% c(3, 4)) {
-        parametersSummary %<>% pivot_longer(everything(), names_to = 'Stat', values_to = columnsNames[3])
+    
+    # If user as the right to see
+    if (F) {
+      # If there is at least one parameter selected
+      # Summarise each parameter
+      # Else display only Stat column
+      if (length(parameters()) > 0) {
+        parametersSummary <- selectedData() %>% summarise_if(is.numeric, list(
+          'Min' = ~ min(.x, na.rm = TRUE),
+          'Mean' = ~ mean(.x, na.rm = TRUE),
+          'Max' = ~ max(.x, na.rm = TRUE),
+          'NAs' = ~ sum(is.na(.x))
+        ))
+        
+        # If there is only one parameter and three or four columns set manually the summary columns names
+        # Else get them programmatically
+        if (length(parameters()) == 1 & length(columnsNames) %in% c(3, 4)) {
+          parametersSummary %<>% pivot_longer(everything(), names_to = 'Stat', values_to = columnsNames[3])
+        } else {
+          parametersSummary %<>% pivot_longer(everything(), names_to = c('.value', 'Stat'), names_pattern = '(.*)_(.*)')
+        }
+        
+        # Convert summary to data.table
+        parametersSummary %<>% as.data.table()
       } else {
-        parametersSummary %<>% pivot_longer(everything(), names_to = c('.value', 'Stat'), names_pattern = '(.*)_(.*)')
+        parametersSummary <- data.table('Stat' = c('Min', 'Mean', 'Max', 'NAs'))
       }
-      
-      # Convert summary to data.table
-      parametersSummary %<>% as.data.table()
-    } else {
-      parametersSummary <- data.table('Stat' = c('Min', 'Mean', 'Max', 'NAs'))
     }
     
 
@@ -388,12 +392,17 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     print(sitesSummary)
     cat('\n')
     cat('## Parameters info', '\n\n')
-    print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)
-    cat('\n\n')
-    cat('---------------------------------------------------------------------------')
-    cat('\n\n')
-    cat('# Selected data preview:', '\n\n')
-    print(selectedData(), topn = 5, nrows = 15)
+    # If user as the right to see it
+    if (F) {
+      print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)
+      cat('\n\n')
+      cat('---------------------------------------------------------------------------')
+      cat('\n\n')
+      cat('# Selected data preview:', '\n\n')
+      print(selectedData(), topn = 5, nrows = 15)
+    } else {
+      print(colnames(selectedData()))
+    }
   })
   
   
