@@ -102,8 +102,6 @@ ui <- tagList(
     # Add link for js script
     tags$script(src = 'metalpdataportal.js')
   ),
-  # Add a class to the body element to keep the footer at the bottom of the page
-  tags$body(class = 'footer-to-bottom-container'),
   # Create the navbarPage using custom function to add a content-wrapper (defined in './utils/shiny_extensions.R')
   navbarPageWithWrapper(
     # Pass in the output of shiny navbarPage()

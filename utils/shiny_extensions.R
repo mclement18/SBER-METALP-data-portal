@@ -19,8 +19,13 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
   navbarPageOutput[[3]][[2]]$attribs$class <- str_interp('${navbarPageOutput[[3]][[2]]$attribs$class} ${wrapperClass} ${beforeFooterClass}')
   
   # If footer is defined, add it after the content
+  # And wrap all the body in a div with a CSS class used to send the footer to the bottom of the page
   if(!is.null(footer)) {
     navbarPageOutput[[3]][[length(navbarPageOutput[[3]]) + 1]] <- footer
+    navbarPageOutput <- div(
+      class = 'footer-to-bottom-container',
+      navbarPageOutput
+    )
   }
   
   return(navbarPageOutput)
