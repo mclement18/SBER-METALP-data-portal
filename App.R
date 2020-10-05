@@ -43,6 +43,15 @@ library(forcats)
 library(tidyr)
 library(magrittr)
 library(dplyr)
+library(DBI)
+library(pool)
+library(dbplyr)
+
+
+
+## Load Secret Global Variables ###################################################
+source('./secrets.R')
+
 
 
 ## Compile CSS from Sass ##########################################################
@@ -76,6 +85,16 @@ hfDf <- loadHighFreqDf()
 sites <- loadSites()
 grabSampleParameters <- loadGrabSamplesParameters()
 hfParameters <- loadHfParameters()
+
+
+
+## Connect to DB ##################################################################
+
+# Load BD interactions functions
+source('./utils/bd_interaction.R')
+
+# Create pool connection with the DB
+pool <- connectToDB()
 
 
 

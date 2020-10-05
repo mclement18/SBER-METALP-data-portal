@@ -14,7 +14,12 @@ install.packages(
            "forcats", 
            "tidyr", 
            "magrittr", 
-           "dplyr"
+           "dplyr",
+           "DBI",
+           "RMySQL",
+           "pool",
+           "dbplyr",
+           "sodium"
   ),
   repos = 'https://cran.rstudio.com/'
 )
