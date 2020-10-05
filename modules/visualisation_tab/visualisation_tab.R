@@ -36,7 +36,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
     # Create the grab samples timeserie visualisation tab
     tabPanel(
       # Tab title
-      'Grab Samples Data',
+      'Grab sample data',
       # Tab content
       # Create a sidebarInputLayout UI with for the grabSamplesTimeSeries module 
       sidebarInputLayoutUI(
@@ -51,7 +51,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
     # Create the Sensors timeserie visualisation tab
     tabPanel(
       # Tab title
-      'Sensors Data',
+      'Sensor data',
       # Tab content
       # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
       sidebarInputLayoutUI(
@@ -66,7 +66,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
     # Create the grab samples comparison tab
     tabPanel(
       # Tab title
-      'Grab samples comparison',
+      'Grab sample comparison',
       # Tab content
       # Create a sidebarInputLayout UI with for the grabSamplesComparison module
       sidebarInputLayoutUI(
@@ -81,7 +81,7 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
     # Create the sensors vs grab samples comparison tab
     tabPanel(
       # Tab title
-      'Sensors vs Grab samples comparison',
+      'Sensor vs Grab sample comparison',
       # Tab content
       # Create a sidebarInputLayout UI with for the sensorGrabComparison module
       sidebarInputLayoutUI(

@@ -16,10 +16,6 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
   # Create namespace
   ns <- NS(id)
   
-  # Parse id to get the module unit nb
-  splittedId <- str_split(id, '-') %>% unlist()
-  unitNb <- splittedId[length(splittedId)]
-  
   # Create the UI list to be returned
   list(
     # Create the UI inputs
@@ -31,7 +27,7 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
       checkboxGroupInputWithClass(
         checkboxGroupInput(
           ns('sites'),
-          str_interp('Stations ${unitNb}'),
+          str_interp('Stations'),
           choices = sites$sitesOptions,
           selected = sites$sitesOptions[[1]]
         ),
@@ -198,15 +194,11 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     # If there are no data return NULL
     if (data() %>% is.null()) return(NULL)
     
-    # Get unitNb
-    splittedId <- str_split(session$ns('0'), '-') %>% unlist()
-    unitNb <- splittedId[length(splittedId) - 1]
-    
     # Create and return a highFreqTimeSeriePlot
     highFreqTimeSeriePlot(
       df = data(),
       parameter = param(),
-      plotTitle = str_interp('Sensors High Frequency Time Serie ${unitNb}'),
+      plotTitle = str_interp('Sensors High Frequency Time Serie'),
       sites = sites$sites,
       modeledData = 'data_type' %in% colnames(data())
     )
@@ -237,7 +229,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
-      title = 'Parameters description',
+      title = 'Parameter description',
       htmlOutput(session$ns('description')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
@@ -251,7 +243,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   # Create an observeEvent that react to the data freq helper button
   observeEvent(input$freqHelper, ignoreInit = TRUE, {
     showModal(modalDialog(
-      title = 'Sensor Data Frequency Selection',
+      title = 'Sensor data frequency selection',
       htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
@@ -326,7 +318,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   observeEvent(input$showStats, ignoreInit = TRUE, {
     # Create a moadal containing the stats output
     showModal(modalDialog(
-      title = 'Sensors Stats',
+      title = 'Sensor summary statistics',
       htmlOutput(session$ns('sensorStats'), class = 'stats-summary'),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE

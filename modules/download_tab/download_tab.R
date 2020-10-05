@@ -461,7 +461,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
   # Create an observeEvent that react to the data freq helper button
   observeEvent(input$hfFreqHelper, ignoreInit = TRUE, {
     showModal(modalDialog(
-      title = 'Sensor Data Frequency Selection',
+      title = 'Sensor data frequency selection',
       htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE

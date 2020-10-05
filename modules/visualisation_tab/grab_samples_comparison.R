@@ -16,10 +16,6 @@ grabSamplesComparisonUI <- function(id, sites, parameters) {
   # Create namespace
   ns <- NS(id)
   
-  # Parse id to get the module unit nb
-  splittedId <- str_split(id, '-') %>% unlist()
-  unitNb <- splittedId[length(splittedId)]
-  
   # Create the UI list to be returned
   list(
     # Create the UI inputs
@@ -28,14 +24,14 @@ grabSamplesComparisonUI <- function(id, sites, parameters) {
       id = str_interp('grab-vs-grab-plot-input-${id}'),
       class = 'time-serie-input',
       # Create select input for catchment selection
-      selectInput(ns('site'), str_interp('Station ${unitNb}'), sites$sitesSelectOptions),
+      selectInput(ns('site'), str_interp('Station'), sites$sitesSelectOptions),
       # Inputs for X axis
       # Create a select input for parameter selection
       selectInput(
         ns('paramX'),
         # Create a label with an icon button
         tags$span(
-          str_interp('Parameter X ${unitNb}'),
+          str_interp('Parameter X-axis'),
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelperX'), icon('question-circle'), class = 'icon-btn')
         ),
@@ -46,7 +42,7 @@ grabSamplesComparisonUI <- function(id, sites, parameters) {
       hidden(
         radioButtons(
           ns('paramfilterX'),
-          str_interp('Subparameter X ${unitNb}'),
+          str_interp('Subparameter X-axis'),
           choices = 'NULL'
         )
       ),
@@ -56,7 +52,7 @@ grabSamplesComparisonUI <- function(id, sites, parameters) {
         ns('paramY'),
         # Create a label with an icon button
         tags$span(
-          str_interp('Parameter Y ${unitNb}'),
+          str_interp('Parameter Y-axis'),
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelperY'), icon('question-circle'), class = 'icon-btn')
         ),
@@ -67,7 +63,7 @@ grabSamplesComparisonUI <- function(id, sites, parameters) {
       hidden(
         radioButtons(
           ns('paramfilterY'),
-          str_interp('Subparameter Y ${unitNb}'),
+          str_interp('Subparameter Y-axis'),
           choices = 'NULL'
         )
       )
@@ -220,10 +216,6 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
     # Isolate paramfilter to rerender only when data is ready
     paramfilter <- isolate(paramfilter())
     
-    # Get unitNb
-    splittedId <- str_split(session$ns('0'), '-') %>% unlist()
-    unitNb <- splittedId[length(splittedId) - 1]
-    
     # Get current site name and color
     currentSite <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_full)
     currentColor <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_color)
@@ -235,7 +227,7 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
       y = paramfilter$filterY,
       parameterX = paramfilter$paramX,
       parameterY  = paramfilter$paramY,
-      plotTitle = str_interp('${currentSite} Grab VS Grab ${unitNb}'),
+      plotTitle = str_interp('${currentSite} Grab VS Grab'),
       color = currentColor
     )
   })
@@ -264,7 +256,7 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
     
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
-      title = 'Parameters description',
+      title = 'Parameter description',
       htmlOutput(session$ns('description')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
@@ -283,7 +275,7 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
     
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
-      title = 'Parameters description',
+      title = 'Parameter description',
       htmlOutput(session$ns('description')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE

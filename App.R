@@ -128,14 +128,14 @@ ui <- tagList(
       # Create the visualisation tab
       tabPanel(
         # Create a tab title with an icon
-        tags$span(icon('chart-bar'),tags$span('Visualisation', class = 'navbar-menu-name')),
+        tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
         # Load the visualisationTab module UI elements
         visualisationTabUI('1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
       ),
       # Create the data management tab
       tabPanel(
         # Create a tab title with an icon
-        tags$span(icon('database'),tags$span('Data Management', class = 'navbar-menu-name'))
+        tags$span(icon('database'),tags$span('Data management', class = 'navbar-menu-name'))
       ),
       # Create the toolbox tab
       tabPanel(

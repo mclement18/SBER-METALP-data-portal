@@ -16,10 +16,6 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
   # Create namespace
   ns <- NS(id)
   
-  # Parse id to get the module unit nb
-  splittedId <- str_split(id, '-') %>% unlist()
-  unitNb <- splittedId[length(splittedId)]
-  
   # Create the UI list to be returned
   list(
     # Create the UI inputs
@@ -28,13 +24,13 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
       id = str_interp('sensor-vs-grab-plot-input-${id}'),
       class = 'time-serie-input',
       # Create select input for site selection
-      selectInput(ns('site'), str_interp('Station ${unitNb}'), sites$sitesSelectOptions),
+      selectInput(ns('site'), str_interp('Station'), sites$sitesSelectOptions),
       # Create a select input for parameter selection
       selectInput(
         ns('paramHf'),
         # Create a label with an icon button
         tags$span(
-          str_interp('Parameter ${unitNb}'),
+          str_interp('Parameter'),
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
@@ -319,16 +315,12 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     # If there are no data return NULL
     if (hfData %>% is.null()) return(NULL)
     
-    # Get unitNb
-    splittedId <- str_split(session$ns('0'), '-') %>% unlist()
-    unitNb <- splittedId[length(splittedId) - 1]
-    
     # Create a highFreqTimeSeriePlot
     p <- highFreqTimeSeriePlot(
       df = hfData,
       # Isolate paramHF to avoid multiple rerender
       parameter = isolate(paramHf()),
-      plotTitle = str_interp('Sensor High Frequency Time Serie ${unitNb}'),
+      plotTitle = str_interp('Sensor High Frequency Time Serie'),
       sites = sites$sites,
       modeledData = 'data_type' %in% colnames(hfData)
     )
@@ -355,10 +347,6 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     # If there are no data return NULL
     if (vsDf() %>% is.null()) return(NULL)
     
-    # Get unitNb
-    splittedId <- str_split(session$ns('0'), '-') %>% unlist()
-    unitNb <- splittedId[length(splittedId) - 1]
-    
     # Get current site name and color
     currentSite <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_full)
     currentColor <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_color)
@@ -371,7 +359,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       parameterX = paramGrab(),
       # Isolate paramHF to avoid multiple rerender
       parameterY  = isolate(paramHf()),
-      plotTitle = str_interp('${currentSite} Sensor VS Grab ${unitNb}'),
+      plotTitle = str_interp('${currentSite} Sensor VS Grab'),
       color = currentColor
     ) %>% addOneToOneLine(
       minData = min(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE),
@@ -407,7 +395,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
-      title = 'Parameters description',
+      title = 'Parameter description',
       htmlOutput(session$ns('description')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
@@ -422,7 +410,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
   # Create an observeEvent that react to the data freq helper button
   observeEvent(input$hfFreqHelper, ignoreInit = TRUE, {
     showModal(modalDialog(
-      title = 'Sensor Data Frequency Selection',
+      title = 'Sensor data frequency selection',
       htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE

@@ -16,10 +16,6 @@ grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
   # Create namespace
   ns <- NS(id)
   
-  # Parse id to get the module unit nb
-  splittedId <- str_split(id, '-') %>% unlist()
-  unitNb <- splittedId[length(splittedId)]
-  
   # Create the UI list to be returned
   list(
     # Create the UI inputs
@@ -28,7 +24,7 @@ grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
       id = str_interp('time-serie-plot-input-${id}'),
       class = 'time-serie-input',
       # Create select input for catchment selection
-      selectInput(ns('catchment'), str_interp('Catchment ${unitNb}'), sites$catchmentsOptions),
+      selectInput(ns('catchment'), str_interp('Catchment'), sites$catchmentsOptions),
       # Create an empty checkbox group input for station selection
       # Will update dynamically in function of the catchment
       checkboxGroupInput(ns('sites'), 'Stations'),
@@ -282,7 +278,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
   observeEvent(input$showstats, {
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
-      title = str_interp('Stats ${currentCatchment()} catchment'),
+      title = str_interp('Summary statistics of the ${currentCatchment()} catchment'),
       htmlOutput(session$ns('stats'), class = 'stats-summary'),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
