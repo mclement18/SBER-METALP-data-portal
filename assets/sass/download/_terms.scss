@@ -1,0 +1,26 @@
+// ####################################
+// Disclaimer and Terms layout
+// ####################################
+
+.disclaimer {
+    font-size: .9em;
+    text-align: justify;
+}
+
+.terms {
+    padding: 1em;
+    border: 1px solid $black;
+    border-radius: 5px;
+    background: lighten($grey5, 25);
+
+    h3 {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin: 0 0 1.5em;
+        color: $primary-color;
+    }
+
+    .disclaimer {
+        margin: 0;
+    }
+}

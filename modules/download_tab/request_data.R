@@ -13,9 +13,12 @@ requestDataUI <- function(id) {
   # Create namespace
   ns <- NS(id)
   
-  # Create and return an actionButton disabled by default
-  disabled(
-    actionButton(ns('requestData'), 'Request Data', class = 'custom-style custom-style--primary')
+  # Return a list with a request button and a disclaimer
+  list(
+    # Create an actionButton disabled by default
+    'button' = disabled(actionButton(ns('requestData'), 'Request Data', class = 'custom-style custom-style--primary')),
+    # Load the HTML template with the disclaimer
+    'disclaimer' = htmlTemplate('./html_components/data_privacy.html')
   )
 }
 
@@ -51,18 +54,29 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
     showModal(
       # Create the modal form
       modalDialog(
-        title = 'Requisitor Informations',
+        title = 'Requisitor Informations', size = 's',
         # Create the form
         div(
           class = 'modal-form',
-          # Name
-          textInput(session$ns('requisitorName'), 'Name*', placeholder = 'Otto Octavius'),
-          # Email
-          textInput(session$ns('requisitorEmail'), 'Email*', placeholder = 'otto.octavius@octaviusindustries.com'),
-          # Institution
-          textInput(session$ns('requisitoInstitution'), 'Institution / Company*', placeholder = 'Octavius Industries'),
-          # Reasons
-          textAreaInput(session$ns('requisitorReason'), 'Motivations*', resize = 'vertical', placeholder = 'Kill Spider-Man, Destroy Oscorp, Take revenge on Norman Osborn'),
+          div(
+            class = 'requisitor-info',
+            # Name
+            textInput(session$ns('requisitorName'), 'Name*', placeholder = 'Otto Octavius'),
+            # Email
+            textInput(session$ns('requisitorEmail'), 'Email*', placeholder = 'otto.octavius@octaviusindustries.com'),
+            # Institution
+            textInput(session$ns('requisitoInstitution'), 'Institution / Company*', placeholder = 'Octavius Industries'),
+            # Reasons
+            textAreaInput(session$ns('requisitorReason'), 'Motivations*', resize = 'vertical', placeholder = 'Kill Spider-Man, Destroy Oscorp, Take revenge on Norman Osborn'),
+          ),
+          div(
+            class = 'data-terms',
+            htmlTemplate('./html_components/data_terms_use.html'),
+            checkboxInput(
+              inputId = session$ns('dataTermsUse'),
+              label = '* I agree with the Terms of use for the METALP data and Privacy policy.',
+              value = FALSE)
+          ),
           p('* mendatory fields')
         ),
         # Create footer buttons
@@ -88,7 +102,8 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
     input$requisitorName != '',
     isValidEmail(input$requisitorEmail),
     input$requisitoInstitution != '',
-    input$requisitorReason != ''
+    input$requisitorReason != '',
+    input$dataTermsUse
   ))
   
   # Debounce checks to avoid it to rerun for every single character typed
@@ -105,7 +120,13 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
   # Create an observeEvent that react to sendRequest button
   observeEvent(input$sendRequest, ignoreInit = TRUE, {
     # Run only if all fields are filled and correct
-    req(input$requisitorName, isValidEmail(input$requisitorEmail), input$requisitoInstitution, input$requisitorReason)
+    req(
+      input$requisitorName,
+      isValidEmail(input$requisitorEmail),
+      input$requisitoInstitution,
+      input$requisitorReason,
+      input$dataTermsUse
+    )
     
     # Set the sender email address
     from <- 'yourdummysenderemail@epfl.ch'

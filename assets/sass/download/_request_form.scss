@@ -1,0 +1,19 @@
+// ####################################
+// Request data modal form layout
+// ####################################
+
+.modal-form {
+    max-width: 465px;
+    margin: 0 auto;
+
+    .shiny-input-container:not(.shiny-input-container-inline) {
+        width: auto;
+    }
+
+    @include laptop {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        column-gap: 10px;
+        max-width: none;
+    }
+}

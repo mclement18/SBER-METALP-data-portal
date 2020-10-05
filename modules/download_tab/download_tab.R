@@ -4,7 +4,7 @@
 source('./modules/download_tab/download_data.R')
 source('./modules/download_tab/request_data.R')
 
-fake_login_status <- TRUE
+fake_login_status <- FALSE
 
 
 ## Create module UI ###############################################################
@@ -25,6 +25,16 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
   
   # Create namespace
   ns <- NS(id)
+  
+  # Get the correct button depending on the user role
+  if (fake_login_status) {
+    dlButton <- list(
+      'button' = downloadDataUI(ns('download')),
+      'disclaimer' = NULL
+    )
+  } else {
+    dlButton <- requestDataUI(ns('request'))
+  }
   
   # Create main download tab element
   div(
@@ -152,15 +162,13 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
       # Create a text output with a spinner
       withSpinner(verbatimTextOutput(ns('preview')), type = 4, color = "#e24727", size = .5)
     ),
+    # Add disclaimer if present
+    if (!is.null(dlButton$disclaimer)) dlButton$disclaimer,
     # Create the download actions
     div(
       class = 'download__actions',
       # Add the download or request button
-      if (fake_login_status) {
-        downloadDataUI(ns('download'))
-      } else {
-        requestDataUI(ns('request'))
-      },
+      dlButton$button,
       # Clear form button
       actionButton(ns('clear'), 'Clear', class = 'custom-style')
     )

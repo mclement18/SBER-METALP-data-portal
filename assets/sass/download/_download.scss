@@ -5,6 +5,10 @@
 .download-main {
     margin: 1.5em 0 0 0;
 
+    .disclaimer {
+        grid-column: span 2;
+    }
+
     @include laptop {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
