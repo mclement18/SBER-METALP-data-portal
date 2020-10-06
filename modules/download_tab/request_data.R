@@ -77,7 +77,7 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
               label = '* I agree with the Terms of use for the METALP data and Privacy policy.',
               value = FALSE)
           ),
-          p('* mendatory fields')
+          p('* mandatory fields')
         ),
         # Create footer buttons
         footer = tagList(
@@ -129,13 +129,13 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
     )
     
     # Set the sender email address
-    from <- 'yourdummysenderemail@epfl.ch'
+    from <- paste0('From: ', NOREPLY_ADDRESS)
     # Set the recipient email address
-    to <- 'metalp-poeple@epfl.ch'
+    to <- paste0('To: ', TO_ADDRESS)
     # Set the reply to email address, i.e. the requisitor
-    replyTo <- paste0('Reply to ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
+    replyTo <- paste0('Reply-To: ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
     # Create the email subject
-    subject <- paste0('Data Request from ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
+    subject <- paste0('Subject: Data Request from ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
     # Create the email body
     body <- paste(
       # Add the requisitor's name and institution
@@ -172,21 +172,43 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
       input$requisitorReason,
       sep = '\n')
     
-    # Add the smtp host informations
-    smtp <- list(host.name = "mail.epfl.ch", port = 465,
-                 user.name = "********",            
-                 passwd = "******", ssl = TRUE)
-  
-    # Send the email
-    send.mail(
-      from = from,
-      to = to,
-      replyTo = replyTo,
-      subject = subject,
-      body = body,
-      smtp = smtp,
-      authenticate = TRUE,
-      send = TRUE
+    # Create email
+    email <- tempfile()
+    write(
+      paste(
+        to,
+        from,
+        replyTo,
+        subject,
+        '',
+        body,
+        sep = '\n'
+      ),
+      email
     )
+    
+    # Send email with UNIX sendmail command
+    tryCatch({
+      # Send email
+      processx::run(command = 'sendmail', args = c('-t', '<', email))
+      # Close modal
+      removeModal()
+      # Show success notification
+      showNotification('Request sent successfully!', type = 'message')
+    },
+    # Show error notification
+      error = function(e) showNotification(
+        paste(
+          'Request could not be sent...',
+          e$message,
+          sep = '\n'
+        ),
+        type = 'error'
+      )
+    )
+    
+    # Cleanup tempfile
+    file.remove(email)
+    rm(email)
   })
 }
