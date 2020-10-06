@@ -91,7 +91,7 @@ hfParameters <- loadHfParameters()
 ## Connect to DB ##################################################################
 
 # Load BD interactions functions
-source('./utils/bd_interaction.R')
+source('./utils/db_interaction.R')
 
 # Create pool connection with the DB
 pool <- connectToDB()
@@ -198,4 +198,11 @@ server <- function(input, output, session) {
 
 ## Launch App #####################################################################
 
-shinyApp(ui, server)
+shinyApp(ui, server, onStart = function() {
+  cat("Doing application setup\n")
+  
+  onStop(function() {
+    cat("Doing application cleanup\n")
+    poolClose(pool)
+  })
+})

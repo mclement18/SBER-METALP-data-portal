@@ -7,6 +7,7 @@ connectToDB <- function() {
     drv = RMySQL::MySQL(),
     dbname = MY_DB_NAME,
     host = MY_DB_HOST,
+    port = MY_DB_PORT,
     username = MY_DB_USER,
     password = MY_DB_PWD
   )
