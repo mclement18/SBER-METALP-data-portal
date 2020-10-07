@@ -25,4 +25,9 @@
     @include desktop {
         max-width: 1200px;
     }
+
+    &.modal-sm {
+        width: auto;
+        max-width: 500px;
+    }
 }
