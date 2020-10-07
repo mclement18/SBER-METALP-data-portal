@@ -202,8 +202,7 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     df <- input$data
     toggleElement(selector = '#download-hf-inputs', condition = df == 'hfDf')
     toggleElement(selector = '#download-grab-inputs', condition = df == 'grabDf')
-  }, ignoreInit = TRUE)
-  
+  })
   
   
   
