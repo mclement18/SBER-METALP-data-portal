@@ -33,6 +33,23 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
 
 
 
+withLoginAction <- function(navbarPageOutput, loginUI) {
+# Return a Shiny navbarPage with a login UI on the right of the nav bar
+# Parameters:
+# - navbarPageOutput: Output of shiny navbarPage() function, mandatory
+# - loginUI: UI element to insert, ideally output from the loginUI module function, mandatory
+#
+# Returns an updated shiny navbarPage UI element
+  
+  # Add the loginUI to the navbar of the navbarPageOutput
+  navbarPageOutput[[3]][[1]]$children[[1]]$children[[length(navbarPageOutput[[3]][[1]]$children[[1]]$children) + 1]] <- loginUI
+  # Return the updated UI
+  return(navbarPageOutput)
+}
+
+
+
+
 checkboxGroupInputWithClass <- function(checkboxGroupInput, class) {
 # Create a shiny checkboxGroupInput with additional custom class names
 # Can be used with radioButtons as well
