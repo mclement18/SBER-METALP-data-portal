@@ -104,6 +104,7 @@ source('./utils/shiny_extensions.R')
 
 
 ## Load tabs modules ##############################################################
+source('./modules/login/login.R')
 source('./modules/visualisation_tab/visualisation_tab.R')
 source('./modules/download_tab/download_tab.R')
 
@@ -123,55 +124,60 @@ ui <- tagList(
   ),
   # Create the navbarPage using custom function to add a content-wrapper (defined in './utils/shiny_extensions.R')
   navbarPageWithWrapper(
-    # Pass in the output of shiny navbarPage()
-    navbarPage(
-      # Load the custom logo for the navbar title
-      htmlTemplate('./html_components/logo.html'),
-      # Set a window browser window title
-      windowTitle = 'METALP DATA PORTAL',
-      # Create the home tab
-      tabPanel(
-        # Create a tab title with an icon
-        tags$span(icon('home'),tags$span('Home', class = 'navbar-menu-name')),
-        # Load the home page template with some icons
-        htmlTemplate(
-          'html_components/home.html',
-          chartIcon = icon('chart-bar'),
-          dataIcon = icon('database'),
-          toolboxIcon = icon('toolbox'),
-          downloadIcon = icon('download')
+    # Create Navabar page with login
+    withLoginAction(
+      # Pass in the output of shiny navbarPage()
+      navbarPage(
+        # Load the custom logo for the navbar title
+        htmlTemplate('./html_components/logo.html'),
+        # Set a window browser window title
+        windowTitle = 'METALP DATA PORTAL',
+        # Create the home tab
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('home'),tags$span('Home', class = 'navbar-menu-name')),
+          # Load the home page template with some icons
+          htmlTemplate(
+            'html_components/home.html',
+            chartIcon = icon('chart-bar'),
+            dataIcon = icon('database'),
+            toolboxIcon = icon('toolbox'),
+            downloadIcon = icon('download')
+          )
+        ),
+        # Create the visualisation tab
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
+          # Load the visualisationTab module UI elements
+          visualisationTabUI('visu', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
+        ),
+        # Create the data management tab
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('database'),tags$span('Data management', class = 'navbar-menu-name'))
+        ),
+        # Create the toolbox tab
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name'))
+        ),
+        # Create the download tab
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('download'),tags$span('Download', class = 'navbar-menu-name')),
+          downloadTabUI(
+            'dl',
+            minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
+            maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
+            sites = sites,
+            grabSampleParameters = grabSampleParameters,
+            hfParameters = hfParameters
+          )
         )
       ),
-      # Create the visualisation tab
-      tabPanel(
-        # Create a tab title with an icon
-        tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
-        # Load the visualisationTab module UI elements
-        visualisationTabUI('1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
-      ),
-      # Create the data management tab
-      tabPanel(
-        # Create a tab title with an icon
-        tags$span(icon('database'),tags$span('Data management', class = 'navbar-menu-name'))
-      ),
-      # Create the toolbox tab
-      tabPanel(
-        # Create a tab title with an icon
-        tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name'))
-      ),
-      # Create the download tab
-      tabPanel(
-        # Create a tab title with an icon
-        tags$span(icon('download'),tags$span('Download', class = 'navbar-menu-name')),
-        downloadTabUI(
-          '1',
-          minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-          maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-          sites = sites,
-          grabSampleParameters = grabSampleParameters,
-          hfParameters = hfParameters
-        )
-      )
+      # Add the login module UI
+      loginUI('login')
     ),
     # Add footer to navbarPageWithWrapper
     footer = htmlTemplate('html_components/footer.html')
@@ -183,11 +189,14 @@ ui <- tagList(
 ## Create server function #########################################################
 
 server <- function(input, output, session) {
+  # Load login module server logic
+  callModule(login, 'login', pool)
+  
   # Load visualisationTab module server logic
-  callModule(visualisationTab, '1', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
+  callModule(visualisationTab, 'visu', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
   
   # Load downloadTab module server logic
-  callModule(downloadTab, '1',
+  callModule(downloadTab, 'dl',
              grabSampleDf, hfDf,
              minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
              maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
