@@ -128,6 +128,7 @@ ui <- tagList(
     withLoginAction(
       # Pass in the output of shiny navbarPage()
       navbarPage(
+        id = 'main-nav',
         # Load the custom logo for the navbar title
         htmlTemplate('./html_components/logo.html'),
         # Set a window browser window title
@@ -143,24 +144,16 @@ ui <- tagList(
             dataIcon = icon('database'),
             toolboxIcon = icon('toolbox'),
             downloadIcon = icon('download')
-          )
+          ),
+          value = 'home'
         ),
         # Create the visualisation tab
         tabPanel(
           # Create a tab title with an icon
           tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
           # Load the visualisationTab module UI elements
-          visualisationTabUI('visu', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
-        ),
-        # Create the data management tab
-        tabPanel(
-          # Create a tab title with an icon
-          tags$span(icon('database'),tags$span('Data management', class = 'navbar-menu-name'))
-        ),
-        # Create the toolbox tab
-        tabPanel(
-          # Create a tab title with an icon
-          tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name'))
+          visualisationTabUI('visu', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters),
+          value = 'visu'
         ),
         # Create the download tab
         tabPanel(
@@ -173,7 +166,8 @@ ui <- tagList(
             sites = sites,
             grabSampleParameters = grabSampleParameters,
             hfParameters = hfParameters
-          )
+          ),
+          value = 'dl'
         )
       ),
       # Add the login module UI
@@ -189,18 +183,78 @@ ui <- tagList(
 ## Create server function #########################################################
 
 server <- function(input, output, session) {
-  # Load login module server logic
-  callModule(login, 'login', pool)
+  ## Load login module server logic ###############################################
+  user <- callModule(login, 'login', pool)
+
   
-  # Load visualisationTab module server logic
-  callModule(visualisationTab, 'visu', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters)
+  ## Load visualisationTab module server logic ####################################
+  callModule(visualisationTab, 'visu',
+             user,
+             grabSampleDf, hfDf,
+             sites, grabSampleParameters, hfParameters)
   
-  # Load downloadTab module server logic
+  
+               
+  ## Load downloadTab module server logic #########################################
   callModule(downloadTab, 'dl',
+             user,
              grabSampleDf, hfDf,
              minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
              maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
              sites, grabSampleParameters, hfParameters)
+    
+  
+  ## Check authorizations #########################################################
+  
+  # Do it when the user role changes
+  observeEvent(user$role, {
+    if (user$role %in% c('intern', 'sber', 'admin')) {
+      ## Generate dataManagementTab #################################################
+      
+      # Create the data management tab
+      appendTab(
+        'main-nav',
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('database'),tags$span('Data management', class = 'navbar-menu-name')),
+          value = 'data'
+        )
+      )
+      
+      # Load data management server logic
+      
+      ## Generate toolsTab ##########################################################
+      
+      # Create the toolbox tab
+      appendTab(
+        'main-nav',
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name')),
+          value = 'tools'
+        )
+      )
+      
+      # Load tools tab server logic
+    }
+    
+    
+    if (user$role == 'admin') {
+      ## Generate usersTab ##########################################################
+      
+      # Create users tab
+      appendTab(
+        'main-nav',
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('user'), tags$span('Users', class = 'navbar-menu-name')),
+          value = 'users'
+        )
+      )
+      
+      # Load users tab server logic
+    }
+  })
 }
 
 

@@ -100,10 +100,11 @@ visualisationTabUI <- function(id, grabSampleDf, hfDf, sites, grabSampleParamete
 
 ## Create module server function ##################################################
 
-visualisationTab <- function(input, output, session, grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters) {
+visualisationTab <- function(input, output, session, user, grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters) {
 # Create the logic for the visualisationTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
+#  - user: Reactive values, the current user
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency

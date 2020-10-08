@@ -5,10 +5,6 @@
 .download-main {
     margin: 1.5em 0 0 0;
 
-    .disclaimer {
-        grid-column: span 2;
-    }
-
     @include laptop {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
@@ -32,6 +28,16 @@
 
     .shiny-bound-output.shiny-spinner-hidden {
         position: absolute;
+    }
+}
+
+.download__data-privacy {
+    grid-column: span 2;
+}
+
+.download__actions {
+    .shiny-html-output {
+        display: inline-block;
     }
 }
 

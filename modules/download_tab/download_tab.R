@@ -4,7 +4,6 @@
 source('./modules/download_tab/download_data.R')
 source('./modules/download_tab/request_data.R')
 
-fake_login_status <- FALSE
 
 
 ## Create module UI ###############################################################
@@ -25,16 +24,6 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
   
   # Create namespace
   ns <- NS(id)
-  
-  # Get the correct button depending on the user role
-  if (fake_login_status) {
-    dlButton <- list(
-      'button' = downloadDataUI(ns('download')),
-      'disclaimer' = NULL
-    )
-  } else {
-    dlButton <- requestDataUI(ns('request'))
-  }
   
   # Create main download tab element
   div(
@@ -163,12 +152,15 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
       withSpinner(verbatimTextOutput(ns('preview')), type = 4, color = "#e24727", size = .5)
     ),
     # Add disclaimer if present
-    if (!is.null(dlButton$disclaimer)) dlButton$disclaimer,
+    div(
+      class = 'download__data-privacy',
+      htmlOutput(ns('disclaimer'))
+    ),
     # Create the download actions
     div(
       class = 'download__actions',
       # Add the download or request button
-      dlButton$button,
+      htmlOutput(ns('button')),
       # Clear form button
       actionButton(ns('clear'), 'Clear', class = 'custom-style')
     )
@@ -179,10 +171,11 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
 
 ## Create module server function ##################################################
 
-downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, maxDate, sites, grabSampleParameters, hfParameters) {
+downloadTab <- function(input, output, session, user, grabSampleDf, hfDf, minDate, maxDate, sites, grabSampleParameters, hfParameters) {
 # Create the logic for the downloadTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
+#  - user: Reactive values, the current user
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
@@ -193,6 +186,54 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns NULL
+  
+  ## Download and request data logic according to authorization ###################
+  
+  # Look for user update
+  observeEvent(user$role, {
+    # Get the correct button depending on the user role
+    # Call the downloadData or requestData module
+    if (user$role == 'visitor') {
+      ui <- requestDataUI(session$ns('request'))
+      output$button <- renderUI(ui$button)
+      output$disclaimer <- renderUI(ui$disclaimer)
+      
+      # Create a reactive expression returning a list of the data selection inputs
+      dataSelectionInput <- reactive({
+        # Define the selected data
+        if (input$data == 'hfDf') {
+          data <- 'sensor'
+        } else {
+          data <- 'grab samples'
+        }
+        
+        # Create the returned list with all the inputs info
+        list(
+          'min' = input$time[1],
+          'max' = input$time[2],
+          'data' = data,
+          'dataFreq' = input$hfDataFreq,
+          'modeled' = input$addModeledData,
+          'sites' = sitesReactive_d(),
+          'parameters' = parameters()
+        )
+      })
+      
+      # Call the module
+      callModule(requestData, 'request', selectedData, dataSelectionInput)
+    } else {
+      output$button <- renderUI(downloadDataUI(session$ns('download')))
+      output$disclaimer <- renderUI({})
+      callModule(downloadData, 'download', selectedData)
+    }
+  })
+  
+
+
+  
+
+  
+  
   
   ## Data specific inputs display logic ###########################################
   
@@ -522,38 +563,4 @@ downloadTab <- function(input, output, session, grabSampleDf, hfDf, minDate, max
     # Remove modal when finished
     remove_modal_spinner()
   })
-  
-  
-  
-  ## Download and request data logic ###########################################################
-  
-  # Call the downloadData or requestData module
-  if (fake_login_status) {
-    callModule(downloadData, 'download', selectedData)
-  } else {
-    # Create a reactive expression returning a list of the data selection inputs
-    dataSelectionInput <- reactive({
-      # Define the selected data
-      if (input$data == 'hfDf') {
-        data <- 'sensor'
-      } else {
-        data <- 'grab samples'
-      }
-      
-      # Create the returned list with all the inputs info
-      list(
-        'min' = input$time[1],
-        'max' = input$time[2],
-        'data' = data,
-        'dataFreq' = input$hfDataFreq,
-        'modeled' = input$addModeledData,
-        'sites' = sitesReactive_d(),
-        'parameters' = parameters()
-      )
-    })
-    
-    # Call the module
-    callModule(requestData, 'request', selectedData, dataSelectionInput)
-  }
-  
 }
