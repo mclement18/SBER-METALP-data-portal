@@ -3,11 +3,22 @@
 ## Create module UI ###############################################################
 
 loginUI <- function(id) {
+# Create the UI for the login module
+# Parameters:
+#  - id: String, the module id
+# 
+# Returns a div containing the layout
+  
+  # Create namespace
   ns <- NS(id)
   
+  # Create and return a div
   div(
     class = 'navbar-login',
+    # Create a login link
     actionLink(ns('showLoginForm'), 'Log In', class = 'custom-links'),
+    # Create a HTML output that will contain the logged in user info and logout link
+    # Hidden when logged out
     hidden(
       htmlOutput(ns('userInfo'))
     )
@@ -19,6 +30,13 @@ loginUI <- function(id) {
 ## Create module server function ##################################################
 
 login <- function(input, output, session, pool) {
+# Create the logic for the login module
+# Parameters:
+#  - input, output, session: Default needed parameters to create a module
+#  - pool: The pool connection to the database
+# 
+# Returns the reactive values containing the user info
+  
   ## Default User creation #########################################################
   
   # Create a some reactive values linked to the login status
@@ -117,6 +135,7 @@ login <- function(input, output, session, pool) {
   
   ## Error display logic ##########################################################
   
+  # Render the error with validate in a renderText
   output$loginError <- renderText(shiny::validate(
     errorClass = 'form',
     need(FALSE, message = user$error)
@@ -128,16 +147,21 @@ login <- function(input, output, session, pool) {
   
   # Create an observeEvent that react to the log in status update
   observeEvent(user$loggedin, ignoreInit = TRUE, {
+    # Show and hide the correct UI element depending on the login status
     toggleElement('showLoginForm', condition = !user$loggedin)
     toggleElement('userInfo', condition = user$loggedin)
   
+  })
+  
+  # Render the loggin status if user is logged in
+  output$userInfo <- renderUI({
     if(user$loggedin) {
-      output$userInfo <- renderUI(htmlTemplate(
+      htmlTemplate(
         './html_components/user_status.html',
         username = user$name,
         role = user$role,
         logout = actionLink(session$ns('logout'), 'Log Out', class = 'custom-links')
-      ))
+      )
     }
   })
   
@@ -148,6 +172,7 @@ login <- function(input, output, session, pool) {
   # Create an observeEvent that react to the logout button
   observeEvent(input$logout, ignoreInit = TRUE, {
     req(user$loggedin)
+    # Refresh browser
     session$reload()
   })
   
