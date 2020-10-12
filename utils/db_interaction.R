@@ -3,7 +3,8 @@
 ## Database connection ############################################################
 
 connectToDB <- function() {
-  dbPool(
+  # Create pool connection
+  pool <- dbPool(
     drv = RMySQL::MySQL(),
     dbname = MY_DB_NAME,
     host = MY_DB_HOST,
@@ -11,6 +12,12 @@ connectToDB <- function() {
     username = MY_DB_USER,
     password = MY_DB_PWD
   )
+  
+  # Set charset for connection
+  dbGetQuery(pool, "SET NAMES 'utf8';")
+  
+  # Return pool
+  return(pool)
 }
 
 
@@ -27,11 +34,53 @@ validInputString <- function(input) {
 
 
 
+
+## Technical queries ##############################################################
+
+getEnumValues <- function(pool, table, column) {
+  # Create query
+  query <- sqlInterpolate(
+    pool,
+    "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?table AND COLUMN_NAME = ?column AND DATA_TYPE = 'enum';",
+    table = table, column = column
+  )
+  
+  # Run query
+  result <- dbGetQuery(pool, query)
+  
+  # If not empty, parse the info
+  if (nrow(result) == 1) {
+    result[1, 1] %>% str_extract_all("(?<=')[^,]+(?=')") %>% unlist()
+  } else {
+    NULL
+  }
+}
+
+
+
+
 ## User queries ###################################################################
 
 # Get user for login
 loginUser <- function(pool, username) {
   pool %>% tbl('users') %>% filter(name == username, active == 1) %>% select(name, password, role) %>% head(1) %>% collect()
+}
+
+
+# Get all users
+getUsers <- function(pool, columns = NULL) {
+  # Initiate query with users table
+  query <- pool %>% tbl('users')
+  
+  # Select columns if needed
+  if (!is.null(columns)) {
+    query %<>% select(all_of(columns), -password)
+  } else {
+    query %<>% select(-password)
+  }
+  
+  # Perform query
+  query %>% collect()
 }
 
 
@@ -70,3 +119,5 @@ createUser <- function(pool, username, password, role = 'sber') {
     return(result)
   }
 }
+
+
