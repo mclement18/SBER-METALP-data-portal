@@ -405,7 +405,7 @@ downloadTab <- function(input, output, session, user, grabSampleDf, hfDf, minDat
     
     
     # If user as the right to see
-    if (fake_login_status) {
+    if (user$role != 'visitor') {
       # If there is at least one parameter selected
       # Summarise each parameter
       # Else display only Stat column
@@ -443,7 +443,7 @@ downloadTab <- function(input, output, session, user, grabSampleDf, hfDf, minDat
     cat('\n')
     cat('## Parameters info', '\n\n')
     # If user as the right to see it
-    if (fake_login_status) {
+    if (user$role != 'visitor') {
       print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)
       cat('\n\n')
       cat('---------------------------------------------------------------------------')
