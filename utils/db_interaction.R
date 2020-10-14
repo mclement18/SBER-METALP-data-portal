@@ -25,11 +25,15 @@ connectToDB <- function() {
 ## Query parameters parsing #######################################################
 
 validInputString <- function(input) {
-  if (input == '' | !is.character(input) | length(input) != 1) {
+  if (!is.character(input)){
     return(SQL('NULL'))
-  } else {
-    return(input)
   }
+  
+  if (input == '' | length(input) != 1) {
+    return(SQL('NULL'))
+  }
+  
+  return(input)
 }
 
 
@@ -85,7 +89,7 @@ getUsers <- function(pool, columns = NULL) {
 
 
 # Create a new user
-createUser <- function(pool, username, password, role = 'sber') {
+createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
   # Check for valid input string
   username <- validInputString(username)
   password <- validInputString(password)
@@ -101,8 +105,8 @@ createUser <- function(pool, username, password, role = 'sber') {
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    'INSERT INTO users (name, password, role) values(?username, ?hashedPassword, ?role);',
-    username = username, hashedPassword = hashedPassword, role = role
+    'INSERT INTO users (name, password, role, active) values(?username, ?hashedPassword, ?role, ?active);',
+    username = username, hashedPassword = hashedPassword, role = role, active = active
   )
   
   # Send Query and catch errors
@@ -114,7 +118,47 @@ createUser <- function(pool, username, password, role = 'sber') {
   # Check if insertion succeed (i.e. empty df)
   # If not return the error message
   if (is.data.frame(result)) {
-    return(TRUE)
+    return('')
+  } else {
+    return(result)
+  }
+}
+
+
+updateUser <- function(pool, user, username = '', password = '', role = '', active = TRUE) {
+  username <- validInputString(username)
+  password <- validInputString(password)
+  role <- validInputString(role)
+  
+  if (username == SQL('NULL')) username <- user$name
+  if (role == SQL('NULL')) role <- user$role
+  if (!is.logical(active) | is.na(active)) active <- user$active
+  
+  if (password == SQL('NULL')) {
+    query <- sqlInterpolate(
+      pool,
+      "UPDATE users SET name = ?name, role = ?role, active = ?active WHERE id = ?id;",
+      id = user$id, name = username, role = role, active = active
+    )
+  } else {
+    hashedPassword <- sodium::password_store(password)
+    query <- sqlInterpolate(
+      pool,
+      "UPDATE users SET name = ?name, password = ?password, role = ?role, active = ?active WHERE id = ?id;",
+      id = user$id, name = username, password = password, role = role, active = active
+    )
+  }
+  
+  # Send Query and catch errors
+  result <- tryCatch(
+    dbGetQuery(pool, query),
+    error = function(e) return(e$message)
+  )
+  
+  # Check if insertion succeed (i.e. empty df)
+  # If not return the error message
+  if (is.data.frame(result)) {
+    return('')
   } else {
     return(result)
   }
