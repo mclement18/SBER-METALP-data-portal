@@ -398,3 +398,33 @@ createInput <- function(type, label, value = NULL, table, pool, session = getDef
   }
 }
 
+
+
+
+confirmationModal <- function(text = '', session = getDefaultReactiveDomain()) {
+# Create and display a modal for action confirmation purpose
+# Confirmation need to be done with an 'observeEvent' listening for an 'input$YES' button
+# And modal need to be closed within this observer with 'removeModal()'
+# Parameters:
+#  - text: String, the optional additional text to display
+#  - session: Shiny session, the session in which to create the inputs, default: getDefaultReactiveDomain()
+# 
+# Returns NULL
+  
+  # Create and display the modal
+  showModal(modalDialog(
+    size = 's',
+    div(
+      class = 'confirmation-modal',
+      h1('Are you sure ?'),
+      p(text),
+      div(
+        class = 'confirmation-buttons',
+        actionButton(session$ns('YES'), 'YES', class = 'btn-success'),
+        modalButtonWithClass('NO', class = 'btn-danger')
+      )
+    ),
+    footer = NULL
+  ), session = session)
+}
+
