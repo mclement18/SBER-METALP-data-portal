@@ -19,7 +19,8 @@ install.packages(
            "RMySQL",
            "pool",
            "dbplyr",
-           "sodium"
+           "sodium",
+           "DT"
   ),
   repos = 'https://cran.rstudio.com/'
 )
