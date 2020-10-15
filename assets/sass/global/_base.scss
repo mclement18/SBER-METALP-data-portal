@@ -8,3 +8,13 @@ body {
     font-family: 'Nunito', sans-serif;
     color: $secondary-color;
 }
+
+// ####################################
+// Main headers
+// ####################################
+
+.global-header {
+    margin: 1em 0 1.5em;
+    padding: 0 10px .5em;
+    border-bottom: 1px solid $primary-color;
+}
