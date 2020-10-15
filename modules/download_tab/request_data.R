@@ -54,7 +54,7 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
     showModal(
       # Create the modal form
       modalDialog(
-        title = 'Requisitor Informations', size = 's',
+        title = 'Requisitor Informations',
         # Create the form
         div(
           class = 'modal-form',
