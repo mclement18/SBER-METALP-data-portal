@@ -29,7 +29,7 @@ validInputString <- function(input) {
     return(SQL('NULL'))
   }
   
-  if (input == '' | length(input) != 1) {
+  if (input == '' | is.na(input) | length(input) != 1) {
     return(SQL('NULL'))
   }
   
@@ -126,26 +126,33 @@ createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
 
 
 updateUser <- function(pool, user, username = '', password = '', role = '', active = TRUE) {
+  # Check for valid input string
   username <- validInputString(username)
   password <- validInputString(password)
   role <- validInputString(role)
   
+  # Use previous values if not defined
   if (username == SQL('NULL')) username <- user$name
   if (role == SQL('NULL')) role <- user$role
   if (!is.logical(active) | is.na(active)) active <- user$active
   
+  # UPdate password only if a new one is provided
   if (password == SQL('NULL')) {
+    # Create query without password
     query <- sqlInterpolate(
       pool,
       "UPDATE users SET name = ?name, role = ?role, active = ?active WHERE id = ?id;",
       id = user$id, name = username, role = role, active = active
     )
   } else {
+    # Hash the new password
     hashedPassword <- sodium::password_store(password)
+    
+    # Create query with password
     query <- sqlInterpolate(
       pool,
       "UPDATE users SET name = ?name, password = ?password, role = ?role, active = ?active WHERE id = ?id;",
-      id = user$id, name = username, password = password, role = role, active = active
+      id = user$id, name = username, password = hashedPassword, role = role, active = active
     )
   }
   
