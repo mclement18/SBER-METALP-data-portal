@@ -2,7 +2,8 @@
 // Errors style
 // ####################################
 
-.shiny-output-error-form {
+.shiny-output-error-form,
+.error {
     color: $red;
     margin: 0 0 1.5em;
 }
