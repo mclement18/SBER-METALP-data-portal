@@ -22,7 +22,7 @@ connectToDB <- function() {
 
 
 
-## Query parameters parsing #######################################################
+## Parameters validation and parsing #######################################################
 
 validInputString <- function(input) {
   if (!is.character(input)){
@@ -38,8 +38,25 @@ validInputString <- function(input) {
 
 
 
+sqlInterpolateList <- function(conn, sql, vars=list(), list_vars=list()) {
+  if (length(list_vars) > 0) {
+    for (name in names(list_vars)) {
+      sql <- sub(paste0("\\?", name), paste("?", name, "_list_var", 1:length(list_vars[[name]]), sep="", collapse=","), sql)
+    }
+    list_vars <- lapply(list_vars, function(sublist) {
+      names(sublist) <- paste0("list_var", 1:length(sublist))
+      sublist
+    }) %>% unlist()
+    # unlist gives names as "outer.inner" but DBI doesn't like names with periods
+    names(list_vars) <- sub("\\.", "_", names(list_vars))
+    vars <- c(vars, list_vars)
+  }
+  DBI::sqlInterpolate(conn, sql, .dots=vars)
+}
 
-## Technical queries ##############################################################
+
+
+## General queries ##############################################################
 
 getEnumValues <- function(pool, table, column) {
   # Create query
@@ -63,12 +80,60 @@ getEnumValues <- function(pool, table, column) {
 
 
 
+deleteRows <- function(pool, table, ids) {
+  # Perform deletion only if ids is not NULL, numeric, not empty and does not contains NA
+  if (is.null(ids)) {
+    result <- 'Error: IDs cannot be NULL.'
+  } else if (!is.numeric(ids)) {
+    result <- 'Error: IDs should be a numeric vector.'
+  } else if (length(ids) == 0) {
+    result <- 'Error: IDs cannot be empty.'
+  } else if (any(is.na(ids))) {
+    result <- 'Error: IDs cannot be NA.'
+  } else {
+    # If ids is of length 1, make a specific query,
+    # Otherwise, make a IN query
+    if (length(ids) == 1) {
+      query <- sqlInterpolate(
+        pool,
+        "DELETE FROM ?table WHERE id = ?id;",
+        table = dbQuoteIdentifier(pool, table), id = ids
+      )
+    } else {
+      query <- sqlInterpolateList(
+        pool,
+        "DELETE FROM ?table WHERE id IN (?ids);",
+        vars = list(table = dbQuoteIdentifier(pool, table)),
+        list_vars = list(ids = ids)
+      )
+    }
+    # Send Query and catch errors
+    result <- tryCatch(
+      dbGetQuery(pool, query),
+      error = function(e) return(e$message)
+    )
+  }
+  
+  
+  # Check if insertion succeed (i.e. empty df)
+  # If not return the error message
+  if (is.data.frame(result)) {
+    return('')
+  } else {
+    return(result)
+  }
+}
+
+
+
+
 ## User queries ###################################################################
 
 # Get user for login
 loginUser <- function(pool, username) {
   pool %>% tbl('users') %>% filter(name == username, active == 1) %>% select(name, password, role) %>% head(1) %>% collect()
 }
+
 
 
 # Get all users
@@ -86,6 +151,7 @@ getUsers <- function(pool, columns = NULL) {
   # Perform query
   query %>% collect()
 }
+
 
 
 # Create a new user
@@ -123,6 +189,7 @@ createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
     return(result)
   }
 }
+
 
 
 updateUser <- function(pool, user, username = '', password = '', role = '', active = TRUE) {
@@ -170,5 +237,4 @@ updateUser <- function(pool, user, username = '', password = '', role = '', acti
     return(result)
   }
 }
-
 
