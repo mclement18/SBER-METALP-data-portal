@@ -46,6 +46,7 @@ library(dplyr)
 library(DBI)
 library(pool)
 library(dbplyr)
+library(DT)
 
 
 
@@ -107,6 +108,8 @@ source('./utils/shiny_extensions.R')
 source('./modules/login/login.R')
 source('./modules/visualisation_tab/visualisation_tab.R')
 source('./modules/download_tab/download_tab.R')
+source('./modules/users_tab/users_tab.R')
+source('./modules/editableDT/editableDT.R')
 
 
 
@@ -208,7 +211,24 @@ server <- function(input, output, session) {
   
   # Do it when the user role changes
   observeEvent(user$role, {
-    if (user$role %in% c('intern', 'sber', 'admin')) {
+    # if (user$role %in% c('intern', 'sber', 'admin')) {
+    #   ## Generate toolsTab ##########################################################
+    #   
+    #   # Create the toolbox tab
+    #   appendTab(
+    #     'main-nav',
+    #     tabPanel(
+    #       # Create a tab title with an icon
+    #       tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name')),
+    #       value = 'tools'
+    #     )
+    #   )
+    #   
+    #   # Load tools tab server logic
+    # }
+    
+    
+    if (user$role %in% c('sber', 'admin')) {
       ## Generate dataManagementTab #################################################
       
       # Create the data management tab
@@ -222,20 +242,6 @@ server <- function(input, output, session) {
       )
       
       # Load data management server logic
-      
-      ## Generate toolsTab ##########################################################
-      
-      # Create the toolbox tab
-      appendTab(
-        'main-nav',
-        tabPanel(
-          # Create a tab title with an icon
-          tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name')),
-          value = 'tools'
-        )
-      )
-      
-      # Load tools tab server logic
     }
     
     
@@ -248,11 +254,13 @@ server <- function(input, output, session) {
         tabPanel(
           # Create a tab title with an icon
           tags$span(icon('user'), tags$span('Users', class = 'navbar-menu-name')),
+          usersTabUI('users'),
           value = 'users'
         )
       )
       
       # Load users tab server logic
+      callModule(usersTab, 'users', pool)
     }
   })
 }
