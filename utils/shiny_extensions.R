@@ -311,3 +311,90 @@ pointHoverWidgetServer <- function(session, plotId, df, input,
     
   }, ignoreNULL = FALSE)
 }
+
+
+
+createInputs <- function(df, pool, table, session = getDefaultReactiveDomain()) {
+# Create inputs based on a df column names, types and values
+# Parameters:
+#  - df: Data.frame, the data used to create the inputs, should either be empty or have only one row
+#  - pool: Pool connection, the connection to an SQL Database
+#  - table: String, the database corresponding table
+#  - session: Shiny session, the session in which to create the inputs, default: getDefaultReactiveDomain()
+# 
+# Returns a tagList of inputs
+  
+  # Create the inputs tagList
+  inputs <- tagList()
+  # Get the df column types
+  columnTypes <- df %>% lapply(type_sum) %>% unlist()
+  
+  # For each column
+  for (i in c(1:length(columnTypes))) {
+    # Get the type and the column name
+    type <- columnTypes[i]
+    column <- names(type)
+    
+    # If the df is empty, set the value to NULL
+    # Otherwise, set it to the column value unless it is an NA, then set it to NULL
+    if (nrow(df) == 0) {
+      value <- NULL
+    } else {
+      value <- df %>% pull(column)
+      if (is.na(value)) value <- NULL
+    }
+    
+    # Create the input and add it to the list
+    inputs <- tagList(
+      inputs,
+      createInput(
+        type = type,
+        label = column,
+        value = value,
+        pool = pool,
+        table = table,
+        session = session
+      )
+    )
+  }
+  
+  # Return the inputs list
+  return(inputs)
+}
+
+
+
+
+createInput <- function(type, label, value = NULL, table, pool, session = getDefaultReactiveDomain()) {
+# Create an input based on a df column name, type and value
+# Parameters:
+#  - type: String, the columns type used to choose the input
+#  - label: String the column name used to create the input label and id
+#  - value: 'type' dependent, the value of the column used to populate the input
+#  - table: String, the database corresponding table
+#  - pool: Pool connection, the connection to an SQL Database
+#  - session: Shiny session, the session in which to create the inputs, default: getDefaultReactiveDomain()
+# 
+# Returns the adequate input
+  
+  # Choose the input in function of the column type
+  if (type == 'dbl' | type == 'int') {
+    numericInput(session$ns(label), label = label, value = value)
+  } else if (type == 'chr') {
+    textInput(session$ns(label), label = label, value = value)
+  } else if (type == 'lgl') {
+    checkboxInput(session$ns(label), label = label, value = value)
+  } else if (type == 'fct') {
+    # For a select input get the possible values from the SQL database
+    selectInput(session$ns(label), label = label, choices = getEnumValues(pool, table, label), selected = value)
+  } else if (type == 'dttm') {
+    airDatepickerInput(
+      inputId = session$ns(label),
+      label = paste(label, '(GMT)'),
+      value = value,
+      timepicker = TRUE,
+      timepickerOpts = timepickerOptions(timeFormat = 'hh:ii')
+    )
+  }
+}
+
