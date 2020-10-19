@@ -80,6 +80,22 @@ getEnumValues <- function(pool, table, column) {
 
 
 
+getRows <- function(pool, table, ..., columns = NULL) {
+  # Start query by selecting the table and filtering it
+  query <- pool %>% tbl(table) %>% filter(...)
+  
+  # If some columns are provided, select only them
+  if (!is.null(columns)) {
+    query %<>% select(all_of(columns))
+  }
+  
+  # Perform query
+  query %>% collect()
+}
+
+
+
+
 deleteRows <- function(pool, table, ids) {
   # Perform deletion only if ids is not NULL, numeric, not empty and does not contains NA
   if (is.null(ids)) {
@@ -222,6 +238,78 @@ updateUser <- function(pool, user, username = '', password = '', role = '', acti
       id = user$id, name = username, password = hashedPassword, role = role, active = active
     )
   }
+  
+  # Send Query and catch errors
+  result <- tryCatch(
+    dbGetQuery(pool, query),
+    error = function(e) return(e$message)
+  )
+  
+  # Check if insertion succeed (i.e. empty df)
+  # If not return the error message
+  if (is.data.frame(result)) {
+    return('')
+  } else {
+    return(result)
+  }
+}
+
+
+
+
+## Stations queries ###################################################################
+
+createStation <- function(pool, name, full_name, catchment, color) {
+  # Check for valid input string
+  name <- validInputString(name)
+  full_name <- validInputString(full_name)
+  catchment <- validInputString(catchment)
+  color <- validInputString(color)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO stations (name, full_name, catchment, color) values(?name, ?full_name, ?catchment, ?color);',
+    name = name, full_name = full_name, catchment = catchment, color = color
+  )
+  
+  # Send Query and catch errors
+  result <- tryCatch(
+    dbGetQuery(pool, query),
+    error = function(e) return(e$message)
+  )
+  
+  # Check if insertion succeed (i.e. empty df)
+  # If not return the error message
+  if (is.data.frame(result)) {
+    return('')
+  } else {
+    return(result)
+  }
+}
+
+
+
+
+updateStation <- function(pool, station, name = '', full_name = '', catchment = '', color = '') {
+  # Check for valid input string
+  name <- validInputString(name)
+  full_name <- validInputString(full_name)
+  catchment <- validInputString(catchment)
+  color <- validInputString(color)
+  
+  # Use previous values if not defined
+  if (name == SQL('NULL')) name <- station$name
+  if (full_name == SQL('NULL')) full_name <- station$full_name
+  if (catchment == SQL('NULL')) catchment <- station$catchment
+  if (color == SQL('NULL')) color <- station$color
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    "UPDATE users SET name = ?name, full_name = ?full_name, full_name = ?full_name, color = ?color WHERE id = ?id;",
+    id = station$id, name = name, full_name = full_name, catchment = catchment, color = color
+  )
   
   # Send Query and catch errors
   result <- tryCatch(
