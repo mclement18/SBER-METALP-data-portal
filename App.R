@@ -108,6 +108,7 @@ source('./utils/shiny_extensions.R')
 source('./modules/login/login.R')
 source('./modules/visualisation_tab/visualisation_tab.R')
 source('./modules/download_tab/download_tab.R')
+source('./modules/data_management_tab/data_management_tab.R')
 source('./modules/users_tab/users_tab.R')
 source('./modules/editableDT/editableDT.R')
 
@@ -237,11 +238,13 @@ server <- function(input, output, session) {
         tabPanel(
           # Create a tab title with an icon
           tags$span(icon('database'),tags$span('Data management', class = 'navbar-menu-name')),
+          dataManagementTabUI('data'),
           value = 'data'
         )
       )
       
       # Load data management server logic
+      callModule(dataManagementTab, 'data', pool)
     }
     
     
