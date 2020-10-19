@@ -2,6 +2,7 @@
 
 ## Source needed files ############################################################
 
+source('./modules/data_management_tab/stations_management.R')
 
 
 ## Create module UI ###############################################################
@@ -32,8 +33,8 @@ dataManagementTabUI <- function(id) {
       # Tab title
       'Stations',
       # Tab content
-      
-      value = ns('stations')
+      stationsManagementUI(ns('stationsMan')),
+      value = ns('stationsMan')
     ),
     # Create the Grab sample categories management tab
     tabPanel(
@@ -74,6 +75,6 @@ dataManagementTab <- function(input, output, session, pool) {
 # 
 # Returns NULL
   
-  
+  callModule(stationsManagement, 'stationsMan', pool)
 }
 
