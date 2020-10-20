@@ -25,18 +25,20 @@
     & > li.active > a:hover {
         color: $primary-color;
         border: none;
+        background: $white;
+        cursor: default;
+    }
+
+    & > li.dropdown.active > a:hover,
+    & > li.dropdown.active > a:focus,
+    & > li.dropdown.open > a,
+    & > li.dropdown.open > a:hover,
+    & > li.dropdown.open > a:focus 
+    & > li.dropdown.active.open > a,
+    & > li.dropdown.active.open > a:hover,
+    & > li.dropdown.active.open > a:focus {
+        background: lighten($grey5, 20);
         cursor: pointer;
-    }
-
-    & > li.active > a:focus,
-    & > li.active > a:hover {
-        background: lighten($grey5, 20);
-    }
-
-    .open > a,
-    .open > a:hover,
-    .open > a:focus {
-        background: lighten($grey5, 20);
     }
 
     .dropdown-menu > li > a {
@@ -48,5 +50,6 @@
     .dropdown-menu > .active > a:hover {
         background: $primary-color;
         color: $white;
+        cursor: default;
     }
 }
