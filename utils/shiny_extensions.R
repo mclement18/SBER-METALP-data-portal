@@ -111,7 +111,7 @@ createStatsTablePerSite <- function(site, data, sites) {
 # Returns a stats table
 
   # Get the site full name
-  site_name <- sites %>% filter(sites_short == site) %>% pull(sites_full)
+  site_name <- sites %>% filter(name == site) %>% pull(full_name)
   
   # Return the stats summary table
   tags$div(
@@ -135,7 +135,7 @@ createSensorStatsTable <- function(catchment, data, sites) {
 # Returns a stats table or NULL
   
   # Get current sites
-  currentSites <- sites %>% filter(catchments == catchment) %>% pull(sites_short)
+  currentSites <- sites %>% filter(catchment == !!catchment) %>% pull(name)
   
   # If there is at least one selected site corresponding to this catchment
   # Create and return the stats table for this site

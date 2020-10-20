@@ -49,22 +49,22 @@ visualisationTabUI <- function(id, pool, grabSampleDf, hfDf, grabSampleParameter
         parameters = grabSampleParameters
       ),
       value = ns('grabSamplesTimeseries')
-    # ),
-    # # Create the Sensors timeserie visualisation tab
-    # tabPanel(
-    #   # Tab title
-    #   'Sensor data',
-    #   # Tab content
-    #   # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
-    #   sidebarInputLayoutUI(
-    #     ns('sensorsTimeseries'),
-    #     minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-    #     maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
-    #     innerModuleUI = highFreqTimeSeriesUI,
-    #     pool = pool,
-    #     parameters = hfParameters
-    #   ),
-    #   value = ns('sensorsTimeseries')
+    ),
+    # Create the Sensors timeserie visualisation tab
+    tabPanel(
+      # Tab title
+      'Sensor data',
+      # Tab content
+      # Create a sidebarInputLayout UI with for the highFreqTimeSeries module
+      sidebarInputLayoutUI(
+        ns('sensorsTimeseries'),
+        minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+        maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
+        innerModuleUI = highFreqTimeSeriesUI,
+        pool = pool,
+        parameters = hfParameters
+      ),
+      value = ns('sensorsTimeseries')
     )
   )
 }
@@ -97,16 +97,16 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
              pool = pool,
              parameters = grabSampleParameters)
   
-  # # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
-  # callModule(sidebarInputLayout, 'sensorsTimeseries',
-  #            highFreqTimeSeries, highFreqTimeSeriesUI,
-  #            list('inputs' = 'hf-time-serie-plot-input', 'plots' = 'hf-time-serie-plots'),
-  #            df = hfDf,
-  #            minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-  #            maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
-  #            pool = pool,
-  #            parameters = hfParameters)
-  # 
+  # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
+  callModule(sidebarInputLayout, 'sensorsTimeseries',
+             highFreqTimeSeries, highFreqTimeSeriesUI,
+             list('inputs' = 'hf-time-serie-plot-input', 'plots' = 'hf-time-serie-plots'),
+             df = hfDf,
+             minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+             maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
+             pool = pool,
+             parameters = hfParameters)
+
   # ## Check for authorization #######################################################
   # 
   # # Check for user update

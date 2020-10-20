@@ -102,13 +102,18 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool, p
   # Create an observeEvent that react to the catchment select input
   observeEvent(input$catchment, {
     # Get catchment sites info
-    sites <- getRows(pool, 'stations', catchment == local(input$catchment))
+    catchmentSites <- getRows(
+      pool,
+      'stations',
+      catchment == local(input$catchment),
+      columns = c('name', 'full_name')
+    )
     
     # Update sites checkbox group input with current sites info
     updateCheckboxGroupInput(session, 'sites',
-                             selected = sites$name,
-                             choiceNames = sites$full_name,
-                             choiceValues = sites$name)
+                             selected = catchmentSites$name,
+                             choiceNames = catchmentSites$full_name,
+                             choiceValues = catchmentSites$name)
   })
   
   # Create a reactive expression returning the selected sites
@@ -118,7 +123,12 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool, p
   selectedSites_d <-  selectedSites %>% debounce(1000)
 
   # Create a reactive expression that returns the current catchment sites
-  currentSites <- reactive(getRows(pool, 'stations', name %in% local(selectedSites_d())))
+  currentSites <- reactive(getRows(
+    pool,
+    'stations',
+    name %in% local(selectedSites_d()),
+    columns = c('name', 'full_name', 'catchment', 'color')
+  ))
   
   # Create a currentCatchment reactive expression
   currentCatchment <- reactive(currentSites() %>% pull(catchment) %>% unique())

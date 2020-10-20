@@ -2,11 +2,11 @@
 
 ## Create the UI function of the module ###############################################
 
-highFreqTimeSeriesUI <- function(id, sites, parameters) {
+highFreqTimeSeriesUI <- function(id, pool, parameters) {
 # Create the UI for the highFreqTimeSeries module
 # Parameters:
 #  - id: String, the module id
-#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - pool: The pool connection to the database
 #  - parameters: Named list, contains high frequency data parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
@@ -15,6 +15,9 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
   
   # Create namespace
   ns <- NS(id)
+  
+  # Get site options
+  siteOptions <- parseOptions(getRows(pool, 'stations', columns = 'name'), 'name')
   
   # Create the UI list to be returned
   list(
@@ -28,8 +31,8 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
         checkboxGroupInput(
           ns('sites'),
           str_interp('Stations'),
-          choices = sites$sitesOptions,
-          selected = sites$sitesOptions[[1]]
+          choices = siteOptions,
+          selected = siteOptions[[1]]
         ),
         class = 'checkbox-grid'        
       ),
@@ -91,7 +94,7 @@ highFreqTimeSeriesUI <- function(id, sites, parameters) {
 
 ## Create the server function of the module ###############################################
 
-highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, parameters) {
+highFreqTimeSeries <- function(input, output, session, df, dateRange, pool, parameters) {
 # Create the logic for the highFreqTimeSeries module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -100,12 +103,15 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
-#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - pool: The pool connection to the database
 #  - parameters: Named list, contains high frequency data parameters info, cf data_preprocessing.R
 # 
 # Returns a reactive expression containing the updated date range with the same format as the input
   
   ## Stations update logic ########################################################
+  
+  # Get the sites
+  sites <- getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment', 'color'))
   
   # Create a reactive expression returning the selected sites
   selectedSites <- reactive({input$sites})
@@ -180,7 +186,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
     }
     
     # If there is no data return NULL
-    if (dim(df)[1] == 0) return(NULL)
+    if (nrow(df) == 0) return(NULL)
     
     # Return the formatted data
     df
@@ -199,7 +205,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
       df = data(),
       parameter = param(),
       plotTitle = str_interp('Sensors High Frequency Time Serie'),
-      sites = sites$sites,
+      sites = sites,
       modeledData = 'data_type' %in% colnames(data())
     )
   })
@@ -308,9 +314,9 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, sites, par
   
   # Render the stats tables in the modal
   output$sensorStats <- renderStatsTables(
-    elements = unique(sites$sites$catchments),
+    elements = unique(sites$catchment),
     data = statsData,
-    sites = sites$sites,
+    sites = sites,
     tableFunction = createSensorStatsTable
   )
   
