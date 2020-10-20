@@ -8,15 +8,15 @@ source('./modules/download_tab/request_data.R')
 
 ## Create module UI ###############################################################
 
-downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfParameters) {
+downloadTabUI <- function(id, pool, minDate, maxDate, grabSampleParameters, hfParameters) {
 # Create the UI for the downloadTab module
 # Parameters:
 #  - id: String, the module id
+#  - pool: The pool connection to the database
 #  - minDate: Date, the lower bound for the dateRangeInput
 #  - maxDate: Date, the upper bound for the dateRangeInput
 #  - grabSampleDf: Data.frame, the grab samples data
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
-#  - sites: Named list of sites info, cf data_preprocessing.R
 #  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
@@ -54,7 +54,12 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
         selectizeInput(
           inputId =  ns('sites'),
           label = 'Stations',
-          choices = sites$sitesSelectOptions,
+          choices = parseOptionsWithSections(
+            getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
+            valueColumn = 'name',
+            sectionColumn = 'catchment',
+            optionColumn = 'full_name'
+          ),
           multiple = TRUE,
           options = list(
             'placeholder' = 'Select some stations...',
@@ -171,17 +176,17 @@ downloadTabUI <- function(id, minDate, maxDate, sites, grabSampleParameters, hfP
 
 ## Create module server function ##################################################
 
-downloadTab <- function(input, output, session, user, grabSampleDf, hfDf, minDate, maxDate, sites, grabSampleParameters, hfParameters) {
+downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, minDate, maxDate, grabSampleParameters, hfParameters) {
 # Create the logic for the downloadTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
+#  - pool: The pool connection to the database
 #  - user: Reactive values, the current user
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
 #  - minDate: Date, the lower bound for the dateRangeInput
 #  - maxDate: Date, the upper bound for the dateRangeInput
-#  - sites: Named list of sites info, cf data_preprocessing.R
 #  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 

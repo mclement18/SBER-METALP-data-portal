@@ -164,9 +164,9 @@ ui <- tagList(
           tags$span(icon('download'),tags$span('Download', class = 'navbar-menu-name')),
           downloadTabUI(
             'dl',
+            pool = pool,
             minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
             maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-            sites = sites,
             grabSampleParameters = grabSampleParameters,
             hfParameters = hfParameters
           ),
@@ -200,11 +200,12 @@ server <- function(input, output, session) {
                
   ## Load downloadTab module server logic #########################################
   callModule(downloadTab, 'dl',
+             pool = pool,
              user,
              grabSampleDf, hfDf,
              minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
              maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-             sites, grabSampleParameters, hfParameters)
+             grabSampleParameters, hfParameters)
     
   
   ## Check authorizations #########################################################
