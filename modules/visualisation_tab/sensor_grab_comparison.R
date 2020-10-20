@@ -2,11 +2,11 @@
 
 ## Create the UI function of the module ###############################################
 
-sensorGrabComparisonUI <- function(id, sites, parameters) {
+sensorGrabComparisonUI <- function(id, pool, parameters) {
 # Create the UI for the sensorGrabComparison module
 # Parameters:
 #  - id: String, the module id
-#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - pool: The pool connection to the database
 #  - parameters: Named list, contains both grab samples and high frequency data parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
@@ -24,13 +24,22 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
       id = str_interp('sensor-vs-grab-plot-input-${id}'),
       class = 'time-serie-input',
       # Create select input for site selection
-      selectInput(ns('site'), str_interp('Station'), sites$sitesSelectOptions),
+      selectInput(
+        ns('site'),
+        'Station',
+        parseOptionsWithSections(
+          getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
+          valueColumn = 'name',
+          sectionColumn = 'catchment',
+          optionColumn = 'full_name'
+        )
+      ),
       # Create a select input for parameter selection
       selectInput(
         ns('paramHf'),
         # Create a label with an icon button
         tags$span(
-          str_interp('Parameter'),
+          'Parameter',
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
@@ -93,7 +102,7 @@ sensorGrabComparisonUI <- function(id, sites, parameters) {
 
 ## Create the server function of the module ###############################################
 
-sensorGrabComparison <- function(input, output, session, df, dateRange, sites, parameters) {
+sensorGrabComparison <- function(input, output, session, df, dateRange, pool, parameters) {
 # Create the logic for the sensorGrabComparison module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -102,10 +111,21 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
-#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - pool: The pool connection to the database
 #  - parameters: Named list, contains both grab samples and high frequency data parameters info, cf data_preprocessing.R
 # 
 # Returns a reactive expression containing the updated date range with the same format as the input
+  
+  ## Selected station logic #######################################################
+  
+  # Create a reactive expression that return the current site info
+  currentSite <- reactive(getRows(
+    pool,
+    'stations',
+    name == local(input$site),
+    columns = c('name', 'full_name', 'color')
+  ))
+  
   
 
   ## Parameters update logic ###################################################
@@ -320,8 +340,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       df = hfData,
       # Isolate paramHF to avoid multiple rerender
       parameter = isolate(paramHf()),
-      plotTitle = str_interp('Sensor High Frequency Time Serie'),
-      sites = sites$sites,
+      plotTitle = 'Sensor High Frequency Time Serie',
+      sites = currentSite(),
       modeledData = 'data_type' %in% colnames(hfData)
     )
     
@@ -348,8 +368,9 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
     if (vsDf() %>% is.null()) return(NULL)
     
     # Get current site name and color
-    currentSite <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_full)
-    currentColor <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_color)
+    site <- currentSite()
+    currentSiteName <- site %>% pull(full_name)
+    currentSiteColor <- site %>% pull(color)
     
     # Create a onVsOne plot add the one to one line and return the plot
     onVsOnePlot(
@@ -359,8 +380,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, sites, p
       parameterX = paramGrab(),
       # Isolate paramHF to avoid multiple rerender
       parameterY  = isolate(paramHf()),
-      plotTitle = str_interp('${currentSite} Sensor VS Grab'),
-      color = currentColor
+      plotTitle = paste(currentSiteName, 'Sensor VS Grab'),
+      color = currentSiteColor
     ) %>% addOneToOneLine(
       minData = min(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE),
       maxData = max(vsDf()$grab_value, vsDf()$hf_value, na.rm = TRUE)

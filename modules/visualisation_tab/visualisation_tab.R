@@ -133,25 +133,25 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
       )
 
 
-      # # Create the sensors vs grab samples comparison tab
-      # appendTab(
-      #   'visuTabs',
-      #   tabPanel(
-      #     # Tab title
-      #     'Sensor vs Grab sample comparison',
-      #     # Tab content
-      #     # Create a sidebarInputLayout UI with for the sensorGrabComparison module
-      #     sidebarInputLayoutUI(
-      #       session$ns('sensorVsGrab'),
-      #       minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-      #       maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
-      #       innerModuleUI = sensorGrabComparisonUI,
-      #       pool = pool,
-      #       parameters = list('hf' = hfParameters)
-      #     ),
-      #     value = session$ns('sensorVsGrab')
-      #   )
-      # )
+      # Create the sensors vs grab samples comparison tab
+      appendTab(
+        'visuTabs',
+        tabPanel(
+          # Tab title
+          'Sensor vs Grab sample comparison',
+          # Tab content
+          # Create a sidebarInputLayout UI with for the sensorGrabComparison module
+          sidebarInputLayoutUI(
+            session$ns('sensorVsGrab'),
+            minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+            maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
+            innerModuleUI = sensorGrabComparisonUI,
+            pool = pool,
+            parameters = list('hf' = hfParameters)
+          ),
+          value = session$ns('sensorVsGrab')
+        )
+      )
 
 
       # Load the server logic for the grabSamplesComparison module inside the sidebarInputLayout module
@@ -165,15 +165,15 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
                  pool = pool,
                  parameters = grabSampleParameters)
 
-    #   # Load the server logic for the sensorGrabComparison module inside the sidebarInputLayout module
-    #   callModule(sidebarInputLayout, 'sensorVsGrab',
-    #              sensorGrabComparison, sensorGrabComparisonUI,
-    #              list('inputs' = 'sensor-vs-grab-plot-input', 'plots' = 'sensor-vs-grab-plots'),
-    #              df = list('hf' = hfDf, 'grab' = grabSampleDf),
-    #              minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-    #              maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
-    #              pool = pool,
-    #              parameters = list('hf' = hfParameters, 'grab' = grabSampleParameters))
+      # Load the server logic for the sensorGrabComparison module inside the sidebarInputLayout module
+      callModule(sidebarInputLayout, 'sensorVsGrab',
+                 sensorGrabComparison, sensorGrabComparisonUI,
+                 list('inputs' = 'sensor-vs-grab-plot-input', 'plots' = 'sensor-vs-grab-plots'),
+                 df = list('hf' = hfDf, 'grab' = grabSampleDf),
+                 minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+                 maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
+                 pool = pool,
+                 parameters = list('hf' = hfParameters, 'grab' = grabSampleParameters))
     }
   })
 }

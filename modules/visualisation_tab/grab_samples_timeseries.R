@@ -26,7 +26,7 @@ grabSamplesTimeSeriesUI <- function(id, pool, parameters) {
       # Create select input for catchment selection
       selectInput(
         ns('catchment'),
-        str_interp('Catchment'),
+        'Catchment',
         parseOptions(getRows(pool, 'stations', columns = 'catchment'), 'catchment')
       ),
       # Create an empty checkbox group input for station selection

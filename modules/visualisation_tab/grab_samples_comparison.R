@@ -26,7 +26,7 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
       # Create select input for catchment selection
       selectInput(
         ns('site'),
-        str_interp('Station'),
+        'Station',
         parseOptionsWithSections(
           getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
           valueColumn = 'name',
@@ -40,7 +40,7 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
         ns('paramX'),
         # Create a label with an icon button
         tags$span(
-          str_interp('Parameter X-axis'),
+          'Parameter X-axis',
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelperX'), icon('question-circle'), class = 'icon-btn')
         ),
@@ -51,7 +51,7 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
       hidden(
         radioButtons(
           ns('paramfilterX'),
-          str_interp('Subparameter X-axis'),
+          'Subparameter X-axis',
           choices = 'NULL'
         )
       ),
@@ -61,7 +61,7 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
         ns('paramY'),
         # Create a label with an icon button
         tags$span(
-          str_interp('Parameter Y-axis'),
+          'Parameter Y-axis',
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelperY'), icon('question-circle'), class = 'icon-btn')
         ),
@@ -72,7 +72,7 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
       hidden(
         radioButtons(
           ns('paramfilterY'),
-          str_interp('Subparameter Y-axis'),
+          'Subparameter Y-axis',
           choices = 'NULL'
         )
       )
