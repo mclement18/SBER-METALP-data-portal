@@ -381,7 +381,11 @@ createInput <- function(type, label, value = NULL, table, pool, session = getDef
   if (type == 'dbl' | type == 'int') {
     numericInput(session$ns(label), label = label, value = value)
   } else if (type == 'chr') {
-    textInput(session$ns(label), label = label, value = value)
+    if (label == 'description') {
+      textAreaInput(session$ns(label), label = label, value = value)
+    } else {
+      textInput(session$ns(label), label = label, value = value)
+    }
   } else if (type == 'lgl') {
     checkboxInput(session$ns(label), label = label, value = value)
   } else if (type == 'fct') {

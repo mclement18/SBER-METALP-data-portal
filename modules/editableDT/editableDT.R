@@ -38,7 +38,7 @@ editableDTUI<- function(id) {
 
 editableDT <- function(input, output, session, pool, tableName, element,
                        tableLoading, templateInputsCreate, templateInputsEdit,
-                       creationExpr, updateExpr, deleteExpr) {
+                       creationExpr, updateExpr, deleteExpr, outputTableExpr = NULL) {
 # Create the logic for the editableDT module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -48,18 +48,20 @@ editableDT <- function(input, output, session, pool, tableName, element,
 #  - tableLoading: Expression, the expression to run in order to get the table from the SQL
 #  - templateInputsCreate: Expression, the expression to run in order to create an empty df for inputs creation.
 #                          The column names will be used as label and id and the column types for the input type selection.
-#                          You can use the 'inputsTemplate' symbol in your expression that is an empty df with the same format as the 'tableLoading' output.
+#                          You can use the 'inputsTemplate' symbol in your expression which is an empty df with the same format as the 'tableLoading' output.
 #  - templateInputsEdit: Expression, the expression to run in order to create a df containing only the row to be edited for inputs creation.
 #                          The column names will be used as label and id and the column types for the input type selection.
 #                          The values will be used to populate the inputs.
-#                          You can use the 'selectedRow' symbol in your expression that is a df containing the selected row with the same format as the 'tableLoading' output.
+#                          You can use the 'selectedRow' symbol in your expression which is a df containing the selected row with the same format as the 'tableLoading' output.
 #  - creationExpr: Expression, the expression to run in order to create a new row in the SQL database.
 #                  You can refer to all the inputs created via 'templateInputsCreate' with input$<column name>.
 #  - creationExpr: Expression, the expression to run in order to update a row in the SQL database.
 #                  You can refer to all the inputs created via 'templateInputsEdit' with input$<column name>.
 #                  You can use the editedRow() reactive value that return a df containing the row being edited with all the previous values and id.
 #  - deleteExpr: Expression, the expression to run in order to delete rows from the SQL database
-#                You can use the 'selectedRowIds' symbol in your expression that is the a numeric vector of the selected row ids.
+#                You can use the 'selectedRowIds' symbol in your expression which is the a numeric vector of the selected row ids.
+#  - outputTableExpr: Expression, the expression to run in order to apply modification to the df before create the datatable
+#                     You can use the 'loadedTable' symbol in your expression which is the loaded df.
 # 
 # Returns NULL
   
@@ -270,7 +272,11 @@ editableDT <- function(input, output, session, pool, tableName, element,
   
   # Render the DataTable
   output$table <- renderDT({
-    loadTable() %>%
+    loadedTable <- loadTable()
+    
+    if (!is.null(outputTableExpr)) loadedTable <- eval(outputTableExpr)
+    
+    loadedTable %>%
       datatable(rownames = FALSE, options = list(
         dom = 't',
         paging = FALSE,

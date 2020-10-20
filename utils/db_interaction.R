@@ -307,8 +307,107 @@ updateStation <- function(pool, station, name = '', full_name = '', catchment = 
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    "UPDATE users SET name = ?name, full_name = ?full_name, full_name = ?full_name, color = ?color WHERE id = ?id;",
+    "UPDATE stations SET name = ?name, full_name = ?full_name, full_name = ?full_name, color = ?color WHERE id = ?id;",
     id = station$id, name = name, full_name = full_name, catchment = catchment, color = color
+  )
+  
+  # Send Query and catch errors
+  result <- tryCatch(
+    dbGetQuery(pool, query),
+    error = function(e) return(e$message)
+  )
+  
+  # Check if insertion succeed (i.e. empty df)
+  # If not return the error message
+  if (is.data.frame(result)) {
+    return('')
+  } else {
+    return(result)
+  }
+}
+
+
+
+
+
+
+## Grab sample plotting options queries ###################################################################
+
+createGbPlotOption <- function(pool, section_name, option_name, param_name, units, data,
+                               sd = '', min_max = '', plot_func, description = '') {
+  # Check for valid input string
+  section_name <- validInputString(section_name)
+  option_name <- validInputString(option_name)
+  param_name <- validInputString(param_name)
+  units <- validInputString(units)
+  data <- validInputString(data)
+  sd <- validInputString(sd)
+  min_max <- validInputString(min_max)
+  plot_func <- validInputString(plot_func)
+  description <- validInputString(description)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO grab_params_plotting
+    (section_name, option_name, param_name, units, data, sd, min_max, plot_func, description)
+    values(?section_name, ?option_name, ?param_name, ?units, ?data, ?sd, ?min_max, ?plot_func, ?description);',
+    section_name = section_name, option_name = option_name, param_name = param_name, units = units,
+    data = data, sd = sd, min_max = min_max, plot_func = plot_func, description = description
+  )
+  
+  # Send Query and catch errors
+  result <- tryCatch(
+    dbGetQuery(pool, query),
+    error = function(e) return(e$message)
+  )
+  
+  # Check if insertion succeed (i.e. empty df)
+  # If not return the error message
+  if (is.data.frame(result)) {
+    return('')
+  } else {
+    return(result)
+  }
+}
+
+
+
+
+updateGbPlotOption <- function(pool, gbPlotOption, section_name = '', option_name = '', param_name = '', units = '', data = '',
+                               sd = '', min_max = '', plot_func = '', description = '') {
+  # Check for valid input string
+  section_name <- validInputString(section_name)
+  option_name <- validInputString(option_name)
+  param_name <- validInputString(param_name)
+  units <- validInputString(units)
+  data <- validInputString(data)
+  sd <- validInputString(sd)
+  min_max <- validInputString(min_max)
+  plot_func <- validInputString(plot_func)
+  description <- validInputString(description)
+  
+  # Use previous values if not defined
+  if (section_name == SQL('NULL')) section_name <- gbPlotOption$section_name
+  if (option_name == SQL('NULL')) option_name <- gbPlotOption$option_name
+  if (param_name == SQL('NULL')) param_name <- gbPlotOption$param_name
+  if (units == SQL('NULL')) units <- gbPlotOption$units
+  if (data == SQL('NULL')) data <- gbPlotOption$data
+  if (sd == SQL('NULL')) sd <- gbPlotOption$sd
+  if (min_max == SQL('NULL')) min_max <- gbPlotOption$min_max
+  if (plot_func == SQL('NULL')) plot_func <- gbPlotOption$plot_func
+  if (description == SQL('NULL')) description <- gbPlotOption$description
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE grab_params_plotting SET
+    section_name = ?section_name, option_name = ?option_name, param_name = ?param_name, units = ?units,
+    data = ?data, sd = ?sd, min_max = ?min_max, plot_func = ?plot_func, description = ?description
+    WHERE id = ?id;',
+    id = gbPlotOption$id,
+    section_name = section_name, option_name = option_name, param_name = param_name, units = units,
+    data = data, sd = sd, min_max = min_max, plot_func = plot_func, description = description
   )
   
   # Send Query and catch errors
