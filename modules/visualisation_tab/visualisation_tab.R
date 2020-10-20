@@ -107,74 +107,74 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
              pool = pool,
              parameters = hfParameters)
 
-  # ## Check for authorization #######################################################
-  # 
-  # # Check for user update
-  # observeEvent(user$role, {
-  #   if (user$role %in% c('intern', 'sber', 'admin')) {
-  #     # Create the grab samples comparison tab
-  #     appendTab(
-  #       'visuTabs',
-  #       tabPanel(
-  #         # Tab title
-  #         'Grab sample comparison',
-  #         # Tab content
-  #         # Create a sidebarInputLayout UI with for the grabSamplesComparison module
-  #         sidebarInputLayoutUI(
-  #           session$ns('grabVsGrab'),
-  #           minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
-  #           maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
-  #           innerModuleUI = grabSamplesComparisonUI,
-  #           pool = pool,
-  #           parameters = grabSampleParameters
-  #         ),
-  #         value = session$ns('grabVSgrab')
-  #       )
-  #     )
-  #     
-  #     
-  #     # Create the sensors vs grab samples comparison tab
-  #     appendTab(
-  #       'visuTabs',
-  #       tabPanel(
-  #         # Tab title
-  #         'Sensor vs Grab sample comparison',
-  #         # Tab content
-  #         # Create a sidebarInputLayout UI with for the sensorGrabComparison module
-  #         sidebarInputLayoutUI(
-  #           session$ns('sensorVsGrab'),
-  #           minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-  #           maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
-  #           innerModuleUI = sensorGrabComparisonUI,
-  #           pool = pool,
-  #           parameters = list('hf' = hfParameters)
-  #         ),
-  #         value = session$ns('sensorVsGrab')
-  #       )
-  #     )
-  #     
-  #     
-  #     # Load the server logic for the grabSamplesComparison module inside the sidebarInputLayout module
-  #     callModule(sidebarInputLayout, 'grabVsGrab',
-  #                grabSamplesComparison, grabSamplesComparisonUI,
-  #                list('inputs' = 'grab-vs-grab-plot-input', 'plots' = 'grab-vs-grab-plots'),
-  #                df = grabSampleDf,
-  #                plotDateRangeSelection = FALSE,
-  #                minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
-  #                maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
-  #                pool = pool,
-  #                parameters = grabSampleParameters)
-  #     
-  #     # Load the server logic for the sensorGrabComparison module inside the sidebarInputLayout module
-  #     callModule(sidebarInputLayout, 'sensorVsGrab',
-  #                sensorGrabComparison, sensorGrabComparisonUI,
-  #                list('inputs' = 'sensor-vs-grab-plot-input', 'plots' = 'sensor-vs-grab-plots'),
-  #                df = list('hf' = hfDf, 'grab' = grabSampleDf),
-  #                minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-  #                maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
-  #                pool = pool,
-  #                parameters = list('hf' = hfParameters, 'grab' = grabSampleParameters))
-  #   }
-  # })
+  ## Check for authorization #######################################################
+
+  # Check for user update
+  observeEvent(user$role, {
+    if (user$role %in% c('intern', 'sber', 'admin')) {
+      # Create the grab samples comparison tab
+      appendTab(
+        'visuTabs',
+        tabPanel(
+          # Tab title
+          'Grab sample comparison',
+          # Tab content
+          # Create a sidebarInputLayout UI with for the grabSamplesComparison module
+          sidebarInputLayoutUI(
+            session$ns('grabVsGrab'),
+            minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
+            maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+            innerModuleUI = grabSamplesComparisonUI,
+            pool = pool,
+            parameters = grabSampleParameters
+          ),
+          value = session$ns('grabVSgrab')
+        )
+      )
+
+
+      # # Create the sensors vs grab samples comparison tab
+      # appendTab(
+      #   'visuTabs',
+      #   tabPanel(
+      #     # Tab title
+      #     'Sensor vs Grab sample comparison',
+      #     # Tab content
+      #     # Create a sidebarInputLayout UI with for the sensorGrabComparison module
+      #     sidebarInputLayoutUI(
+      #       session$ns('sensorVsGrab'),
+      #       minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+      #       maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
+      #       innerModuleUI = sensorGrabComparisonUI,
+      #       pool = pool,
+      #       parameters = list('hf' = hfParameters)
+      #     ),
+      #     value = session$ns('sensorVsGrab')
+      #   )
+      # )
+
+
+      # Load the server logic for the grabSamplesComparison module inside the sidebarInputLayout module
+      callModule(sidebarInputLayout, 'grabVsGrab',
+                 grabSamplesComparison, grabSamplesComparisonUI,
+                 list('inputs' = 'grab-vs-grab-plot-input', 'plots' = 'grab-vs-grab-plots'),
+                 df = grabSampleDf,
+                 plotDateRangeSelection = FALSE,
+                 minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
+                 maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+                 pool = pool,
+                 parameters = grabSampleParameters)
+
+    #   # Load the server logic for the sensorGrabComparison module inside the sidebarInputLayout module
+    #   callModule(sidebarInputLayout, 'sensorVsGrab',
+    #              sensorGrabComparison, sensorGrabComparisonUI,
+    #              list('inputs' = 'sensor-vs-grab-plot-input', 'plots' = 'sensor-vs-grab-plots'),
+    #              df = list('hf' = hfDf, 'grab' = grabSampleDf),
+    #              minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
+    #              maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
+    #              pool = pool,
+    #              parameters = list('hf' = hfParameters, 'grab' = grabSampleParameters))
+    }
+  })
 }
   

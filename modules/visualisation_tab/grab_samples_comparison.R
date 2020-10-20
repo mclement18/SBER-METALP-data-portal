@@ -2,11 +2,11 @@
 
 ## Create the UI function of the module ###############################################
 
-grabSamplesComparisonUI <- function(id, sites, parameters) {
+grabSamplesComparisonUI <- function(id, pool, parameters) {
 # Create the UI for the grabSamplesComparison module
 # Parameters:
 #  - id: String, the module id
-#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - pool: The pool connection to the database
 #  - parameters: Named list, contains grab samples data parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
@@ -24,7 +24,16 @@ grabSamplesComparisonUI <- function(id, sites, parameters) {
       id = str_interp('grab-vs-grab-plot-input-${id}'),
       class = 'time-serie-input',
       # Create select input for catchment selection
-      selectInput(ns('site'), str_interp('Station'), sites$sitesSelectOptions),
+      selectInput(
+        ns('site'),
+        str_interp('Station'),
+        parseOptionsWithSections(
+          getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
+          valueColumn = 'name',
+          sectionColumn = 'catchment',
+          optionColumn = 'full_name'
+        )
+      ),
       # Inputs for X axis
       # Create a select input for parameter selection
       selectInput(
@@ -87,7 +96,7 @@ grabSamplesComparisonUI <- function(id, sites, parameters) {
 
 ## Create the server function of the module ###############################################
 
-grabSamplesComparison <- function(input, output, session, df, dateRange, sites, parameters) {
+grabSamplesComparison <- function(input, output, session, df, dateRange, pool, parameters) {
 # Create the logic for the grabSamplesComparison module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -96,10 +105,21 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
-#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - pool: The pool connection to the database
 #  - parameters: Named list, contains grab samples data parameters info, cf data_preprocessing.R
 # 
 # Returns NULL
+  
+  ## Selected station logic #######################################################
+  
+  # Create a reactive expression that return the current site info
+  currentSite <- reactive(getRows(
+    pool,
+    'stations',
+    name == local(input$site),
+    columns = c('full_name', 'color')
+  ))
+  
   
 
   ## Sub parameter update logic ###################################################
@@ -217,8 +237,9 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
     paramfilter <- isolate(paramfilter())
     
     # Get current site name and color
-    currentSite <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_full)
-    currentColor <- sites$sites %>% filter(sites_short == input$site) %>% pull(sites_color)
+    site <- currentSite()
+    currentSiteName <- site %>% pull(full_name)
+    currentSiteColor <- site %>% pull(color)
 
     # Create and return a onVsOne plot
     onVsOnePlot(
@@ -227,8 +248,8 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, sites, 
       y = paramfilter$filterY,
       parameterX = paramfilter$paramX,
       parameterY  = paramfilter$paramY,
-      plotTitle = str_interp('${currentSite} Grab VS Grab'),
-      color = currentColor
+      plotTitle = paste(currentSiteName, 'Grab VS Grab'),
+      color = currentSiteColor
     )
   })
 
