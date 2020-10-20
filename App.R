@@ -31,7 +31,6 @@ library(shinyWidgets)
 library(shinybusy)
 library(shinycssloaders)
 library(sass)
-# library(mailR)
 library(jsonlite)
 library(readr)
 library(stringr)
@@ -156,7 +155,7 @@ ui <- tagList(
           # Create a tab title with an icon
           tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
           # Load the visualisationTab module UI elements
-          visualisationTabUI('visu', grabSampleDf, hfDf, sites, grabSampleParameters, hfParameters),
+          visualisationTabUI('visu', pool, grabSampleDf, hfDf, grabSampleParameters, hfParameters),
           value = 'visu'
         ),
         # Create the download tab
@@ -193,9 +192,9 @@ server <- function(input, output, session) {
   
   ## Load visualisationTab module server logic ####################################
   callModule(visualisationTab, 'visu',
-             user,
+             pool, user,
              grabSampleDf, hfDf,
-             sites, grabSampleParameters, hfParameters)
+             grabSampleParameters, hfParameters)
   
   
                

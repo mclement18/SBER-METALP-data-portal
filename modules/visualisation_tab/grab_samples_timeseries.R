@@ -2,11 +2,11 @@
 
 ## Create the UI function of the module ###############################################
 
-grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
+grabSamplesTimeSeriesUI <- function(id, pool, parameters) {
 # Create the UI for the grabSamplesTimeSeries module
 # Parameters:
 #  - id: String, the module id
-#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - pool: The pool connection to the database
 #  - parameters: Named list, contains grab samples parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
@@ -24,7 +24,11 @@ grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
       id = str_interp('time-serie-plot-input-${id}'),
       class = 'time-serie-input',
       # Create select input for catchment selection
-      selectInput(ns('catchment'), str_interp('Catchment'), sites$catchmentsOptions),
+      selectInput(
+        ns('catchment'),
+        str_interp('Catchment'),
+        parseOptions(getRows(pool, 'stations', columns = 'catchment'), 'catchment')
+      ),
       # Create an empty checkbox group input for station selection
       # Will update dynamically in function of the catchment
       checkboxGroupInput(ns('sites'), 'Stations'),
@@ -79,7 +83,7 @@ grabSamplesTimeSeriesUI <- function(id, sites, parameters) {
 
 ## Create the server function of the module ###############################################
 
-grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, parameters) {
+grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool, parameters) {
 # Create the logic for the grabSamplesTimeSeries module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -88,7 +92,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
-#  - sites: Named list, contains all sites info, cf data_preprocessing.R
+#  - pool: The pool connection to the database
 #  - parameters: Named list, contains grab samples parameters info, cf data_preprocessing.R
 # 
 # Returns a reactive expression containing the updated date range with the same format as the input
@@ -98,13 +102,13 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
   # Create an observeEvent that react to the catchment select input
   observeEvent(input$catchment, {
     # Get catchment sites info
-    currentSites <- sites$sites %>% filter(catchments == input$catchment)
+    sites <- getRows(pool, 'stations', catchment == local(input$catchment))
     
     # Update sites checkbox group input with current sites info
     updateCheckboxGroupInput(session, 'sites',
-                             selected = currentSites$sites_short,
-                             choiceNames = currentSites$sites_full,
-                             choiceValues = currentSites$sites_short)
+                             selected = sites$name,
+                             choiceNames = sites$full_name,
+                             choiceValues = sites$name)
   })
   
   # Create a reactive expression returning the selected sites
@@ -112,12 +116,12 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
   
   # Create a debounced reactive expression returning the selected sites
   selectedSites_d <-  selectedSites %>% debounce(1000)
+
+  # Create a reactive expression that returns the current catchment sites
+  currentSites <- reactive(getRows(pool, 'stations', name %in% local(selectedSites_d())))
   
   # Create a currentCatchment reactive expression
-  currentCatchment <- reactive({
-    sites$sites %>% filter(sites_short %in% selectedSites_d()) %>%
-    select(catchments) %>% unique() %>% pull()
-  })
+  currentCatchment <- reactive(currentSites() %>% pull(catchment) %>% unique())
   
   
   ## Sub parameter update logic ###################################################
@@ -229,8 +233,8 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
       df = data(),
       x = 'DATETIME_GMT',
       parameter = paramfilter_d()$param,
-      siteName = str_interp('${currentCatchment()} catchment'),
-      sites = sites$sites
+      siteName = paste(currentCatchment(), 'catchment'),
+      sites = currentSites()
     )
   })
   
@@ -244,8 +248,8 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
       df = data(),
       x = 'DATETIME_month_day_time_GMT',
       parameter = paramfilter_d()$param,
-      siteName = str_interp('${currentCatchment()} catchment'),
-      sites = sites$sites
+      siteName = paste(currentCatchment(), 'catchment'),
+      sites = currentSites()
     )
   })
   
@@ -270,7 +274,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
   output$stats <- renderStatsTables(
     elements = selectedSites_d,
     data = data,
-    sites = sites$sites,
+    sites = currentSites(),
     tableFunction = createStatsTablePerSite
   )
   
@@ -278,7 +282,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, sites, 
   observeEvent(input$showstats, {
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
-      title = str_interp('Summary statistics of the ${currentCatchment()} catchment'),
+      title = paste('Summary statistics of the', currentCatchment(), 'catchment'),
       htmlOutput(session$ns('stats'), class = 'stats-summary'),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE

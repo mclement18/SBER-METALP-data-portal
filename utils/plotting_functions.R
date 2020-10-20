@@ -12,7 +12,7 @@ calculateYaxisLimits <- function(min, max, perc = 0.1) {
 siteColors <- function(df, sitesTable) {
   namedColors <- c()
   for (site in df$Site_ID %>% unique()) {
-    namedColors[site] <- sitesTable %>% filter(sites_short == site) %>% pull(sites_color)
+    namedColors[site] <- sitesTable %>% filter(name == site) %>% pull(color)
   }
   
   return(namedColors)
