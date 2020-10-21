@@ -4,6 +4,7 @@
 
 source('./modules/data_management_tab/stations_management.R')
 source('./modules/data_management_tab/grab_sample_plotting_options.R')
+source('./modules/data_management_tab/sensor_plotting_options.R')
 
 
 ## Create module UI ###############################################################
@@ -58,7 +59,7 @@ dataManagementTabUI <- function(id) {
       # Tab title
       'Sensor plotting options',
       # Tab content
-      
+      sensorPlotOptionsUI(ns('sensorPlot')),
       value = ns('sensorPlot')
     )
   )
@@ -79,5 +80,7 @@ dataManagementTab <- function(input, output, session, pool) {
   callModule(stationsManagement, 'stationsMan', pool)
   
   callModule(gbPlotOptions, 'grabPlot', pool)
+  
+  callModule(sensorPlotOptions, 'sensorPlot', pool)
 }
 
