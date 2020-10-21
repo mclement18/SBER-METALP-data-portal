@@ -81,7 +81,7 @@ gbPlotOptions <- function(input, output, session, pool) {
                )
              ),
              updateExpr = expression(
-               updateStation(
+               updateGbPlotOption(
                  pool = pool,
                  gbPlotOption = editedRow(),
                  section_name = input$section_name,
