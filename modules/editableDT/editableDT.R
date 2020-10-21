@@ -280,6 +280,7 @@ editableDT <- function(input, output, session, pool, tableName, element,
       datatable(rownames = FALSE, options = list(
         dom = 't',
         paging = FALSE,
+        scrollX = TRUE,
         columnDefs = list(list(targets = 0, visible = FALSE))
       )) %>%
       formatDate(c('created_at', 'updated_at'), method = 'toUTCString')
