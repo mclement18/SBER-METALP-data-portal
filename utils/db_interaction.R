@@ -55,6 +55,24 @@ sqlInterpolateList <- function(conn, sql, vars=list(), list_vars=list()) {
 }
 
 
+sendQueryWithError <- function(pool, query) {
+  # Send Query and catch errors
+  result <- tryCatch(
+    dbGetQuery(pool, query),
+    error = function(e) return(e$message)
+  )
+  
+  # Check if insertion succeed (i.e. empty df)
+  # If not return the error message
+  if (is.data.frame(result)) {
+    return('')
+  } else {
+    return(result)
+  }
+}
+
+
+
 
 ## General queries ##############################################################
 
@@ -99,13 +117,13 @@ getRows <- function(pool, table, ..., columns = NULL) {
 deleteRows <- function(pool, table, ids) {
   # Perform deletion only if ids is not NULL, numeric, not empty and does not contains NA
   if (is.null(ids)) {
-    result <- 'Error: IDs cannot be NULL.'
+    error <- 'Error: IDs cannot be NULL.'
   } else if (!is.numeric(ids)) {
-    result <- 'Error: IDs should be a numeric vector.'
+    error <- 'Error: IDs should be a numeric vector.'
   } else if (length(ids) == 0) {
-    result <- 'Error: IDs cannot be empty.'
+    error <- 'Error: IDs cannot be empty.'
   } else if (any(is.na(ids))) {
-    result <- 'Error: IDs cannot be NA.'
+    error <- 'Error: IDs cannot be NA.'
   } else {
     # If ids is of length 1, make a specific query,
     # Otherwise, make a IN query
@@ -124,20 +142,11 @@ deleteRows <- function(pool, table, ids) {
       )
     }
     # Send Query and catch errors
-    result <- tryCatch(
-      dbGetQuery(pool, query),
-      error = function(e) return(e$message)
-    )
+    return(sendQueryWithError(pool, query))
   }
   
-  
-  # Check if insertion succeed (i.e. empty df)
-  # If not return the error message
-  if (is.data.frame(result)) {
-    return('')
-  } else {
-    return(result)
-  }
+  # If error return the error message
+  return(error)
 }
 
 
@@ -192,18 +201,7 @@ createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
   )
   
   # Send Query and catch errors
-  result <- tryCatch(
-    dbGetQuery(pool, query),
-    error = function(e) return(e$message)
-  )
-  
-  # Check if insertion succeed (i.e. empty df)
-  # If not return the error message
-  if (is.data.frame(result)) {
-    return('')
-  } else {
-    return(result)
-  }
+  sendQueryWithError(pool, query)
 }
 
 
@@ -240,18 +238,7 @@ updateUser <- function(pool, user, username = '', password = '', role = '', acti
   }
   
   # Send Query and catch errors
-  result <- tryCatch(
-    dbGetQuery(pool, query),
-    error = function(e) return(e$message)
-  )
-  
-  # Check if insertion succeed (i.e. empty df)
-  # If not return the error message
-  if (is.data.frame(result)) {
-    return('')
-  } else {
-    return(result)
-  }
+  sendQueryWithError(pool, query)
 }
 
 
@@ -274,18 +261,7 @@ createStation <- function(pool, name, full_name, catchment, color) {
   )
   
   # Send Query and catch errors
-  result <- tryCatch(
-    dbGetQuery(pool, query),
-    error = function(e) return(e$message)
-  )
-  
-  # Check if insertion succeed (i.e. empty df)
-  # If not return the error message
-  if (is.data.frame(result)) {
-    return('')
-  } else {
-    return(result)
-  }
+  rsendQueryWithError(pool, query)
 }
 
 
@@ -312,18 +288,7 @@ updateStation <- function(pool, station, name = '', full_name = '', catchment = 
   )
   
   # Send Query and catch errors
-  result <- tryCatch(
-    dbGetQuery(pool, query),
-    error = function(e) return(e$message)
-  )
-  
-  # Check if insertion succeed (i.e. empty df)
-  # If not return the error message
-  if (is.data.frame(result)) {
-    return('')
-  } else {
-    return(result)
-  }
+  sendQueryWithError(pool, query)
 }
 
 
@@ -357,18 +322,7 @@ createGbPlotOption <- function(pool, section_name, option_name, param_name, unit
   )
   
   # Send Query and catch errors
-  result <- tryCatch(
-    dbGetQuery(pool, query),
-    error = function(e) return(e$message)
-  )
-  
-  # Check if insertion succeed (i.e. empty df)
-  # If not return the error message
-  if (is.data.frame(result)) {
-    return('')
-  } else {
-    return(result)
-  }
+  sendQueryWithError(pool, query)
 }
 
 
@@ -411,17 +365,76 @@ updateGbPlotOption <- function(pool, gbPlotOption, section_name = '', option_nam
   )
   
   # Send Query and catch errors
-  result <- tryCatch(
-    dbGetQuery(pool, query),
-    error = function(e) return(e$message)
+  sendQueryWithError(pool, query)
+}
+
+
+
+
+## Sensor plotting options queries ###################################################################
+
+createSensorPlotOption <- function(pool, section_name, option_name, param_name, units, data,
+                                   grab_param_name = '', description = '') {
+  # Check for valid input string
+  section_name <- validInputString(section_name)
+  option_name <- validInputString(option_name)
+  param_name <- validInputString(param_name)
+  units <- validInputString(units)
+  data <- validInputString(data)
+  grab_param_name <- validInputString(grab_param_name)
+  description <- validInputString(description)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO sensor_params_plotting
+    (section_name, option_name, param_name, units, data, grab_param_name, description)
+    values(?section_name, ?option_name, ?param_name, ?units, ?data, ?grab_param_name, ?description);',
+    section_name = section_name, option_name = option_name, param_name = param_name, units = units,
+    data = data, grab_param_name = grab_param_name, description = description
   )
   
-  # Check if insertion succeed (i.e. empty df)
-  # If not return the error message
-  if (is.data.frame(result)) {
-    return('')
-  } else {
-    return(result)
-  }
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
 }
+
+
+
+
+updateSensorPlotOption <- function(pool, sensorPlotOption, section_name = '', option_name = '', param_name = '', units = '', data = '',
+                                   grab_param_name = '', description = '') {
+  # Check for valid input string
+  section_name <- validInputString(section_name)
+  option_name <- validInputString(option_name)
+  param_name <- validInputString(param_name)
+  units <- validInputString(units)
+  data <- validInputString(data)
+  grab_param_name <- validInputString(grab_param_name)
+  description <- validInputString(description)
+  
+  # Use previous values if not defined
+  if (section_name == SQL('NULL')) section_name <- sensorPlotOption$section_name
+  if (option_name == SQL('NULL')) option_name <- sensorPlotOption$option_name
+  if (param_name == SQL('NULL')) param_name <- sensorPlotOption$param_name
+  if (units == SQL('NULL')) units <- sensorPlotOption$units
+  if (data == SQL('NULL')) data <- sensorPlotOption$data
+  if (grab_param_name == SQL('NULL')) grab_param_name <- sensorPlotOption$grab_param_name
+  if (description == SQL('NULL')) description <- sensorPlotOption$description
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE sensor_params_plotting SET
+    section_name = ?section_name, option_name = ?option_name, param_name = ?param_name, units = ?units,
+    data = ?data, grab_param_name = ?grab_param_name, description = ?description
+    WHERE id = ?id;',
+    id = sensorPlotOption$id,
+    section_name = section_name, option_name = option_name, param_name = param_name, units = units,
+    data = data, grab_param_name = grab_param_name, description = description
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
 
