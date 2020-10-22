@@ -2,12 +2,11 @@
 
 ## Create the UI function of the module ###############################################
 
-grabSamplesComparisonUI <- function(id, pool, parameters) {
+grabSamplesComparisonUI <- function(id, pool) {
 # Create the UI for the grabSamplesComparison module
 # Parameters:
 #  - id: String, the module id
 #  - pool: The pool connection to the database
-#  - parameters: Named list, contains grab samples data parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
 #  - inputs: the inputs UI elements of the module
@@ -15,6 +14,12 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
   
   # Create namespace
   ns <- NS(id)
+  
+  # Get parameter select options
+  parameterOptions <- parseOptionsWithSections(
+    getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+    'param_name'
+  )
   
   # Create the UI list to be returned
   list(
@@ -44,7 +49,7 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelperX'), icon('question-circle'), class = 'icon-btn')
         ),
-        parameters$selectOptions
+        parameterOptions
       ),
       # Create an hidden radio buttons input group (with shinyjs) for sub parameter selection
       # Will be displayed only if there is a sub parameter selection available
@@ -65,7 +70,7 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelperY'), icon('question-circle'), class = 'icon-btn')
         ),
-        parameters$selectOptions
+        parameterOptions
       ),
       # Create an hidden radio buttons input group (with shinyjs) for sub parameter selection
       # Will be displayed only if there is a sub parameter selection available
@@ -96,7 +101,7 @@ grabSamplesComparisonUI <- function(id, pool, parameters) {
 
 ## Create the server function of the module ###############################################
 
-grabSamplesComparison <- function(input, output, session, df, dateRange, pool, parameters) {
+grabSamplesComparison <- function(input, output, session, df, dateRange, pool) {
 # Create the logic for the grabSamplesComparison module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -106,7 +111,6 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, pool, p
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
 #  - pool: The pool connection to the database
-#  - parameters: Named list, contains grab samples data parameters info, cf data_preprocessing.R
 # 
 # Returns NULL
   
@@ -121,14 +125,33 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, pool, p
   ))
   
   
-
+  
+  
+  ## Parameter logic ###################################################
+  
+  # Create a reactive expression that return the parameter X and Y infos
+  currentParamX <- reactive(getRows(
+    pool, 'grab_params_plotting',
+    param_name == local(input$paramX),
+    columns = c('param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
+  ))
+  
+  currentParamY <- reactive(getRows(
+    pool, 'grab_params_plotting',
+    param_name == local(input$paramY),
+    columns = c('param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
+  ))
+  
+  
+  
+  
   ## Sub parameter update logic ###################################################
   
   # X parameter
   # Create an observeEvent that react to the param select input
   observeEvent(input$paramX,{
     # Get parameter info
-    dataColumns <- parameters$parameters %>% filter(param_name == input$paramX) %>% select(data) %>% str_split(',') %>% unlist()
+    dataColumns <- currentParamX() %>% select(data) %>% str_split(',') %>% unlist()
     
     # Update sub parameter radio buttons group input with current parameter info
     updateRadioButtons(session, 'paramfilterX',
@@ -146,7 +169,7 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, pool, p
   # Create an observeEvent that react to the param select input
   observeEvent(input$paramY,{
     # Get parameter info
-    dataColumns <- parameters$parameters %>% filter(param_name == input$paramY) %>% select(data) %>% str_split(',') %>% unlist()
+    dataColumns <- currentParamY() %>% select(data) %>% str_split(',') %>% unlist()
     
     # Update sub parameter radio buttons group input with current parameter info
     updateRadioButtons(session, 'paramfilterY',
@@ -181,15 +204,12 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, pool, p
       'paramY' = NULL
     ))
     
-    # Otherwise get parameter info
-    paramX <- parameters$parameters %>% filter(param_name == inputParamX)
-    paramY <- parameters$parameters %>% filter(param_name == inputParamY)
     # Return the sub parameters and parameter info
     return(list(
       'filterX' = paramToDisplayX,
-      'paramX' = paramX,
+      'paramX' = isolate(currentParamX()),
       'filterY' = paramToDisplayY,
-      'paramY' = paramY
+      'paramY' = isolate(currentParamY())
     ))
   })
   
@@ -272,7 +292,7 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, pool, p
     # Render the description UI in the modal
     output$description <- renderUI(tags$p(
       class = 'description',
-      parameters$parameters %>% filter(param_name == input$paramX) %>% pull(description)
+      currentParamX() %>% pull(description)
     ))
     
     # Create modal with the corresponding htmlOutput
@@ -291,7 +311,7 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, pool, p
     # Render the description UI in the modal
     output$description <- renderUI(tags$p(
       class = 'description',
-      parameters$parameters %>% filter(param_name == input$paramY) %>% pull(description)
+      currentParamY() %>% pull(description)
     ))
     
     # Create modal with the corresponding htmlOutput

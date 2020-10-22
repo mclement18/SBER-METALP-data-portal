@@ -8,7 +8,7 @@ source('./modules/download_tab/request_data.R')
 
 ## Create module UI ###############################################################
 
-downloadTabUI <- function(id, pool, minDate, maxDate, grabSampleParameters, hfParameters) {
+downloadTabUI <- function(id, pool, minDate, maxDate, hfParameters) {
 # Create the UI for the downloadTab module
 # Parameters:
 #  - id: String, the module id
@@ -17,7 +17,6 @@ downloadTabUI <- function(id, pool, minDate, maxDate, grabSampleParameters, hfPa
 #  - maxDate: Date, the upper bound for the dateRangeInput
 #  - grabSampleDf: Data.frame, the grab samples data
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
-#  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns a tabsetPanel containing the layout
@@ -135,7 +134,10 @@ downloadTabUI <- function(id, pool, minDate, maxDate, grabSampleParameters, hfPa
                 # Create an icon button that trigger a modal to display the parameter description
                 actionButton(ns('grabParamHelper'), icon('question-circle'), class = 'icon-btn')
               ),
-              choices = grabSampleParameters$selectOptions,
+              choices = parseOptionsWithSections(
+                getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+                'param_name'
+              ),
               multiple = TRUE,
               options = list(
                 'placeholder' = 'Select some parameters...',
@@ -176,7 +178,7 @@ downloadTabUI <- function(id, pool, minDate, maxDate, grabSampleParameters, hfPa
 
 ## Create module server function ##################################################
 
-downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, minDate, maxDate, grabSampleParameters, hfParameters) {
+downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, minDate, maxDate, hfParameters) {
 # Create the logic for the downloadTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -187,7 +189,6 @@ downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, 
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
 #  - minDate: Date, the lower bound for the dateRangeInput
 #  - maxDate: Date, the upper bound for the dateRangeInput
-#  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns NULL
@@ -291,10 +292,15 @@ downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, 
         filter(param_name %in% hfParamReactive_d()) %>%
         pull(data)
     } else if (inputDf == 'grabDf') {
+      # Get parameters info
+      parametersInfo <- getRows(
+        pool, 'grab_params_plotting',
+        param_name %in% local(grabParamReactive_d()),
+        columns = c('data', 'sd', 'min_max')
+      )
+      
       # Get parameters
-      raw_params <- grabSampleParameters$parameters %>%
-        filter(param_name %in% grabParamReactive_d()) %>%
-        pull(data)
+      raw_params <- na.exclude(c(parametersInfo$data, parametersInfo$sd, parametersInfo$min_max))
       
       # Create an empty vector
       params <- c()
@@ -469,7 +475,7 @@ downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, 
     if (input$data == 'hfDf') {
       parameters <- hfParameters$parameters
     } else if (input$data == 'grabDf') {
-      parameters <- grabSampleParameters$parameters
+      parameters <- getRows(pool, 'grab_params_plotting', columns = c('option_name', 'description'))
     }
     
     # Render the descriptions UI in the modal

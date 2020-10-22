@@ -16,14 +16,13 @@ source('./modules/visualisation_tab/sensor_grab_comparison.R')
 
 ## Create module UI ###############################################################
 
-visualisationTabUI <- function(id, pool, grabSampleDf, hfDf, grabSampleParameters, hfParameters) {
+visualisationTabUI <- function(id, pool, grabSampleDf, hfDf, hfParameters) {
 # Create the UI for the visualisationTab module
 # Parameters:
 #  - id: String, the module id
 #  - pool: The pool connection to the database
 #  - grabSampleDf: Data.frame, the grab samples data
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
-#  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns a tabsetPanel containing the layout
@@ -45,8 +44,7 @@ visualisationTabUI <- function(id, pool, grabSampleDf, hfDf, grabSampleParameter
         minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
         maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
         innerModuleUI = grabSamplesTimeSeriesUI,
-        pool = pool,
-        parameters = grabSampleParameters
+        pool = pool
       ),
       value = ns('grabSamplesTimeseries')
     ),
@@ -73,7 +71,7 @@ visualisationTabUI <- function(id, pool, grabSampleDf, hfDf, grabSampleParameter
 
 ## Create module server function ##################################################
 
-visualisationTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, grabSampleParameters, hfParameters) {
+visualisationTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, hfParameters) {
 # Create the logic for the visualisationTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -82,7 +80,6 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
-#  - grabSampleParameters: Named list of grab samples parameters info, cf data_preprocessing.R
 #  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns NULL
@@ -94,8 +91,7 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
              df = grabSampleDf,
              minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
              maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
-             pool = pool,
-             parameters = grabSampleParameters)
+             pool = pool)
   
   # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
   callModule(sidebarInputLayout, 'sensorsTimeseries',
@@ -125,8 +121,7 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
             minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
             maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
             innerModuleUI = grabSamplesComparisonUI,
-            pool = pool,
-            parameters = grabSampleParameters
+            pool = pool
           ),
           value = session$ns('grabVSgrab')
         )
@@ -162,8 +157,7 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
                  plotDateRangeSelection = FALSE,
                  minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
                  maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
-                 pool = pool,
-                 parameters = grabSampleParameters)
+                 pool = pool)
 
       # Load the server logic for the sensorGrabComparison module inside the sidebarInputLayout module
       callModule(sidebarInputLayout, 'sensorVsGrab',
@@ -173,7 +167,7 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
                  minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
                  maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
                  pool = pool,
-                 parameters = list('hf' = hfParameters, 'grab' = grabSampleParameters))
+                 parameters = list('hf' = hfParameters))
     }
   })
 }

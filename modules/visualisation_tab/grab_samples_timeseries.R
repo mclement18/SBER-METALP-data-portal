@@ -2,12 +2,11 @@
 
 ## Create the UI function of the module ###############################################
 
-grabSamplesTimeSeriesUI <- function(id, pool, parameters) {
+grabSamplesTimeSeriesUI <- function(id, pool) {
 # Create the UI for the grabSamplesTimeSeries module
 # Parameters:
 #  - id: String, the module id
 #  - pool: The pool connection to the database
-#  - parameters: Named list, contains grab samples parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
 #  - inputs: the inputs UI elements of the module
@@ -41,7 +40,10 @@ grabSamplesTimeSeriesUI <- function(id, pool, parameters) {
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
-        parameters$selectOptions
+        parseOptionsWithSections(
+          getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+          'param_name'
+        )
       ),
       # Create an hidden checkbox input group (with shinyjs) for sub parameter selection
       # Will be displayed only if there is a sub parameter selection available
@@ -83,7 +85,7 @@ grabSamplesTimeSeriesUI <- function(id, pool, parameters) {
 
 ## Create the server function of the module ###############################################
 
-grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool, parameters) {
+grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool) {
 # Create the logic for the grabSamplesTimeSeries module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -93,7 +95,6 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool, p
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
 #  - pool: The pool connection to the database
-#  - parameters: Named list, contains grab samples parameters info, cf data_preprocessing.R
 # 
 # Returns a reactive expression containing the updated date range with the same format as the input
   
@@ -134,12 +135,28 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool, p
   currentCatchment <- reactive(currentSites() %>% pull(catchment) %>% unique())
   
   
+  
+  
+  
+  ## Parameter logic ###################################################
+  
+  # Create a reactive expression that return the parameter infos
+  currentParam <- reactive(getRows(
+    pool, 'grab_params_plotting',
+    param_name == local(input$param),
+    columns = c('param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
+  ))
+  
+  
+  
+  
+  
   ## Sub parameter update logic ###################################################
   
   # Create an observeEvent that react to the param select input
   observeEvent(input$param,{
     # Get parameter info
-    dataColumns <- parameters$parameters %>% filter(param_name == input$param) %>% select(data) %>% str_split(',') %>% unlist()
+    dataColumns <- currentParam() %>% select(data) %>% str_split(',') %>% unlist()
     
     # Update sub parameter checkbox group input with current parameter info
     updateCheckboxGroupInput(session, 'paramfilter',
@@ -167,12 +184,11 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool, p
       'param' = NULL
     ))
     
-    # Otherwise get parameter info
-    param <- parameters$parameters %>% filter(param_name == inputParam)
+    
     # Return the sub parameters and parameter info
     return(list(
       'filter' = paramToDisplay,
-      'param' = param
+      'param' = currentParam()
     ))
   })
   
@@ -308,7 +324,7 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool, p
     # Render the description UI in the modal
     output$description <- renderUI(tags$p(
       class = 'description',
-      parameters$parameters %>% filter(param_name == input$param) %>% select(description) %>% unlist()
+      currentParam() %>% pull(description)
     ))
     
     # Create modal with the corresponding htmlOutput

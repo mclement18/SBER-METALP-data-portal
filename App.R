@@ -155,7 +155,7 @@ ui <- tagList(
           # Create a tab title with an icon
           tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
           # Load the visualisationTab module UI elements
-          visualisationTabUI('visu', pool, grabSampleDf, hfDf, grabSampleParameters, hfParameters),
+          visualisationTabUI('visu', pool, grabSampleDf, hfDf, hfParameters),
           value = 'visu'
         ),
         # Create the download tab
@@ -167,7 +167,6 @@ ui <- tagList(
             pool = pool,
             minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
             maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-            grabSampleParameters = grabSampleParameters,
             hfParameters = hfParameters
           ),
           value = 'dl'
@@ -194,7 +193,7 @@ server <- function(input, output, session) {
   callModule(visualisationTab, 'visu',
              pool, user,
              grabSampleDf, hfDf,
-             grabSampleParameters, hfParameters)
+             hfParameters)
   
   
                
@@ -205,7 +204,7 @@ server <- function(input, output, session) {
              grabSampleDf, hfDf,
              minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
              maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-             grabSampleParameters, hfParameters)
+             hfParameters)
     
   
   ## Check authorizations #########################################################
