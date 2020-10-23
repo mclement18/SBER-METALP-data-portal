@@ -12,6 +12,7 @@
     .navbar-nav > .active > a:hover {
         background-color: $grey3;
         color: $primary-color;
+        cursor: default;
     }
     
     .navbar-nav > li > a {
