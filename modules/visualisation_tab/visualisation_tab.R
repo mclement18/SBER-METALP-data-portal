@@ -16,14 +16,13 @@ source('./modules/visualisation_tab/sensor_grab_comparison.R')
 
 ## Create module UI ###############################################################
 
-visualisationTabUI <- function(id, pool, grabSampleDf, hfDf, hfParameters) {
+visualisationTabUI <- function(id, pool, grabSampleDf, hfDf) {
 # Create the UI for the visualisationTab module
 # Parameters:
 #  - id: String, the module id
 #  - pool: The pool connection to the database
 #  - grabSampleDf: Data.frame, the grab samples data
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
-#  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns a tabsetPanel containing the layout
   
@@ -59,8 +58,7 @@ visualisationTabUI <- function(id, pool, grabSampleDf, hfDf, hfParameters) {
         minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
         maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
         innerModuleUI = highFreqTimeSeriesUI,
-        pool = pool,
-        parameters = hfParameters
+        pool = pool
       ),
       value = ns('sensorsTimeseries')
     )
@@ -71,7 +69,7 @@ visualisationTabUI <- function(id, pool, grabSampleDf, hfDf, hfParameters) {
 
 ## Create module server function ##################################################
 
-visualisationTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, hfParameters) {
+visualisationTab <- function(input, output, session, pool, user, grabSampleDf, hfDf) {
 # Create the logic for the visualisationTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -80,7 +78,6 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
 #  - grabSampleDf: Data.frame, the data of the grab samples
 #                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
-#  - hfParameters: Named list of high frequency parameters info, cf data_preprocessing.R
 # 
 # Returns NULL
   
@@ -100,8 +97,7 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
              df = hfDf,
              minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
              maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
-             pool = pool,
-             parameters = hfParameters)
+             pool = pool)
 
   ## Check for authorization #######################################################
 
@@ -141,8 +137,7 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
             minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
             maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
             innerModuleUI = sensorGrabComparisonUI,
-            pool = pool,
-            parameters = list('hf' = hfParameters)
+            pool = pool
           ),
           value = session$ns('sensorVsGrab')
         )
@@ -166,8 +161,7 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
                  df = list('hf' = hfDf, 'grab' = grabSampleDf),
                  minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
                  maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
-                 pool = pool,
-                 parameters = list('hf' = hfParameters))
+                 pool = pool)
     }
   })
 }

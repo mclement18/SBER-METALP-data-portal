@@ -82,10 +82,6 @@ source('./utils/data_preprocessing.R')
 grabSampleDf <- loadGrabSampleDf()
 hfDf <- loadHighFreqDf()
 
-sites <- loadSites()
-grabSampleParameters <- loadGrabSamplesParameters()
-hfParameters <- loadHfParameters()
-
 
 
 ## Connect to DB ##################################################################
@@ -155,7 +151,7 @@ ui <- tagList(
           # Create a tab title with an icon
           tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
           # Load the visualisationTab module UI elements
-          visualisationTabUI('visu', pool, grabSampleDf, hfDf, hfParameters),
+          visualisationTabUI('visu', pool, grabSampleDf, hfDf),
           value = 'visu'
         ),
         # Create the download tab
@@ -166,8 +162,7 @@ ui <- tagList(
             'dl',
             pool = pool,
             minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-            maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-            hfParameters = hfParameters
+            maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE)
           ),
           value = 'dl'
         )
@@ -192,8 +187,7 @@ server <- function(input, output, session) {
   ## Load visualisationTab module server logic ####################################
   callModule(visualisationTab, 'visu',
              pool, user,
-             grabSampleDf, hfDf,
-             hfParameters)
+             grabSampleDf, hfDf)
   
   
                
@@ -203,8 +197,7 @@ server <- function(input, output, session) {
              user,
              grabSampleDf, hfDf,
              minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-             maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-             hfParameters)
+             maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE))
     
   
   ## Check authorizations #########################################################

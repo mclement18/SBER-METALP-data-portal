@@ -2,12 +2,11 @@
 
 ## Create the UI function of the module ###############################################
 
-highFreqTimeSeriesUI <- function(id, pool, parameters) {
+highFreqTimeSeriesUI <- function(id, pool) {
 # Create the UI for the highFreqTimeSeries module
 # Parameters:
 #  - id: String, the module id
 #  - pool: The pool connection to the database
-#  - parameters: Named list, contains high frequency data parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
 #  - inputs: the inputs UI elements of the module
@@ -44,7 +43,10 @@ highFreqTimeSeriesUI <- function(id, pool, parameters) {
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
-        parameters$selectOptions
+        parseOptionsWithSections(
+          getRows(pool, 'sensor_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+          'param_name'
+        )
       ),
       # Create a checkbox to select or unselect modeled data
       checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
@@ -94,7 +96,7 @@ highFreqTimeSeriesUI <- function(id, pool, parameters) {
 
 ## Create the server function of the module ###############################################
 
-highFreqTimeSeries <- function(input, output, session, df, dateRange, pool, parameters) {
+highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
 # Create the logic for the highFreqTimeSeries module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -104,7 +106,6 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool, para
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
 #  - pool: The pool connection to the database
-#  - parameters: Named list, contains high frequency data parameters info, cf data_preprocessing.R
 # 
 # Returns a reactive expression containing the updated date range with the same format as the input
   
@@ -124,9 +125,11 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool, para
   ## Parameter logic ##############################################################
   
   # Create a reactive expression that returns the filtered parameters df
-  param <- reactive({
-    parameters$parameters %>% filter(param_name == input$param)
-  })
+  param <- reactive(getRows(
+    pool, 'sensor_params_plotting',
+    param_name == local(input$param),
+    columns = c('param_name', 'units', 'data', 'description')
+  ))
   
   
   

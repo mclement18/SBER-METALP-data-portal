@@ -87,76 +87,76 @@ loadHighFreqDf <- function() {
 
 
 
-
-## Load Sites data ################################################################
-
-loadSites <- function() {
-  # Load sites info
-  sites <- fread('./data/sites.csv', header = TRUE, sep = ',')
-  
-  # Create the options for the catchments select input
-  catchmentsOptions <- parseOptions(sites, 'catchments')
-  
-  # Create the options for the HF sites input
-  sitesOptions <- parseOptions(sites, 'sites_short')
-  
-  # Create the options for the sites select input
-  sitesSelectOptions <- parseOptionsWithSections(sites, 'sites_short', sectionColumn = 'catchments', optionColumn = 'sites_full')
-  
-  # Return a list containing the sites info and the catchment options for select input
-  # And the sites options for the HF checkbox input group
-  return(
-    list(
-      'sites' = sites,
-      'catchmentsOptions' = catchmentsOptions,
-      'sitesOptions' = sitesOptions,
-      'sitesSelectOptions' = sitesSelectOptions
-    )
-  )
-}
-
-
-
-## Load grab samples parameters information #######################################
-
-loadGrabSamplesParameters <- function() {
-  # Load parameters info
-  parameters <- fread('./data/parameters_grab_samples.csv', header = TRUE, sep = ',')
-  
-  # Create the options for the select input
-  paramOptions <- parseOptionsWithSections(parameters, 'param_name')
-  
-  # Return a list containing the parameters info and options for a select input
-  return(
-    list(
-      'parameters' = parameters,
-      'selectOptions' = paramOptions
-    )
-  )
-}
-
-
-
-
-## Load HF paramters information ##################################################
-
-loadHfParameters <- function() {
-  # Load parameters info
-  parameters <- fread('./data/parameters_hf.csv', header = TRUE, sep = ',')
-  
-  # Create the options for the select input
-  paramOptions <- parseOptionsWithSections(parameters, 'param_name')
-  
-  # Create the options for the sensor vs grab select input
-  vsGrabParamOptions <- parseOptionsWithSections(filter(parameters, !is.na(grab_param_name)), 'param_name')
-  
-  # Return a list containing the parameters info and options for a select input
-  return(
-    list(
-      'parameters' = parameters,
-      'selectOptions' = paramOptions,
-      'vsGrabSelectOptions' = vsGrabParamOptions
-    )
-  )
-}
+## Old functions to get parameters and sites infos from csv files ###################
+# ## Load Sites data ################################################################
+# 
+# loadSites <- function() {
+#   # Load sites info
+#   sites <- fread('./data/sites.csv', header = TRUE, sep = ',')
+#   
+#   # Create the options for the catchments select input
+#   catchmentsOptions <- parseOptions(sites, 'catchments')
+#   
+#   # Create the options for the HF sites input
+#   sitesOptions <- parseOptions(sites, 'sites_short')
+#   
+#   # Create the options for the sites select input
+#   sitesSelectOptions <- parseOptionsWithSections(sites, 'sites_short', sectionColumn = 'catchments', optionColumn = 'sites_full')
+#   
+#   # Return a list containing the sites info and the catchment options for select input
+#   # And the sites options for the HF checkbox input group
+#   return(
+#     list(
+#       'sites' = sites,
+#       'catchmentsOptions' = catchmentsOptions,
+#       'sitesOptions' = sitesOptions,
+#       'sitesSelectOptions' = sitesSelectOptions
+#     )
+#   )
+# }
+# 
+# 
+# 
+# ## Load grab samples parameters information #######################################
+# 
+# loadGrabSamplesParameters <- function() {
+#   # Load parameters info
+#   parameters <- fread('./data/parameters_grab_samples.csv', header = TRUE, sep = ',')
+#   
+#   # Create the options for the select input
+#   paramOptions <- parseOptionsWithSections(parameters, 'param_name')
+#   
+#   # Return a list containing the parameters info and options for a select input
+#   return(
+#     list(
+#       'parameters' = parameters,
+#       'selectOptions' = paramOptions
+#     )
+#   )
+# }
+# 
+# 
+# 
+# 
+# ## Load HF paramters information ##################################################
+# 
+# loadHfParameters <- function() {
+#   # Load parameters info
+#   parameters <- fread('./data/parameters_hf.csv', header = TRUE, sep = ',')
+#   
+#   # Create the options for the select input
+#   paramOptions <- parseOptionsWithSections(parameters, 'param_name')
+#   
+#   # Create the options for the sensor vs grab select input
+#   vsGrabParamOptions <- parseOptionsWithSections(filter(parameters, !is.na(grab_param_name)), 'param_name')
+#   
+#   # Return a list containing the parameters info and options for a select input
+#   return(
+#     list(
+#       'parameters' = parameters,
+#       'selectOptions' = paramOptions,
+#       'vsGrabSelectOptions' = vsGrabParamOptions
+#     )
+#   )
+# }
 

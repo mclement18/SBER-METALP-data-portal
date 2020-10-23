@@ -2,12 +2,11 @@
 
 ## Create the UI function of the module ###############################################
 
-sensorGrabComparisonUI <- function(id, pool, parameters) {
+sensorGrabComparisonUI <- function(id, pool) {
 # Create the UI for the sensorGrabComparison module
 # Parameters:
 #  - id: String, the module id
 #  - pool: The pool connection to the database
-#  - parameters: Named list, contains both grab samples and high frequency data parameters info, cf data_preprocessing.R
 # 
 # Returns a list containing:
 #  - inputs: the inputs UI elements of the module
@@ -43,7 +42,12 @@ sensorGrabComparisonUI <- function(id, pool, parameters) {
           # Create an icon button that trigger a modal to display the parameter description
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
-        parameters$hf$vsGrabSelectOptions
+        parseOptionsWithSections(
+          getRows(pool, 'sensor_params_plotting',
+                  !is.na(grab_param_name),
+                  columns = c('section_name', 'option_name', 'param_name')),
+          'param_name'
+        )
       ),
       # Create checkbox to show/hide modeled data
       checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
@@ -102,7 +106,7 @@ sensorGrabComparisonUI <- function(id, pool, parameters) {
 
 ## Create the server function of the module ###############################################
 
-sensorGrabComparison <- function(input, output, session, df, dateRange, pool, parameters) {
+sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
 # Create the logic for the sensorGrabComparison module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -112,7 +116,6 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool, pa
 #               + min: Date, the lower bound to filter the date
 #               + max: Date, the upper bound to filter the data
 #  - pool: The pool connection to the database
-#  - parameters: Named list, contains both grab samples and high frequency data parameters info, cf data_preprocessing.R
 # 
 # Returns a reactive expression containing the updated date range with the same format as the input
   
@@ -134,7 +137,11 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool, pa
   paramHf <- reactive({
     # Run it only if input$paramHf is available
     req(input$paramHf)
-    parameters$hf$parameters %>% filter(param_name == input$paramHf)
+    getRows(
+      pool, 'sensor_params_plotting',
+      param_name == local(input$paramHf),
+      columns = c('param_name', 'units', 'data', 'grab_param_name', 'description')
+    )
   })
   
   # Create an observeEvent that react to the paramHf reactive expression
