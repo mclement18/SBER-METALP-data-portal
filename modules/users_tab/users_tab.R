@@ -16,6 +16,7 @@ usersTabUI <- function(id) {
   tagList(
     # Create a main header
     h1(class = 'global-header', 'Users Management'),
+    htmlTemplate('./html_components/user_tab_info.html'),
     editableDTUI(ns('users'))
   )
 }

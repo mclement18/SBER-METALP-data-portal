@@ -13,7 +13,10 @@ sensorPlotOptionsUI <- function(id) {
   ns <- NS(id)
   
   # Create and return the layout
-  editableDTUI(ns('sensorPlotOptions'))
+  tagList(
+    htmlTemplate('./html_components/sensor_params_info.html'),
+    editableDTUI(ns('sensorPlotOptions'))
+  )
 }
 
 

@@ -13,7 +13,10 @@ stationsManagementUI <- function(id) {
   ns <- NS(id)
   
   # Create and return the layout
-  editableDTUI(ns('stations'))
+  tagList(
+    htmlTemplate('./html_components/stations_tab_info.html'),  
+    editableDTUI(ns('stations'))
+  )
 }
 
 

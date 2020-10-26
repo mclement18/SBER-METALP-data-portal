@@ -13,7 +13,10 @@ gbPlotOptionsUI <- function(id) {
   ns <- NS(id)
   
   # Create and return the layout
-  editableDTUI(ns('gbPlotOptions'))
+  tagList(
+    htmlTemplate('./html_components/grab_params_info.html'),
+    editableDTUI(ns('gbPlotOptions'))
+  )
 }
 
 

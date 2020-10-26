@@ -1,0 +1,16 @@
+// ####################################
+// Instruction style
+// ####################################
+
+.instructions {
+    margin: 0 0 2em;
+    padding: 1em;
+    border: 1px solid $secondary-color;
+    border-radius: 5px;
+    background: lighten($grey5, 25);
+
+    .option {
+        font-weight: bold;
+        margin: 0 10px 0 0;
+    }
+}
