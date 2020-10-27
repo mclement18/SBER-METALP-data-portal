@@ -309,7 +309,7 @@ pointHoverWidgetServer <- function(session, plotId, df, input,
     # Linked to some JavaScript defined in './assets/js/point_hover_widget.js'
     session$sendCustomMessage('removeHoverWidget', messageJSON)
     
-  }, ignoreNULL = FALSE)
+  }, ignoreNULL = FALSE, ignoreInit = TRUE)
 }
 
 

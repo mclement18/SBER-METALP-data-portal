@@ -114,6 +114,12 @@ source('./modules/editableDT/editableDT.R')
 ui <- tagList(
   # Load shinyjs
   useShinyjs(),
+  # Load htmlwidgets.js at startup to avoid reference error problem in Firefox
+  # when the datatables are loaded dynamically
+  htmltools:: htmlDependency("htmlwidgets", packageVersion("htmlwidgets"),
+                 src = system.file("www", package="htmlwidgets"),
+                 script = "htmlwidgets.js"
+  ),
   # Add stylesheet link and script tags to head
   tags$head(
     # Add link to main.css stylesheet
@@ -183,14 +189,14 @@ server <- function(input, output, session) {
   ## Load login module server logic ###############################################
   user <- callModule(login, 'login', pool)
 
-  
+
   ## Load visualisationTab module server logic ####################################
   callModule(visualisationTab, 'visu',
              pool, user,
              grabSampleDf, hfDf)
-  
-  
-               
+
+
+
   ## Load downloadTab module server logic #########################################
   callModule(downloadTab, 'dl',
              pool = pool,
@@ -198,15 +204,15 @@ server <- function(input, output, session) {
              grabSampleDf, hfDf,
              minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
              maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE))
-    
-  
+
+
   ## Check authorizations #########################################################
-  
+
   # Do it when the user role changes
   observeEvent(user$role, {
     # if (user$role %in% c('intern', 'sber', 'admin')) {
     #   ## Generate toolsTab ##########################################################
-    #   
+    #
     #   # Create the toolbox tab
     #   appendTab(
     #     'main-nav',
@@ -216,14 +222,14 @@ server <- function(input, output, session) {
     #       value = 'tools'
     #     )
     #   )
-    #   
+    #
     #   # Load tools tab server logic
     # }
-    
-    
+
+
     if (user$role %in% c('sber', 'admin')) {
       ## Generate dataManagementTab #################################################
-      
+
       # Create the data management tab
       appendTab(
         'main-nav',
@@ -234,15 +240,15 @@ server <- function(input, output, session) {
           value = 'data'
         )
       )
-      
+
       # Load data management server logic
       callModule(dataManagementTab, 'data', pool)
     }
-    
-    
+
+
     if (user$role == 'admin') {
       ## Generate usersTab ##########################################################
-      
+
       # Create users tab
       appendTab(
         'main-nav',
@@ -253,7 +259,7 @@ server <- function(input, output, session) {
           value = 'users'
         )
       )
-      
+
       # Load users tab server logic
       callModule(usersTab, 'users', pool)
     }
