@@ -173,24 +173,20 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
       sep = '\n')
     
     # Create email
-    email <- tempfile()
-    write(
-      paste(
-        to,
-        from,
-        replyTo,
-        subject,
-        '',
-        body,
-        sep = '\n'
-      ),
-      email
+    email <- paste(
+      to,
+      from,
+      replyTo,
+      subject,
+      '',
+      body,
+      sep = '\n'
     )
     
     # Send email with UNIX sendmail command
     tryCatch({
       # Send email
-      processx::run(command = 'sendmail', args = c('-t', '<', email))
+      system2('sendmail', args = c('-t'), input = email)
       # Close modal
       removeModal()
       # Show success notification
@@ -207,8 +203,7 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
       )
     )
     
-    # Cleanup tempfile
-    file.remove(email)
+    # Cleanup email
     rm(email)
   })
 }
