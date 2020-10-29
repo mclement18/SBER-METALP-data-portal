@@ -122,9 +122,21 @@ sidebarInputLayout <- function(input, output, session,
   # If the inner module plots are modifying the date range
   if (plotDateRangeSelection) {
     # Add an observeEvent that track the plot brushing dateRange input for the first innerModule unit
-    observeEvent(dateRangeActions$update(), {
+    observeEvent(dateRangeActions$update(), ignoreInit = TRUE, {
+      # Run only if dates are non null
+      req(length(dateRangeActions$update()$min) != 0, length(dateRangeActions$update()$min) != 0)
+      # Store new dates
+      newMin <- dateRangeActions$update()$min
+      newMax <- dateRangeActions$update()$max
+      
+      # Ensure that dates are within range
+      if (newMin < date(minDate)) newMin <- minDate
+      if (newMax < date(minDate)) newMax <- minDate
+      if (newMin > date(maxDate)) newMin <- maxDate
+      if (newMax > date(maxDate)) newMax <- maxDate
+      
       # Update the dateRangeInput accordingly
-      updateDateRangeInput(session, 'time', start = dateRangeActions$update()$min, end = dateRangeActions$update()$max)
+      updateDateRangeInput(session, 'time', start = newMin, end = newMax)
       # Set the zoomed value to TRUE
       zoomed(TRUE)
     })
@@ -184,9 +196,21 @@ sidebarInputLayout <- function(input, output, session,
     # If the inner module plots are modifying the date range
     if (plotDateRangeSelection) {
       # Add an observeEvent that track the plot brushing dateRange input for the new module unit
-      observeEvent(dateRangeActions$update(), {
+      observeEvent(dateRangeActions$update(), ignoreInit = TRUE, {
+        # Run only if dates are non null
+        req(length(dateRangeActions$update()$min) != 0, length(dateRangeActions$update()$min) != 0)
+        # Store new dates
+        newMin <- dateRangeActions$update()$min
+        newMax <- dateRangeActions$update()$max
+        
+        # Ensure that dates are within range
+        if (newMin < date(minDate)) newMin <- minDate
+        if (newMax < date(minDate)) newMax <- minDate
+        if (newMin > date(maxDate)) newMin <- maxDate
+        if (newMax > date(maxDate)) newMax <- maxDate
+        
         # Update the dateRangeInput accordingly
-        updateDateRangeInput(session, 'time', start = dateRangeActions$update()$min, end = dateRangeActions$update()$max)
+        updateDateRangeInput(session, 'time', start = newMin, end = newMax)
         # Set the zoomed value to TRUE
         zoomed(TRUE)
       })
