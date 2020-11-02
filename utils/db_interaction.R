@@ -438,3 +438,50 @@ updateSensorPlotOption <- function(pool, sensorPlotOption, section_name = '', op
 }
 
 
+
+
+## Grab param categories queries ###################################################################
+
+createGrabParamCat <- function(pool, category, param_name) {
+  # Check for valid input string
+  category <- validInputString(category)
+  param_name <- validInputString(param_name)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO grab_param_categories (category, param_name) values(?category, ?param_name);',
+    category = category, param_name = param_name
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
+
+updateGrabParamCat <- function(pool, grabParamCat, category = '', param_name = '') {
+  # Check for valid input string
+  category <- validInputString(category)
+  param_name <- validInputString(param_name)
+  
+  # Use previous values if not defined
+  if (category == SQL('NULL')) category <- grabParamCat$category
+  if (param_name == SQL('NULL')) param_name <- grabParamCat$param_name
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE grab_param_categories SET
+    category = ?category, param_name = ?param_name
+    WHERE id = ?id;',
+    id = grabParamCat$id,
+    category = category, param_name = param_name
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
