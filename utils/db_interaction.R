@@ -244,6 +244,59 @@ updateUser <- function(pool, user, username = '', password = '', role = '', acti
 
 
 
+
+
+## Data queries ######################################################################
+
+updateData <- function(pool, id, columns, values) {
+  # Check for NA in inputs
+  if (any(is.na(id)) | any(is.na(columns)) | any(is.na(values))) return('Inputs cannot contain NA.')
+  # Validate id
+  if (!is.numeric(id)) return('Id must be an integer.')
+  if (length(id) != 1) return('Id length must 1.')
+  # Validate columns
+  if (!is.character(columns)) return('Columns must be a character vector.')
+  if ('id' %in% columns) return('Columns to update cannot contain id.')
+  # Validate values
+  if (length(columns) != length(values)) return('Must provide the same number of columns and values.')
+  for (value in values) {
+    if (value == '') value <- SQL('NULL')
+  }
+  
+  # Build base sql query
+  sql <- 'UPDATE data SET ?values WHERE id = ?id;'
+  
+  # Build complete query to interpolate
+  for (i in c(1:length(columns))) {
+    sql <- sub("\\?values", paste("?column", 1:length(columns), " = ?value", 1:length(values), sep="", collapse=","), sql)
+  }
+  
+  # Quote column names
+  columns <- lapply(columns, function(column) {
+    dbQuoteIdentifier(pool, column)
+  })
+  
+  # Set variables names
+  names(columns) <- paste0("column", 1:length(columns))
+  names(values) <- paste0("value", 1:length(values))
+  names(id) <- 'id'
+  
+  browser()
+  # Create variables list
+  vars <- c(id, columns, values)
+  
+  # Interpolate SQL
+  query <- sqlInterpolate(pool, sql, .dots=vars)
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
+
+
+
 ## Stations queries ###################################################################
 
 createStation <- function(pool, name, full_name, catchment, color) {
