@@ -44,6 +44,7 @@ library(DBI)
 library(pool)
 library(dbplyr)
 library(DT)
+library(rhandsontable)
 
 
 

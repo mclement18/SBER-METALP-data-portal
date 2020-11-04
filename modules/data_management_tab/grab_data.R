@@ -73,7 +73,7 @@ grabDataUI <- function(id, pool) {
         )
       ),
       # rhandsontable
-      rhandsontable::rHandsontableOutput(ns('grabData')),
+      rHandsontableOutput(ns('grabData')),
       # Table action
       div(
         class = 'RH-table-actions',
@@ -448,40 +448,40 @@ grabData <- function(input, output, session, pool) {
   ## Table rendering ##############################################################
   
   # Render the handsontable
-  output$grabData <- rhandsontable::renderRHandsontable({
+  output$grabData <- renderRHandsontable({
     # Get data and column names
     data <- data()
     colNames <- colnames(data)
     
     # Build the handsontable with the first 3 columns fixed and no context menu
-    hot <- rhandsontable::rhandsontable(
+    hot <- rhandsontable(
       data,
       height = 800,
       fixedColumnsLeft = 3,
       contextMenu = FALSE
     ) %>%
       # Hide and mark as read only the id
-      rhandsontable::hot_col('id', readOnly = TRUE, colWidths=0.1) %>%
+      hot_col('id', readOnly = TRUE, colWidths=0.1) %>%
       # Set the dropdown options for the station
-      rhandsontable::hot_col('station', type = 'dropdown', source = levels(data$station), colWidths=60) %>%
+      hot_col('station', type = 'dropdown', source = levels(data$station), colWidths=60) %>%
       # Set the date format and renderer for the DATE
-      rhandsontable::hot_col(
+      hot_col(
         'DATE_reading',
         type = 'date',
         dateFormat = 'YYYY-MM-DD',
         renderer = dateRanderer
       ) %>%
       # Add a time validator for the always present time columns
-      rhandsontable::hot_col(
+      hot_col(
         c('TIME_reading', 'Convert_to_GMT', 'TIME_reading_GMT'),
         validator = timeValidator
       ) %>%
       # Mark the created and updated at columns as read only
-      rhandsontable::hot_col(c('created_at', 'updated_at'), readOnly = TRUE)
+      hot_col(c('created_at', 'updated_at'), readOnly = TRUE)
     
     # If the two following time columns are present, add a validator to them
-    if ('Vaisala_CO2_time' %in% colNames) hot %<>% rhandsontable::hot_col('Vaisala_CO2_time', validator = timeValidator)
-    if ('WTW_DO_2_time' %in% colNames) hot %<>% rhandsontable::hot_col('WTW_DO_2_time', validator = timeValidator)
+    if ('Vaisala_CO2_time' %in% colNames) hot %<>% hot_col('Vaisala_CO2_time', validator = timeValidator)
+    if ('WTW_DO_2_time' %in% colNames) hot %<>% hot_col('WTW_DO_2_time', validator = timeValidator)
     
     # Add hooks callback to the table
     hot %>% htmlwidgets::onRender(onTableRender)
