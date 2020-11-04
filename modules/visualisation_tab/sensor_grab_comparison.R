@@ -20,7 +20,7 @@ sensorGrabComparisonUI <- function(id, pool) {
     # Create the UI inputs
     'inputs' = div(
       # Set UI inputs id and class
-      id = str_interp('sensor-vs-grab-plot-input-${id}'),
+      id = paste0('sensor-vs-grab-plot-input-', id),
       class = 'time-serie-input',
       # Create select input for site selection
       selectInput(
@@ -75,7 +75,7 @@ sensorGrabComparisonUI <- function(id, pool) {
     # Create the UI plots
     'plots' = div(
       # Set UI plots id and class
-      id = str_interp('sensor-vs-grab-plots-${id}'),
+      id = paste0('sensor-vs-grab-plots-', id),
       class = 'time-serie-plot two-plots point-hover-widget-plot',
       # Create a plotOutput for the grab vs grab plot
       spinnerPlotOutput(

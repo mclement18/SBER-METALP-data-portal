@@ -129,9 +129,9 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
     )
     
     # Set the sender email address
-    from <- paste0('From: ', NOREPLY_ADDRESS)
+    from <- paste0('From: <', NOREPLY_ADDRESS, '>')
     # Set the recipient email address
-    to <- paste0('To: ', TO_ADDRESS)
+    to <- paste0('To: <', TO_ADDRESS, '>')
     # Set the reply to email address, i.e. the requisitor
     replyTo <- paste0('Reply-To: ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
     # Create the email subject

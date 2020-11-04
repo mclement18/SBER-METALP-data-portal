@@ -357,7 +357,7 @@ downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, 
           # Select the parameter columns
           tmpDf <- df %>% select(starts_with(parameter), -ends_with('singlePoint'))
           # Create combined column name
-          newcolName <- str_interp('${parameter}_combined')
+          newcolName <- paste0(parameter, '_combined')
           # Create the combined column
           tmpDf %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
           # Add parameter columns to the new df

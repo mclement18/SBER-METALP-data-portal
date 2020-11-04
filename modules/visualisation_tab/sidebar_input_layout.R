@@ -176,14 +176,14 @@ sidebarInputLayout <- function(input, output, session,
     
     # Insert the new unit input UI elements in the sidebar
     insertUI(
-      str_interp("#${session$ns('sidebar-inputs')}"), where = 'beforeEnd',
+      paste0('#', session$ns('sidebar-inputs')), where = 'beforeEnd',
       ui = innerModuleUIList$inputs,
       immediate = TRUE
     )
     
     # Insert the new unit plot UI elements in the main panel
     insertUI(
-      str_interp("#${session$ns('main-plots')}"), where = 'beforeEnd',
+      paste0('#', session$ns('main-plots')), where = 'beforeEnd',
       ui = innerModuleUIList$plots,
       immediate = TRUE
     )
@@ -234,8 +234,8 @@ sidebarInputLayout <- function(input, output, session,
   # Add an observeEvent that will run upon click on the remove unit button
   observeEvent(input$removeUnit, {
     # Define last unit inputs and plots ids
-    inputsId <- str_interp('#${innerModulePrefixIds$inputs}-${session$ns(unitsNb())}')
-    plotsId <- str_interp('#${innerModulePrefixIds$plots}-${session$ns(unitsNb())}')
+    inputsId <- paste0('#', innerModulePrefixIds$inputs, '-', session$ns(unitsNb()))
+    plotsId <- paste0('#', innerModulePrefixIds$plots, '-', session$ns(unitsNb()))
     
     # Remove last unit plots
     removeUI(

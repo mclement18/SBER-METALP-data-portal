@@ -127,7 +127,7 @@ grabData <- function(input, output, session, pool) {
   '
   
   # Callback that register table hooks
-  onTableRender <- stringr::str_interp("
+  onTableRender <- str_interp("
   function (el, x, data) {
     const hot = this.hot;
     CustomHandsontable.onChange(el, hot, '${session$ns('tableChanges')}');
@@ -339,7 +339,7 @@ grabData <- function(input, output, session, pool) {
         if (grepl('^[[:digit:].]+$', value)) {
           value <- as.numeric(value)
         } else if (grepl('^[[:digit:]]{2}/[[:digit:]]{2}/[[:digit:]]{4}$', value)) {
-          value %<>% stringr::str_split(value, '/') %>%
+          value %<>% str_split(value, '/') %>%
             unlist() %>% rev() %>% paste(collapse = '-')
         }
       }

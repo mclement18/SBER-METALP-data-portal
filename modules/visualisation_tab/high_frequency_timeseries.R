@@ -23,7 +23,7 @@ highFreqTimeSeriesUI <- function(id, pool) {
     # Create the UI inputs
     'inputs' = div(
       # Set UI inputs id and class
-      id = str_interp('hf-time-serie-plot-input-${id}'),
+      id = paste0('hf-time-serie-plot-input-', id),
       class = 'time-serie-input',
       # Create select input for catchment selection
       checkboxGroupInputWithClass(
@@ -70,7 +70,7 @@ highFreqTimeSeriesUI <- function(id, pool) {
     # Create the UI plots
     'plots' = div(
       # Set UI plots id and class
-      id = str_interp('hf-time-serie-plots-${id}'),
+      id = paste0('hf-time-serie-plots-', id),
       class = 'time-serie-plot point-hover-widget-plot',
       # Create a plotOutput for the regular timeserie plot
       spinnerPlotOutput(
@@ -207,7 +207,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
     highFreqTimeSeriePlot(
       df = data(),
       parameter = param(),
-      plotTitle = str_interp('Sensors High Frequency Time Serie'),
+      plotTitle = 'Sensors High Frequency Time Serie',
       sites = sites,
       modeledData = 'data_type' %in% colnames(data())
     )

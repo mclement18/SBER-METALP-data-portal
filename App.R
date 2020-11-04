@@ -30,9 +30,7 @@ library(shinyjs)
 library(shinyWidgets)
 library(shinybusy)
 library(shinycssloaders)
-library(sass)
 library(jsonlite)
-library(readr)
 library(stringr)
 library(ggplot2)
 library(Cairo)
@@ -52,25 +50,24 @@ library(DT)
 ## Load Secret Global Variables ###################################################
 source('./secrets.R')
 
-
-
-## Compile CSS from Sass ##########################################################
-sass(
-  sass_file('assets/sass/main.scss'), 
-  output = 'www/main.css',
-  options = sass_options(output_style = 'compressed')
-)
-
-
-
-
 ## Load helper functions ##########################################################
 source('./utils/helper_functions.R')
 
 
 
-## Compile and minify JavaScript ##################################################
-js_parser()
+## Development environment specific ##########################################################
+
+if (ENV == 'development') {
+  # Compile CSS from Sass
+  sass::sass(
+    sass::sass_file('assets/sass/main.scss'), 
+    output = 'www/main.css',
+    options = sass::sass_options(output_style = 'compressed')
+  )
+  
+  # Compile and minify JavaScript
+  js_parser()
+}
 
 
 

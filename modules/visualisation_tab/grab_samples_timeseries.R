@@ -20,7 +20,7 @@ grabSamplesTimeSeriesUI <- function(id, pool) {
     # Create the UI inputs
     'inputs' = div(
       # Set UI inputs id and class
-      id = str_interp('time-serie-plot-input-${id}'),
+      id = paste0('time-serie-plot-input-', id),
       class = 'time-serie-input',
       # Create select input for catchment selection
       selectInput(
@@ -56,7 +56,7 @@ grabSamplesTimeSeriesUI <- function(id, pool) {
     # Create the UI plots
     'plots' = div(
       # Set UI plots id and class
-      id = str_interp('time-serie-plots-${id}'),
+      id = paste0('time-serie-plots-', id),
       class = 'time-serie-plot two-plots point-hover-widget-plot',
       # Create a plotOutput for the regular timeserie plot
       spinnerPlotOutput(

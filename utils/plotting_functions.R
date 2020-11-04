@@ -45,7 +45,7 @@ basicPlot <- function(df, x, param, plotTitle, sites) {
               size = 1.2,
               alpha = 0.5)+
     ggtitle(plotTitle)+
-    ylab(str_interp('${param$param_name} [${param$units}]'))+
+    ylab(paste0(param$param_name, ' [', param$units, ']'))+
     xlab('Date')+
     # Set color of the data groups
     # And remove the line from the color legend images to keep the points only
@@ -177,7 +177,7 @@ timeSeriePlot <- function(df, x, parameter, siteName, sites) {
   # Recover plotting function using string
   plottingFunc <- match.fun(parameter$plot_func)
   # Create plot title
-  plotTitle <- str_interp('${siteName} Time Serie')
+  plotTitle <- paste0(siteName, ' Time Serie')
   # Create plot using the plotting function
   p <- plottingFunc(df, x, parameter, plotTitle, sites)
   # Set the x axis as datetime
@@ -205,7 +205,7 @@ DOYPlot <- function(df, x, parameter, siteName, sites) {
   # Recover plotting function using string
   plottingFunc <- match.fun(parameter$plot_func)
   # Create plot title
-  plotTitle <- str_interp('${siteName} DOY Serie')
+  plotTitle <- paste0(siteName, ' DOY Serie')
   # Create plot using the plotting function
   p <- plottingFunc(df, x, parameter, plotTitle, sites)
   # Set the x axis as datetime
@@ -251,7 +251,7 @@ highFreqTimeSeriePlot <- function(df, parameter, plotTitle, sites, modeledData =
   
   # Finished plot construction
   p <- p + ggtitle(plotTitle)+
-    ylab(str_interp('${parameter$param_name} [${parameter$units}]'))+
+    ylab(paste0(parameter$param_name, ' [', parameter$units, ']'))+
     xlab('Date')+
     # Set the y axis limits
     scale_y_continuous(limits = calculateYaxisLimits(min(df$value, na.rm = TRUE), max(df$value, na.rm = TRUE)))+
@@ -325,9 +325,9 @@ onVsOnePlot <- function(df, x, y, parameterX, parameterY, plotTitle, color) {
     annotate('text', -Inf, Inf, hjust = -.1, vjust = 1.5,
              label = lm_eqn(df, x, y), parse = TRUE, size = 5)+
     # Set plot title and axis names
-    ggtitle(str_interp(plotTitle))+
-    ylab(str_interp('${parameterY$param_name} [${parameterY$units}]'))+
-    xlab(str_interp('${parameterX$param_name} [${parameterX$units}]'))+
+    ggtitle(plotTitle)+
+    ylab(paste0(parameterY$param_name, ' [', parameterY$units, ']'))+
+    xlab(paste0(parameterX$param_name, ' [', parameterX$units, ']'))+
     # Set theme
     theme_bw()+
     # Remove legend title, move legend to the bottom of the plot and set text size

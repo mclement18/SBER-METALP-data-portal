@@ -140,7 +140,7 @@ lm_eqn <- function(df, x, y){
   if (all(is.na(pull(df, all_of(x)))) | all(is.na(pull(df, all_of(y))))) return('')
   
   # Compute the linear regression
-  m <- lm(as.formula(str_interp('${y} ~ ${x}')), df)
+  m <- lm(as.formula(paste0(y, ' ~ ', x)), df)
   # Create the equation and r2 expression
   eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
                    list(a = format(unname(coef(m)[1]), digits = 2),
@@ -175,7 +175,7 @@ js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd()) {
   # For each file in in the manifest
   # Read the file and append the content to the compiled variable
   for (filename in manifest) {
-    compiled <- paste0(compiled, read_file(file.path(inputDir, filename)))  
+    compiled <- paste0(compiled, readr::read_file(file.path(inputDir, filename)))  
   }
   
   # Create a temporary file with the compiled JS
