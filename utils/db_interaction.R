@@ -248,6 +248,30 @@ updateUser <- function(pool, user, username = '', password = '', role = '', acti
 
 ## Data queries ######################################################################
 
+createData <- function(pool, station, DATE_reading, TIME_reading, Convert_to_GMT, TIME_reading_GMT) {
+  # Check for valid input string
+  station <- validInputString(station)
+  DATE_reading <- validInputString(DATE_reading)
+  TIME_reading <- validInputString(TIME_reading)
+  Convert_to_GMT <- validInputString(Convert_to_GMT)
+  TIME_reading_GMT <- validInputString(TIME_reading_GMT)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO data
+    (station, DATE_reading, TIME_reading, Convert_to_GMT, TIME_reading_GMT)
+    values(?station, ?DATE_reading, ?TIME_reading, ?Convert_to_GMT, ?TIME_reading_GMT);',
+    station = station, DATE_reading = DATE_reading, TIME_reading = TIME_reading,
+    Convert_to_GMT = Convert_to_GMT, TIME_reading_GMT = TIME_reading_GMT
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
 updateData <- function(pool, id, columns, values) {
   # Check for NA in inputs
   if (any(is.na(id)) | any(is.na(columns)) | any(is.na(values))) return('Inputs cannot contain NA.')
@@ -281,7 +305,6 @@ updateData <- function(pool, id, columns, values) {
   names(values) <- paste0("value", 1:length(values))
   names(id) <- 'id'
   
-  browser()
   # Create variables list
   vars <- c(id, columns, values)
   
@@ -314,7 +337,7 @@ createStation <- function(pool, name, full_name, catchment, color) {
   )
   
   # Send Query and catch errors
-  rsendQueryWithError(pool, query)
+  sendQueryWithError(pool, query)
 }
 
 

@@ -66,6 +66,9 @@ CustomHandsontable.afterSelectionCallback = function (rowStart, colStart, rowEnd
         end: null
     };
 
+    rowStart++;
+    rowEnd++;
+
     if (rowStart === rowEnd) {
         message.start = rowStart;
     } else if (rowStart < rowEnd) {

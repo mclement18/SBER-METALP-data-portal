@@ -205,11 +205,82 @@ grabData <- function(input, output, session, pool) {
   observeEvent(input$new_top | input$new_bottom, ignoreInit = TRUE, {
     req(input$new_top != 0 | input$new_bottom != 0)
     
-    # Data row creation logic
-    # TODO
+    # Create template for inputs
+    inputsTemplate <- data() %>%
+      select(station, DATE_reading, TIME_reading, Convert_to_GMT, TIME_reading_GMT) %>%
+      head(0)
+    
+    # Create and show modal with inputs
+    showModal(modalDialog(
+      title = 'New Data Entry', size = 's',
+      div(
+        class = 'table-edit-form',
+        textOutput(session$ns('form_error')),
+        selectInput(session$ns('station'), label = 'station', choices = getRows(pool, 'stations', columns = 'name') %>% pull(name)),
+        textInput(session$ns('DATE_reading'), 'DATE_reading', placeholder = 'YYYY-MM-DD'),
+        textInput(session$ns('TIME_reading'), 'TIME_reading', placeholder = 'HH:MM:SS'),
+        textInput(session$ns('Convert_to_GMT'), 'Convert_to_GMT', placeholder = 'HH:MM:SS'),
+        textInput(session$ns('TIME_reading_GMT'), 'TIME_reading_GMT', placeholder = 'HH:MM:SS')
+      ),
+      footer = tagList(
+        actionButton(session$ns('create'), 'Create', class = 'custom-style custom-style--primary'),
+        actionButton(session$ns('cancel'), 'Cancel', class = 'custom-style')
+      )
+    ))
+  })
+  
+  # Date and time input validation
+  dateTimeValidation <- reactive({
+    all(
+      grepl('^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2}$', input$DATE_reading),
+      grepl('^[[:digit:]]{2}:[[:digit:]]{2}:[[:digit:]]{2}$', c(input$TIME_reading, input$Convert_to_GMT, input$TIME_reading_GMT))
+    )
+  })
+  
+  # Create a reactive value to save error happening in the modal
+  modalError <- reactiveVal('')
+  
+  
+  # Create an observeEvent that react to the modal cancel button
+  observeEvent(input$cancel, ignoreInit = TRUE, {
+    # Clear error
+    modalError('')
+    
+    # Close modal
+    removeModal()
   })
   
   
+  # Create an observeEvent that react to the modal create button
+  observeEvent(input$create, ignoreInit = TRUE, {
+    req(dateTimeValidation())
+    
+    # Create new row
+    error <- createData(
+      pool = pool,
+      station = input$station,
+      DATE_reading = input$DATE_reading,
+      TIME_reading = input$TIME_reading,
+      Convert_to_GMT = input$Convert_to_GMT,
+      TIME_reading_GMT = input$TIME_reading_GMT
+    )
+    
+    # Save error
+    modalError(error)
+    
+    # If there is no error, remove the modal and reload the table
+    if (error == '') {
+      removeModal()
+      reloadData(reloadData() + 1)
+      showNotification('Row successfully created!', type = 'message')
+    }
+    
+    # Render the error, if any
+    output$form_error <- renderText(shiny::validate(
+      errorClass = 'form',
+      need(FALSE, message = modalError())
+    ))
+  })
   
   
   ## Data update logic ############################################################
@@ -275,8 +346,9 @@ grabData <- function(input, output, session, pool) {
       currentId <- updatesAsList[[id]]
       
       # Update currentRow
-      error <- updateData(pool, id = id, columns = names(currentId$updates), values = currentId$updates)
+      error <- updateData(pool, id = as.integer(id), columns = names(currentId$updates), values = currentId$updates)
       
+      # Display success or error
       if (error == '') {
         showNotification(
           paste0('Successfully updated ', currentId$info, '!'),
@@ -284,7 +356,7 @@ grabData <- function(input, output, session, pool) {
         )
       } else {
         showNotification(
-          paste0('Error: Cannot update ', currentId$info, '...\n', e$message),
+          paste0('Error: Cannot update ', currentId$info, '...\n', error),
           duration = NULL,
           type = 'error'
         )
@@ -293,6 +365,9 @@ grabData <- function(input, output, session, pool) {
     
     # Clear stored updates
     clearReactiveValues(updates)
+    
+    # Refresh table
+    reloadData(reloadData() + 1)
   })
   
   
@@ -342,7 +417,7 @@ grabData <- function(input, output, session, pool) {
     }
     
     # Reload table
-    reloadTable(reloadTable() + 1)
+    reloadData(reloadData() + 1)
   })
   
   
