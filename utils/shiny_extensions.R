@@ -432,3 +432,18 @@ confirmationModal <- function(text = '', session = getDefaultReactiveDomain()) {
   ), session = session)
 }
 
+
+clearReactiveValues <- function(rv) {
+# Clear the values from a list of reactive values created by reactiveValues()
+# Parameters:
+#  - rv: ReactiveValues, the list of reactive values to clear
+# 
+# Returns NULL
+
+  invisible(
+    lapply(names(rv), function(i) {
+      .subset2(rv, "impl")$.values$remove(i)
+    })
+  )
+}
+
