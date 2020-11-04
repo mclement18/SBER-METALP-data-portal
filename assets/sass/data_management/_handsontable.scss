@@ -1,0 +1,8 @@
+// ####################################
+// Handsontable custom style
+// ####################################
+
+.handsontable .changed:not(.htInvalid) {
+    color: $primary-color;
+    background: $grey5;
+}

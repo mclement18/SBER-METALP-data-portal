@@ -2,5 +2,6 @@
     "sidebar_actions.js",
     "point_hover_widget.js",
     "download_button_state.js",
+    "custom_handsontable.js",
     "shiny_custom_events.js"
 ]
