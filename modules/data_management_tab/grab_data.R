@@ -48,40 +48,45 @@ grabDataUI <- function(id, pool) {
         )
       )
     ),
-    # Table action
     div(
-      class = 'RH-table-actions',
+      class = 'rhandsontable-with-controls',
+      # Table action
       div(
-        class = 'btn-group',
-        # New button
-        actionButton(ns('new_top'), 'New Row', icon = icon('plus'), class = 'custom-style'),
-        # Delete button
-        actionButton(ns('delete_top'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+        class = 'RH-table-actions',
+        div(
+          class = 'btn-group',
+          # New button
+          actionButton(ns('new_top'), 'New Row', icon = icon('plus'), class = 'custom-style'),
+          # Delete button
+          actionButton(ns('delete_top'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+        ),
+        div(
+          class = 'btn-group',
+          # Update button
+          actionButton(ns('update_top'), 'Update', icon = icon('upload'), class = 'custom-style custom-style--primary'),
+          # Refresh button
+          actionButton(ns('refresh_top'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+        )
       ),
+      # rhandsontable
+      rhandsontable::rHandsontableOutput(ns('grabData')),
+      # Table action
       div(
-        class = 'btn-group',
-        # Update button
-        actionButton(ns('update_top'), 'Update', icon = icon('upload'), class = 'custom-style custom-style--primary'),
-        # Refresh button
-        actionButton(ns('refresh_top'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
-      )
-    ),
-    rhandsontable::rHandsontableOutput(ns('grabData')),
-    div(
-      class = 'RH-table-actions',
-      div(
-        class = 'btn-group',
-        # New button
-        actionButton(ns('new_bottom'), 'New Row', icon = icon('plus'), class = 'custom-style'),
-        # Delete button
-        actionButton(ns('delete_bottom'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
-      ),
-      div(
-        class = 'btn-group',
-        # Update button
-        actionButton(ns('update_bottom'), 'Update', icon = icon('upload'), class = 'custom-style custom-style--primary'),
-        # Refresh button
-        actionButton(ns('refresh_bottom'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+        class = 'RH-table-actions',
+        div(
+          class = 'btn-group',
+          # New button
+          actionButton(ns('new_bottom'), 'New Row', icon = icon('plus'), class = 'custom-style'),
+          # Delete button
+          actionButton(ns('delete_bottom'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+        ),
+        div(
+          class = 'btn-group',
+          # Update button
+          actionButton(ns('update_bottom'), 'Update', icon = icon('upload'), class = 'custom-style custom-style--primary'),
+          # Refresh button
+          actionButton(ns('refresh_bottom'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+        )
       )
     )
   )
