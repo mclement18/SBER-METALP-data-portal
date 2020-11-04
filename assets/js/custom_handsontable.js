@@ -28,24 +28,19 @@ CustomHandsontable.setInputId = function (tableDOM, attrName, inputId) {
 // Create an onChange hook callback
 CustomHandsontable.onChangeCallback = function (changes) {
     if (changes) {
-        const hot = this;
-        const inputId = hot.rootElement.dataset.onChangeId;
+        const inputId = this.rootElement.dataset.onChangeId;
         const message = [];
-
         changes.forEach(([row, col, oldValue, newValue]) => {
             if (oldValue !== newValue) {
-                hot.getCellValidator.bind(hot)(row, col)(newValue, (valid) => {
-                    if (valid) {
-                        message.push({
-                            row: row + 1,
-                            column: col + 1,
-                            value: newValue
-                        });
-        
-                        hot.setCellMeta.bind(hot)(row, col, 'className', 'changed');
-                        hot.render.bind(hot)();
-                    }
+
+                message.push({
+                    row: row + 1,
+                    column: col + 1,
+                    value: newValue
                 });
+
+                this.setCellMeta(row, col, 'className', 'changed');
+                this.render();
             }
         });
 
