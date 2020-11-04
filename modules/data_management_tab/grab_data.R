@@ -19,6 +19,7 @@ grabDataUI <- function(id, pool) {
     # Data selection inputs
     div(
       class = 'data-filter',
+      # Station selection
       selectInput(
         ns('site'),
         'Station',
@@ -36,6 +37,9 @@ grabDataUI <- function(id, pool) {
           )
         )
       ),
+      # Year selection
+      textInput(ns('year'), 'Year', placeholder = 'YYYY'),
+      # Parameter category selection
       selectInput(
         ns('paramCategory'),
         'Parameter category',
@@ -184,9 +188,22 @@ grabData <- function(input, output, session, pool) {
       'created_at', 'updated_at'
     )
     
-    # Get the the data and parse it
-    getRows(pool, 'data', station %in% sites, columns = columns) %>%
-      mutate(
+    # Get year
+    selectedYear <- input$year
+    if (is.null(selectedYear)) selectedYear <- ''
+    
+    # Get the the data in function of the selectedYear
+    if (selectedYear == '') {
+      data <- getRows(pool, 'data', station %in% sites, columns = columns)
+    } else {
+      data <- getRows(pool, 'data',
+                      station %in% sites,
+                      year(DATE_reading) == selectedYear,
+                      columns = columns)
+    }
+    
+    # Parse data
+    data %>% mutate(
         station = factor(station, levels = allSites),
         across(matches('DATE', ignore.case = FALSE), ymd),
         across(ends_with('_at'), ymd_hms)
