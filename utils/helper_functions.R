@@ -180,7 +180,7 @@ js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd()) {
   
   # Create a temporary file with the compiled JS
   tmp <- tempfile()
-  write_file(compiled, tmp)
+  readr::write_file(compiled, tmp)
   
   # Create the full path to the output file
   outputFile = file.path(outputDir, 'metalpdataportal.js')
