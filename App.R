@@ -236,7 +236,7 @@ server <- function(input, output, session) {
         tabPanel(
           # Create a tab title with an icon
           tags$span(icon('database'),tags$span('Data management', class = 'navbar-menu-name')),
-          dataManagementTabUI('data'),
+          dataManagementTabUI('data', pool),
           value = 'data'
         )
       )

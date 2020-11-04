@@ -1,0 +1,392 @@
+## This module contains the UI and server code for the grab data management tab
+
+## Create module UI ###############################################################
+
+grabDataUI <- function(id, pool) {
+  # Create the UI for the grabData module
+  # Parameters:
+  #  - id: String, the module id
+  #  - pool: The pool connection to the database
+  # 
+  # Returns a tagList with the layout
+  
+  # Create namespace
+  ns <- NS(id)
+  
+  # Create and return the layout
+  tagList(
+    htmlTemplate('./html_components/grab_data_help.html'),
+    # Data selection inputs
+    div(
+      class = 'data-filter',
+      selectInput(
+        ns('site'),
+        'Station',
+        choices = c(
+          list(
+            All = list(
+              All = 'All'
+            )
+          ),
+          parseOptionsWithSections(
+            getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
+            valueColumn = 'name',
+            sectionColumn = 'catchment',
+            optionColumn = 'full_name'
+          )
+        )
+      ),
+      selectInput(
+        ns('paramCategory'),
+        'Parameter category',
+        choices = c(
+         'All',
+          parseOptions(
+            getRows(pool, 'grab_param_categories', columns = 'category'),
+            'category'
+          )
+        )
+      )
+    ),
+    # Table action
+    div(
+      class = 'RH-table-actions',
+      div(
+        class = 'btn-group',
+        # New button
+        actionButton(ns('new_top'), 'New Row', icon = icon('plus'), class = 'custom-style'),
+        # Delete button
+        actionButton(ns('delete_top'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+      ),
+      div(
+        class = 'btn-group',
+        # Update button
+        actionButton(ns('update_top'), 'Update', icon = icon('upload'), class = 'custom-style custom-style--primary'),
+        # Refresh button
+        actionButton(ns('refresh_top'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+      )
+    ),
+    rhandsontable::rHandsontableOutput(ns('grabData')),
+    div(
+      class = 'RH-table-actions',
+      div(
+        class = 'btn-group',
+        # New button
+        actionButton(ns('new_bottom'), 'New Row', icon = icon('plus'), class = 'custom-style'),
+        # Delete button
+        actionButton(ns('delete_bottom'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+      ),
+      div(
+        class = 'btn-group',
+        # Update button
+        actionButton(ns('update_bottom'), 'Update', icon = icon('upload'), class = 'custom-style custom-style--primary'),
+        # Refresh button
+        actionButton(ns('refresh_bottom'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+      )
+    )
+  )
+}
+
+
+
+## Create module server function ##################################################
+
+grabData <- function(input, output, session, pool) {
+  # Create the logic for the grabData module
+  # Parameters:
+  #  - input, output, session: Default needed parameters to create a module
+  #  - pool: The pool connection to the database
+  # 
+  # Returns NULL
+  
+  ## JavaScript callback functions for the Handsontable ###########################
+  
+  # JavaScript logic in './assets/js/custom_handsontable.js'
+  
+  # Callback to render the date in 'YYYY-MM-DD' format
+  dateRanderer <- '
+  function (hotInstance, td, row, column, prop, value, cellProperties) {
+    CustomHandsontable.dateRenderer(hotInstance, td, row, column, prop, value, cellProperties);
+  }
+  '
+  
+  # Callback to validate string in a time format (HH:MM:SS)
+  timeValidator <- '
+  function (value, callback) {
+    CustomHandsontable.timeFormatValidator(value, callback);
+  }
+  '
+  
+  # Callback that register table hooks
+  onTableRender <- stringr::str_interp("
+  function (el, x, data) {
+    const hot = this.hot;
+    CustomHandsontable.onChange(el, hot, '${session$ns('tableChanges')}');
+    CustomHandsontable.afterSelection(el, hot, '${session$ns('rowsSelected')}');
+  }
+  ")
+  
+  
+  
+  
+  ## Data loading logic ############################################################
+  
+  # Reactive value used to trigger data reload
+  reloadData <- reactiveVal(0)
+  
+  # Reactive expression returning the data
+  data <- reactive({
+    # Trigger the reload
+    reloadData()
+    
+    # Clear the stored updates
+    # Isolate it to avoid issues
+    isolate(clearReactiveValues(updates))
+    
+    # Get selected site
+    sites <- input$site
+    # Get all available sites
+    allSites <- getRows(pool, 'stations', columns = 'name') %>% pull(name)
+    # If all sites are selected, sites to allSites
+    if (sites == 'All') sites <- allSites
+    
+    # Get the selected parameter category
+    paramCat <- input$paramCategory
+    # If all categories are selected
+    if (paramCat == 'All') {
+      # Get all categories
+      columns <- getRows(
+        pool,
+        'grab_param_categories',
+        columns = 'param_name'
+      ) %>% 
+        pull(param_name)
+    } else {
+      # Else get only the selected one
+      columns <- getRows(
+        pool,
+        'grab_param_categories',
+        category == paramCat,
+        columns = 'param_name'
+      ) %>% 
+        pull(param_name)
+    }
+    
+    # Add the necessary columns
+    columns <- c(
+      'id', 'station', 'DATE_reading', 'TIME_reading', 'Convert_to_GMT', 'TIME_reading_GMT',
+      columns,
+      'created_at', 'updated_at'
+    )
+    
+    # Get the the data and parse it
+    getRows(pool, 'data', station %in% sites, columns = columns) %>%
+      mutate(
+        station = factor(station, levels = allSites),
+        across(matches('DATE', ignore.case = FALSE), ymd),
+        across(ends_with('_at'), ymd_hms)
+      )
+  })
+  
+  # Refresh the data when refresh button is pressed
+  observeEvent(input$refresh_top | input$refresh_bottom, ignoreInit = TRUE, {
+    req(input$refresh_top != 0 | input$refresh_bottom != 0)
+    
+    reloadData(reloadData() + 1) 
+  })
+  
+  
+  
+  
+  
+  ## New data logic ###############################################################
+  
+  # Create new row when new button is pressed
+  observeEvent(input$new_top | input$new_bottom, ignoreInit = TRUE, {
+    req(input$new_top != 0 | input$new_bottom != 0)
+    
+    # Data row creation logic
+    # TODO
+  })
+  
+  
+  
+  
+  ## Data update logic ############################################################
+  
+  # Create reactive values list that will contains the updates
+  updates <- reactiveValues()
+  
+  # Observe the changes
+  observeEvent(input$tableChanges, ignoreInit = TRUE, {
+    req(input$tableChanges != '[]')
+    # Get data, columns and changes
+    data <- data()
+    columns <- colnames(data)
+    changes <- jsonlite::fromJSON(input$tableChanges)
+
+    # For each change
+    for (i in c(1:nrow(changes))) {
+      # Get the change
+      change <- changes %>% slice(i)
+      
+      # Retrieve the data id and column
+      dataRow <- data %>% slice(change$row)
+      id <- dataRow %>% pull(id) %>% as.character()
+      column <- columns[change$column]
+      
+      # Get the new value
+      value <- change$value
+      
+      # If the value is a character and has only digits and '.'
+      # Convert it to numeric data type
+      # If it is a date with the 'DD/MM/YYYY' format
+      # Convert it to a 'YYYY-MM-DD' format
+      if (is.character(value)) {
+        if (grepl('^[[:digit:].]+$', value)) {
+          value <- as.numeric(value)
+        } else if (grepl('^[[:digit:]]{2}/[[:digit:]]{2}/[[:digit:]]{4}$', value)) {
+          value %<>% stringr::str_split(value, '/') %>%
+            unlist() %>% rev() %>% paste(collapse = '-')
+        }
+      }
+      
+      # If the id is NULL, create a list containing some info and the updates as a list
+      if (is.null(updates[[id]])) updates[[id]] <- list(
+        info = paste(dataRow$station, dataRow$DATE_reading),
+        updates = list()
+      )
+      
+      # Add or update the update for the id
+      updates[[id]]$updates[[column]] <- value
+    }
+  })
+  
+  
+  # Update when update button is pressed
+  observeEvent(input$update_top | input$update_bottom, ignoreInit = TRUE, {
+    req(input$update_top != 0 | input$update_bottom != 0, length(updates) > 0)
+    
+    # Get the updates as list
+    updatesAsList <- reactiveValuesToList(updates)
+    
+    # For each data id, update its columns
+    for (id in names(updatesAsList)) {
+      currentId <- updatesAsList[[id]]
+      
+      # Update currentRow
+      error <- updateData(pool, id = id, columns = names(currentId$updates), values = currentId$updates)
+      
+      if (error == '') {
+        showNotification(
+          paste0('Successfully updated ', currentId$info, '!'),
+          type = 'message'
+        )
+      } else {
+        showNotification(
+          paste0('Error: Cannot update ', currentId$info, '...\n', e$message),
+          duration = NULL,
+          type = 'error'
+        )
+      }
+    }
+    
+    # Clear stored updates
+    clearReactiveValues(updates)
+  })
+  
+  
+  
+  
+  
+  ## Data Deletion logic ###########################################################
+  
+  # Create a reactive value to store the row ids that will be deleted
+  idsToDelete <- reactiveVal()
+  
+  # Create an observeEvent that react to both delete buttons
+  observeEvent(input$delete_top | input$delete_bottom, ignoreInit = TRUE, {
+    req(input$delete_top != 0 | input$delete_bottom != 0, input$rowsSelected$start)
+    # Get selection and data
+    selection <- input$rowsSelected
+    data <- data()
+    
+    # Filter rows to delete
+    if (is.null(selection$end)) {
+      data %<>% slice(selection$start)
+    } else {
+      data %<>% slice(selection$start:selection$end)
+    }
+    
+    # Store ids to delete
+    idsToDelete(pull(data, id))
+    
+    # Show confirmation modal
+    confirmationModal('You are about to permanently delete rows from this table. Please confirm your action.')
+  })
+  
+  
+  # Create an observeEvent linked to the YES button of the confirmation modal
+  observeEvent(input$YES, ignoreInit = TRUE, {
+    # Remove confirmation modal
+    removeModal()
+    
+    # Delete the rows and retrieve the error
+    error <- deleteRows(pool, 'data', idsToDelete())
+    
+    # Show success or error notification
+    if (error == '') {
+      showNotification('Rows successfully deleted!', type = 'message')
+    } else {
+      showNotification(paste('The following error(s) occured:', error, sep = '\n'))
+    }
+    
+    # Reload table
+    reloadTable(reloadTable() + 1)
+  })
+  
+  
+  
+  
+  ## Table rendering ##############################################################
+  
+  # Render the handsontable
+  output$grabData <- rhandsontable::renderRHandsontable({
+    # Get data and column names
+    data <- data()
+    colNames <- colnames(data)
+    
+    # Build the handsontable with the first 3 columns fixed and no context menu
+    hot <- rhandsontable::rhandsontable(
+      data,
+      height = 800,
+      fixedColumnsLeft = 3,
+      contextMenu = FALSE
+    ) %>%
+      # Hide and mark as read only the id
+      rhandsontable::hot_col('id', readOnly = TRUE, colWidths=0.1) %>%
+      # Set the dropdown options for the station
+      rhandsontable::hot_col('station', type = 'dropdown', source = levels(data$station), colWidths=60) %>%
+      # Set the date format and renderer for the DATE
+      rhandsontable::hot_col(
+        'DATE_reading',
+        type = 'date',
+        dateFormat = 'YYYY-MM-DD',
+        renderer = dateRanderer
+      ) %>%
+      # Add a time validator for the always present time columns
+      rhandsontable::hot_col(
+        c('TIME_reading', 'Convert_to_GMT', 'TIME_reading_GMT'),
+        validator = timeValidator
+      ) %>%
+      # Mark the created and updated at columns as read only
+      rhandsontable::hot_col(c('created_at', 'updated_at'), readOnly = TRUE)
+    
+    # If the two following time columns are present, add a validator to them
+    if ('Vaisala_CO2_time' %in% colNames) hot %<>% rhandsontable::hot_col('Vaisala_CO2_time', validator = timeValidator)
+    if ('WTW_DO_2_time' %in% colNames) hot %<>% rhandsontable::hot_col('WTW_DO_2_time', validator = timeValidator)
+    
+    # Add hooks callback to the table
+    hot %>% htmlwidgets::onRender(onTableRender)
+  })
+}

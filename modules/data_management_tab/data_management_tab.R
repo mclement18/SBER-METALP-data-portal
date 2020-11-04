@@ -2,18 +2,20 @@
 
 ## Source needed files ############################################################
 
+source('./modules/data_management_tab/grab_data.R')
 source('./modules/data_management_tab/stations_management.R')
+source('./modules/data_management_tab/grab_param_categories.R')
 source('./modules/data_management_tab/grab_sample_plotting_options.R')
 source('./modules/data_management_tab/sensor_plotting_options.R')
-source('./modules/data_management_tab/grab_param_categories.R')
 
 
 ## Create module UI ###############################################################
 
-dataManagementTabUI <- function(id) {
+dataManagementTabUI <- function(id, pool) {
 # Create the UI for the dataManagementTab module
 # Parameters:
 #  - id: String, the module id
+#  - pool: The pool connection to the database
 # 
 # Returns a tabsetPanel containing the layout
   
@@ -28,7 +30,7 @@ dataManagementTabUI <- function(id) {
       # Tab title
       'Grab sample data',
       # Tab content
-      
+      grabDataUI(ns('grabData'), pool),
       value = ns('grabData')
     ),
     # Create the stations management tab
@@ -77,6 +79,8 @@ dataManagementTab <- function(input, output, session, pool) {
 #  - pool: The pool connection to the database
 # 
 # Returns NULL
+  
+  callModule(grabData, 'grabData', pool)
   
   callModule(stationsManagement, 'stationsMan', pool)
   
