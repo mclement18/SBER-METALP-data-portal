@@ -20,7 +20,8 @@ install.packages(
            "pool",
            "dbplyr",
            "sodium",
-           "DT"
+           "DT",
+           "rhandsontable"
   ),
   repos = 'https://cran.rstudio.com/'
 )
