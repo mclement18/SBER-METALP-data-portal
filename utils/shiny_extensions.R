@@ -103,6 +103,26 @@ modalButtonWithClass <- function(label, icon = NULL, class) {
 
 
 
+roleToIcon <- function(role) {
+# Convert user role to an icon
+# Parameters:
+#  - role: String, the role to get the icon for
+# 
+# Returns a shiny icon output
+  
+  # Create the role mapping
+  mapping <- list(
+    download = 'cloud-download-alt',
+    intern = 'poo',
+    sber = 'mountain',
+    admin = 'hat-wizard'
+  )
+  
+  # Create the icon
+  icon(mapping[[role]])
+}
+
+
 
 ## Reusable server logic ##########################################################
 

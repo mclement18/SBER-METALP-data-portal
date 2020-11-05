@@ -161,7 +161,7 @@ ui <- tagList(
         # Create the visualisation tab
         tabPanel(
           # Create a tab title with an icon
-          tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
+          tags$span(icon('chart-bar'),tags$span('Visualisation', class = 'navbar-menu-name')),
           # Load the visualisationTab module UI elements
           visualisationTabUI('visu', pool, hfDf),
           value = 'visuTab'

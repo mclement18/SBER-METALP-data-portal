@@ -159,7 +159,7 @@ login <- function(input, output, session, pool) {
       htmlTemplate(
         './html_components/user_status.html',
         username = user$name,
-        role = user$role,
+        role = roleToIcon(user$role),
         logout = actionLink(session$ns('logout'), 'Log Out', class = 'custom-links')
       )
     }

@@ -14,7 +14,13 @@ usersTabUI <- function(id) {
   
   # Create and return the layout
   tagList(
-    htmlTemplate('./html_components/user_tab_info.html'),
+    htmlTemplate(
+      './html_components/user_tab_info.html',
+      download = roleToIcon('download'),
+      intern = roleToIcon('intern'),
+      sber = roleToIcon('sber'),
+      admin = roleToIcon('admin')
+    ),
     editableDTUI(ns('users'))
   )
 }

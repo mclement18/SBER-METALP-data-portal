@@ -20,35 +20,54 @@ dataManagementTabUI <- function(id, pool, userRole) {
   # Create namespace
   ns <- NS(id)
   
-  # Create a tabsetPanel to create sub navigation
-  tabsetPanel(
-    id = ns('dataTabs'),
-    # If the user is at least a sber member
-    if (userRole %in% c('sber', 'admin')) {
-      # Create the grab samples data management tab
+  # If the user is at least a sber member
+  if (userRole %in% c('sber', 'admin')) {
+    # Create a tabsetPanel to create sub navigation
+    tabsetPanel(
+      id = ns('dataTabs'),
+      # Add the grab samples data management tab
       tabPanel(
         # Tab title
         'Grab sample data',
         # Tab content
         grabDataUI(ns('grabData'), pool),
         value = ns('grabDataTab')
-      )
-    },
-    # Create the tools tab
-    navbarMenu(
-      # Menu title
-      'Tools',
-      tabPanel(
-        # Tab title
-        'Tools',
-        # Tab content
-        value = ns('toolsTab')
       ),
-      # Menu reference
-      menuName = 'toolsTabs',
-      icon = icon('tools')
+      # And the tools tab
+      navbarMenu(
+        # Menu title
+        'Tools',
+        tabPanel(
+          # Tab title
+          'Tools',
+          # Tab content
+          value = ns('toolsTab')
+        ),
+        # Menu reference
+        menuName = 'toolsTabs',
+        icon = icon('tools')
+      )
     )
-  )
+  } else {
+    # Create a tabsetPanel to create sub navigation
+    tabsetPanel(
+      id = ns('dataTabs'),
+      # With only the tools
+      navbarMenu(
+        # Menu title
+        'Tools',
+        tabPanel(
+          # Tab title
+          'Tools',
+          # Tab content
+          value = ns('toolsTab')
+        ),
+        # Menu reference
+        menuName = 'toolsTabs',
+        icon = icon('tools')
+      )
+    )
+  }
 }
 
 
