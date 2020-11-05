@@ -534,16 +534,17 @@ updateSensorPlotOption <- function(pool, sensorPlotOption, section_name = '', op
 
 ## Grab param categories queries ###################################################################
 
-createGrabParamCat <- function(pool, category, param_name) {
+createGrabParamCat <- function(pool, category, param_name, description = '') {
   # Check for valid input string
   category <- validInputString(category)
   param_name <- validInputString(param_name)
+  description <- validInputString(description)
   
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    'INSERT INTO grab_param_categories (category, param_name) values(?category, ?param_name);',
-    category = category, param_name = param_name
+    'INSERT INTO grab_param_categories (category, param_name, description) values(?category, ?param_name, ?description);',
+    category = category, param_name = param_name, description = description
   )
   
   # Send Query and catch errors
@@ -553,23 +554,25 @@ createGrabParamCat <- function(pool, category, param_name) {
 
 
 
-updateGrabParamCat <- function(pool, grabParamCat, category = '', param_name = '') {
+updateGrabParamCat <- function(pool, grabParamCat, category = '', param_name = '', description = '') {
   # Check for valid input string
   category <- validInputString(category)
   param_name <- validInputString(param_name)
+  description <- validInputString(description)
   
   # Use previous values if not defined
   if (category == SQL('NULL')) category <- grabParamCat$category
   if (param_name == SQL('NULL')) param_name <- grabParamCat$param_name
+  if (description == SQL('NULL')) description <- grabParamCat$description
   
   # Create SQL query
   query <- sqlInterpolate(
     pool,
     'UPDATE grab_param_categories SET
-    category = ?category, param_name = ?param_name
+    category = ?category, param_name = ?param_name, description = ?description
     WHERE id = ?id;',
     id = grabParamCat$id,
-    category = category, param_name = param_name
+    category = category, param_name = param_name, description = description
   )
   
   # Send Query and catch errors

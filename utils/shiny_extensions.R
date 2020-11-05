@@ -6,7 +6,7 @@
 navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrapper', footer = NULL, beforeFooterClass = 'before-footer') {
 # Create a shiny navbarPage with a content wrapper class for the navbar and content
 # Parameters:
-# - navbarPageOutput: Output of shiny navbarPage() function, mendatory
+# - navbarPageOutput: Output of shiny navbarPage() function, mandatory
 # - wrapperClass: a class name for your wrapper, default 'content-wrapper'
 # - footer: an optional custom footer, default NULL
 # - beforeFooterClass: a class name for the content before the optional footer, default 'before-footer'

@@ -41,16 +41,17 @@ grabParamCategories <- function(input, output, session, pool) {
                  )
              ),
              templateInputsCreate = expression(
-               inputsTemplate %>% select(category, param_name)
+               inputsTemplate %>% select(category, param_name, description)
              ),
              templateInputsEdit = expression(
-               selectedRow %>% select(id, category, param_name)
+               selectedRow %>% select(id, category, param_name, description)
              ),
              creationExpr = expression(
                createGrabParamCat(
                  pool = pool,
                  category = input$category,
-                 param_name = input$param_name
+                 param_name = input$param_name,
+                 description = input$description
                )
              ),
              updateExpr = expression(
@@ -58,7 +59,8 @@ grabParamCategories <- function(input, output, session, pool) {
                  pool = pool,
                  grabParamCat = editedRow(),
                  category = input$category,
-                 param_name = input$param_name
+                 param_name = input$param_name,
+                 description = input$description
                )
              ),
              deleteExpr = expression(
