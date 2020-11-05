@@ -16,18 +16,21 @@ source('./modules/visualisation_tab/sensor_grab_comparison.R')
 
 ## Create module UI ###############################################################
 
-visualisationTabUI <- function(id, pool, grabSampleDf, hfDf) {
+visualisationTabUI <- function(id, pool, hfDf) {
 # Create the UI for the visualisationTab module
 # Parameters:
 #  - id: String, the module id
 #  - pool: The pool connection to the database
-#  - grabSampleDf: Data.frame, the grab samples data
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
 # 
 # Returns a tabsetPanel containing the layout
   
   # Create namespace
   ns <- NS(id)
+  
+  # Get grab data min and max values
+  grabMinMaxDates <- getMinMaxValues(pool, 'data', DATE_reading) %>%
+    mutate(across(everything(), ymd))
   
   # Create a tabsetPanel to create sub navigation
   tabsetPanel(
@@ -40,8 +43,8 @@ visualisationTabUI <- function(id, pool, grabSampleDf, hfDf) {
       # Create a sidebarInputLayout UI with for the grabSamplesTimeSeries module 
       sidebarInputLayoutUI(
         ns('grabSamplesTimeseries'),
-        minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE), 
-        maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+        minDate = grabMinMaxDates$min, 
+        maxDate = grabMinMaxDates$max,
         innerModuleUI = grabSamplesTimeSeriesUI,
         pool = pool
       ),
@@ -69,34 +72,53 @@ visualisationTabUI <- function(id, pool, grabSampleDf, hfDf) {
 
 ## Create module server function ##################################################
 
-visualisationTab <- function(input, output, session, pool, user, grabSampleDf, hfDf) {
+visualisationTab <- function(input, output, session, pool, user, hfDf) {
 # Create the logic for the visualisationTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - pool: The pool connection to the database
 #  - user: Reactive values, the current user
-#  - grabSampleDf: Data.frame, the data of the grab samples
-#                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
 # 
 # Returns NULL
   
+  ## Get min and max values ##############################################
+  
+  # For grab sample
+  grabMinMaxDates <- getMinMaxValues(pool, 'data', DATE_reading) %>%
+    mutate(across(everything(), ymd))
+  
+  # For sensors
+  hfMinMaxDates <- list(
+    min = min(hfDf$`24H`$Date, na.rm = TRUE),
+    max = max(hfDf$`24H`$Date, na.rm = TRUE)
+  )
+  
+  
+  
   # Load the server logic for the grabSamplesTimeSeries module inside the sidebarInputLayout module
   callModule(sidebarInputLayout, 'grabSamplesTimeseries',
-             grabSamplesTimeSeries, grabSamplesTimeSeriesUI,
-             list('inputs' = 'time-serie-plot-input', 'plots' = 'time-serie-plots'),
-             df = grabSampleDf,
-             minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
-             maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+             innerModule = grabSamplesTimeSeries,
+             innerModuleUI = grabSamplesTimeSeriesUI,
+             innerModulePrefixIds = list(
+               'inputs' = 'time-serie-plot-input',
+               'plots' = 'time-serie-plots'
+             ),
+             minDate = grabMinMaxDates$min,
+             maxDate = grabMinMaxDates$max,
              pool = pool)
   
   # Load the server logic for the highFreqTimeSeries module inside the sidebarInputLayout module
   callModule(sidebarInputLayout, 'sensorsTimeseries',
-             highFreqTimeSeries, highFreqTimeSeriesUI,
-             list('inputs' = 'hf-time-serie-plot-input', 'plots' = 'hf-time-serie-plots'),
+             innerModule = highFreqTimeSeries,
+             innerModuleUI = highFreqTimeSeriesUI,
+             innerModulePrefixIds = list(
+               'inputs' = 'hf-time-serie-plot-input',
+               'plots' = 'hf-time-serie-plots'
+             ),
+             minDate = hfMinMaxDates$min,
+             maxDate = hfMinMaxDates$max,
              df = hfDf,
-             minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-             maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
              pool = pool)
 
   ## Check for authorization #######################################################
@@ -114,8 +136,8 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
           # Create a sidebarInputLayout UI with for the grabSamplesComparison module
           sidebarInputLayoutUI(
             session$ns('grabVsGrab'),
-            minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
-            maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
+            minDate = grabMinMaxDates$min,
+            maxDate = grabMinMaxDates$max,
             innerModuleUI = grabSamplesComparisonUI,
             pool = pool
           ),
@@ -134,8 +156,8 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
           # Create a sidebarInputLayout UI with for the sensorGrabComparison module
           sidebarInputLayoutUI(
             session$ns('sensorVsGrab'),
-            minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-            maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
+            minDate = hfMinMaxDates$min,
+            maxDate = hfMinMaxDates$max,
             innerModuleUI = sensorGrabComparisonUI,
             pool = pool
           ),
@@ -146,21 +168,28 @@ visualisationTab <- function(input, output, session, pool, user, grabSampleDf, h
 
       # Load the server logic for the grabSamplesComparison module inside the sidebarInputLayout module
       callModule(sidebarInputLayout, 'grabVsGrab',
-                 grabSamplesComparison, grabSamplesComparisonUI,
-                 list('inputs' = 'grab-vs-grab-plot-input', 'plots' = 'grab-vs-grab-plots'),
-                 df = grabSampleDf,
+                 innerModule = grabSamplesComparison,
+                 innerModuleUI = grabSamplesComparisonUI,
+                 innerModulePrefixIds = list(
+                   'inputs' = 'grab-vs-grab-plot-input',
+                   'plots' = 'grab-vs-grab-plots'
+                 ),
+                 minDate = grabMinMaxDates$min,
+                 maxDate = grabMinMaxDates$max,
                  plotDateRangeSelection = FALSE,
-                 minDate = min(grabSampleDf$DATE_reading, na.rm = TRUE),
-                 maxDate = max(grabSampleDf$DATE_reading, na.rm = TRUE),
                  pool = pool)
 
       # Load the server logic for the sensorGrabComparison module inside the sidebarInputLayout module
       callModule(sidebarInputLayout, 'sensorVsGrab',
-                 sensorGrabComparison, sensorGrabComparisonUI,
-                 list('inputs' = 'sensor-vs-grab-plot-input', 'plots' = 'sensor-vs-grab-plots'),
-                 df = list('hf' = hfDf, 'grab' = grabSampleDf),
-                 minDate = min(hfDf$`24H`$Date, na.rm = TRUE),
-                 maxDate = max(hfDf$`24H`$Date, na.rm = TRUE),
+                 innerModule = sensorGrabComparison,
+                 innerModuleUI = sensorGrabComparisonUI,
+                 innerModulePrefixIds = list(
+                   'inputs' = 'sensor-vs-grab-plot-input',
+                   'plots' = 'sensor-vs-grab-plots'
+                 ),
+                 minDate = hfMinMaxDates$min,
+                 maxDate = hfMinMaxDates$max,
+                 df = hfDf,
                  pool = pool)
     }
   })

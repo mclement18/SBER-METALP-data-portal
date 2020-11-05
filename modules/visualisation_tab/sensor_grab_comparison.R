@@ -110,7 +110,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
 # Create the logic for the sensorGrabComparison module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
-#  - df: Named list of Data.frame, the grab samples and high frequency data
+#  - df: Named List of Data.frame, the sensors high frequency data at different frequency
 #  - dateRange: Reactive expression that returns the date range to filter the data with.
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
@@ -173,7 +173,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
   # Create the high frequency data subset
   hfDf <- reactive({
     # Get high frequency data
-    hfDf <- df$hf[[input$dataFreq]]
+    hfDf <- df[[input$dataFreq]]
 
     # If the raw data is selected filter also for modeled data
     if (input$dataFreq == '10min') {
@@ -211,10 +211,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
     }
     
     # If there is no data return NULL
-    if (nrow(hfDf) == 0) return(NULL)
-    
-    # Return the formatted data
-    hfDf
+    if (nrow(hfDf) == 0) NULL else hfDf
   })
   
   # Create the grab data subset
@@ -222,22 +219,36 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
     # If no grab parameter is selected return NULL
     if (nrow(paramGrab()) == 0) return(NULL)
     
-    # Get grab samples data
-    grabDf <- df$grab
+    # Get grab parameter
+    # If multiple sub params keep only the first one
+    paramGrab <- unlist(str_split(paramGrab()$data, ','))[1]
     
     # Filter the data using the selected sites and the date range
-    # Then select the parameter and rename the column to 'value'
-    grabDf %<>% filter(
-      Site_ID == input$site,
-      DATE_reading >= dateRange()$min,
-      DATE_reading <= dateRange()$max
-    ) %>% select(DATETIME_GMT, Site_ID, 'value' = unlist(str_split(paramGrab()$data, ','))[1])
+    # And select the columns
+    grabDf <- getRows(
+      pool = pool,
+      table = 'data',
+      station == local(input$site),
+      DATE_reading >= local(dateRange()$min),
+      DATE_reading <= local(dateRange()$max),
+      columns = c(
+        'station', 'DATE_reading', 'TIME_reading_GMT',
+        paramGrab
+      )
+      # Parse the DATE and time
+    ) %>% mutate(
+      station = as.factor(station),
+      DATETIME_GMT = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT'),
+      DATE_reading = ymd(DATE_reading),
+      DATETIME_month_day_time_GMT = `year<-`(DATETIME_GMT, 2020)
+      # Rename for the plotting function
+    ) %>% rename(
+      Site_ID = station,
+      value = all_of(paramGrab)
+    )
     
     # If there is no data return NULL
-    if (nrow(grabDf) == 0) return(NULL)
-    
-    # Return the formatted data
-    grabDf
+    if (nrow(grabDf) == 0) NULL else grabDf
   })
   
   # Create the grab vs HF data subset
@@ -247,7 +258,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
     
     # Get hf data
     # Refilter HF data here to always get the 10min data and not rerender when changing the frequency
-    hfData <- df$hf$`10min`
+    hfData <- df$`10min`
     
     # Define data types to remove depending on the state of showModeledData
     # If nothing to remove, set to 'NULL' as string to avoid match error
@@ -312,6 +323,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
       # sdHf <- sd(valuesHf, na.rm = TRUE)
       
       # Set the values in the df (data.table)
+      vsDf <- as.data.table(vsDf)
       vsDf[i, hf_value := averageHf]
       # vsDf[i, 'hf_sd'] <- sdHf
     }
@@ -319,11 +331,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
     # Clear Hf data from memory
     rm(hfData, filteredHf, valuesHf, averageHf)
 
-    # If there are no HF data return NULL
-    if (all(is.na(vsDf$hf_value))) return(NULL)
-
-    # Return the df
-    vsDf
+    # If there are no HF data return NULL else vsDF
+    if (all(is.na(vsDf$hf_value))) NULL else vsDf
   })
 
   

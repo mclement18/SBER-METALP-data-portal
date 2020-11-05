@@ -8,20 +8,25 @@ source('./modules/download_tab/request_data.R')
 
 ## Create module UI ###############################################################
 
-downloadTabUI <- function(id, pool, minDate, maxDate) {
+downloadTabUI <- function(id, pool, hfDfMinMaxDates) {
 # Create the UI for the downloadTab module
 # Parameters:
 #  - id: String, the module id
 #  - pool: The pool connection to the database
-#  - minDate: Date, the lower bound for the dateRangeInput
-#  - maxDate: Date, the upper bound for the dateRangeInput
-#  - grabSampleDf: Data.frame, the grab samples data
-#  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
+#  - hfDfMinMaxDates: List, the min and max dates of the hfDf, format list(min = '', max = '')
 # 
 # Returns a tabsetPanel containing the layout
   
   # Create namespace
   ns <- NS(id)
+  
+  # Get grab data min and max dates
+  grabMinMaxDates <- getMinMaxValues(pool, 'data', DATE_reading) %>%
+    mutate(across(everything(), ymd))
+  
+  # Get min and max dates
+  minDate <- min(grabMinMaxDates$min, hfDfMinMaxDates$min)
+  maxDate <- max(grabMinMaxDates$max, hfDfMinMaxDates$max)
   
   # Create main download tab element
   div(
@@ -180,17 +185,13 @@ downloadTabUI <- function(id, pool, minDate, maxDate) {
 
 ## Create module server function ##################################################
 
-downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, minDate, maxDate) {
+downloadTab <- function(input, output, session, pool, user, hfDf) {
 # Create the logic for the downloadTab module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - pool: The pool connection to the database
 #  - user: Reactive values, the current user
-#  - grabSampleDf: Data.frame, the data of the grab samples
-#                 (to pass to the grabSamplesTimeSeries, grabSamplesComparison and sensorsVsGrabSamplesComparison modules)
 #  - hfDf: Named List of Data.frame, the sensors high frequency data at different frequency
-#  - minDate: Date, the lower bound for the dateRangeInput
-#  - maxDate: Date, the upper bound for the dateRangeInput
 # 
 # Returns NULL
   
@@ -325,65 +326,83 @@ downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, 
   
   # Create a reactive expression returning the selected data
   selectedData <- reactive({
-    # Select df and correct parameter input
+    # Get df input
     inputDf <- input$data
     
+    # If th hf data is selected
     if (inputDf == 'hfDf') {
-      df <- hfDf[[input$hfDataFreq]]
-    } else if (inputDf == 'grabDf') {
-      df <- grabSampleDf
-      df %<>% rename(Date = DATETIME_GMT)
-    } else {
-      return(data.table())
-    }
-    
-    
-    # Filter rows
-    df %<>% filter(
-      date(Date) >= input$time[1],
-      date(Date) <= input$time[2],
-      Site_ID %in% sitesReactive_d()
-    )
-    
-    # If the selected data is the raw HF data
-    if (inputDf == 'hfDf' & input$hfDataFreq == '10min') {
-      # If add modeled data is selected
-      if (input$addModeledData) {
-        # Create a new df with the date and sites columns
-        newDf <- df %>% select(Date, Site_ID)
-        
-        # For each parameter create a combined column
-        for (parameter in parameters()) {
-          # Select the parameter columns
-          tmpDf <- df %>% select(starts_with(parameter), -ends_with('singlePoint'))
-          # Create combined column name
-          newcolName <- paste0(parameter, '_combined')
-          # Create the combined column
-          tmpDf %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
-          # Add parameter columns to the new df
-          newDf <- bind_cols(newDf, tmpDf)
+      df <- hfDf[[input$hfDataFreq]] %>%
+        # Filter rows
+        filter(
+          date(Date) >= input$time[1],
+          date(Date) <= input$time[2],
+          Site_ID %in% sitesReactive_d()
+        )
+      
+      # If the selected data is the raw HF data
+      if (input$hfDataFreq == '10min') {
+        # If add modeled data is selected
+        if (input$addModeledData) {
+          # Create a new df with the date and sites columns
+          newDf <- df %>% select(Date, Site_ID)
+          
+          # For each parameter create a combined column
+          for (parameter in parameters()) {
+            # Select the parameter columns
+            tmpDf <- df %>% select(starts_with(parameter), -ends_with('singlePoint'))
+            # Create combined column name
+            newcolName <- paste0(parameter, '_combined')
+            # Create the combined column
+            tmpDf %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
+            # Add parameter columns to the new df
+            newDf <- bind_cols(newDf, tmpDf)
+          }
+          
+          # Assigne the new df to the df
+          df <- newDf
+          
+          # Remove the tmpDf and newDf
+          rm(tmpDf, newDf, tmpSPCol)
+        } else {
+          # If modeled data is not selected
+          # Keep only the measured value and rename the columns
+          df %<>% select(Date, Site_ID, starts_with(parameters()), -ends_with(c('modeled', 'singlePoint')))
         }
-        
-        # Assigne the new df to the df
-        df <- newDf
-
-        # Remove the tmpDf and newDf
-        rm(tmpDf, newDf, tmpSPCol)
       } else {
-        # Keep only the measured value and rename the columns
-        df %<>% select(Date, Site_ID, starts_with(parameters()), -ends_with(c('modeled', 'singlePoint')))
+        # For all the other HF data
+        # Select date, stations and all parameters
+        df %<>% select(Date, Site_ID, all_of(parameters()))
       }
+      
+      # If the grab data is selected
+    } else if (inputDf == 'grabDf') {
+      # Get the data
+      df <- getRows(
+        pool = pool,
+        table = 'data',
+        station %in% local(sitesReactive_d()),
+        DATE_reading >= local(input$time[1]),
+        DATE_reading <= local(input$time[2]),
+        columns = c(
+          'station', 'DATE_reading', 'TIME_reading_GMT',
+          local(parameters())
+        )
+        # Parse the DATE and time
+      ) %>% mutate(
+        station = as.factor(station),
+        Date = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT')
+        # Rename for the download
+      ) %>% rename(
+        Site_ID = station
+        # Reorder columns and filter columns
+      ) %>% select(Date, Site_ID, all_of(parameters()))
     } else {
-      # For anything else than HF 10min data
-      # Select date, stations and all parameters
-      df %<>% select(Date, Site_ID, all_of(parameters()))
+      # If no data is selected set df as an empty data.table
+      df <- data.table()
     }
     
     # Convert df to data.table for print output
-    df <- as.data.table(df)
-    
-    # Return the filtered df
-    return(df)
+    as.data.table(df)
   })
   
   
@@ -534,6 +553,13 @@ downloadTab <- function(input, output, session, pool, user, grabSampleDf, hfDf, 
   
   
   ## Date resetting logic #########################################################
+  
+  # Get min and max dates
+  grabMinMaxDates <- getMinMaxValues(pool, 'data', DATE_reading) %>%
+    mutate(across(everything(), ymd))
+  
+  minDate <- min(grabMinMaxDates$min, date(hfDf$`10min`$Date), na.rm = TRUE)
+  maxDate <- max(grabMinMaxDates$max, date(hfDf$`10min`$Date), na.rm = TRUE)
   
   # Create an observeEvent that allows to reset the date range when resetDateRange is clicked
   observeEvent(input$resetDateRange, ignoreInit = TRUE, {

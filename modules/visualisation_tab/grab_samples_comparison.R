@@ -101,11 +101,10 @@ grabSamplesComparisonUI <- function(id, pool) {
 
 ## Create the server function of the module ###############################################
 
-grabSamplesComparison <- function(input, output, session, df, dateRange, pool) {
+grabSamplesComparison <- function(input, output, session, dateRange, pool) {
 # Create the logic for the grabSamplesComparison module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
-#  - df: Data.frame, the grab samples data
 #  - dateRange: Reactive expression that returns the date range to filter the data with.
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
@@ -227,21 +226,32 @@ grabSamplesComparison <- function(input, output, session, df, dateRange, pool) {
     # If there is no sub parameter return NULL
     if (is.null(paramColsX) | is.null(paramColsY)) return(NULL)
     
+    
     # Filter the data using the selected sites and the date range
-    df %<>% filter(
-      Site_ID %in% input$site,
-      DATE_reading >= dateRange()$min,
-      DATE_reading <= dateRange()$max
+    # And select the columns
+    df <- getRows(
+      pool = pool,
+      table = 'data',
+      station == local(input$site),
+      DATE_reading >= local(dateRange()$min),
+      DATE_reading <= local(dateRange()$max),
+      columns = c(
+        'station', 'DATE_reading', 'TIME_reading_GMT',
+        paramColsX, paramColsY
+      )
+      # Parse the DATE and time
+    ) %>% mutate(
+      station = as.factor(station),
+      DATETIME_GMT = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT'),
+      DATE_reading = ymd(DATE_reading),
+      DATETIME_month_day_time_GMT = `year<-`(DATETIME_GMT, 2020)
+      # Rename for the plotting function
+    ) %>% rename(
+      Site_ID = station
     )
     
-    # If there is no data return NULL
-    if (dim(df)[1] == 0) return(NULL)
-    
-    # Select all relevant data.frame columns
-    df %<>% select(Site_ID, DATETIME_GMT, all_of(c(paramColsX, paramColsY)))
-    
-    # Return the formatted data
-    df
+    # If there is no data return NULL else the df
+    if (dim(df)[1] == 0) NULL else df
   })
   
   

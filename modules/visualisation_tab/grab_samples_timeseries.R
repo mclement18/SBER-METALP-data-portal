@@ -85,11 +85,10 @@ grabSamplesTimeSeriesUI <- function(id, pool) {
 
 ## Create the server function of the module ###############################################
 
-grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool) {
+grabSamplesTimeSeries <- function(input, output, session, dateRange, pool) {
 # Create the logic for the grabSamplesTimeSeries module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
-#  - df: Data.frame, the data of the grab samples
 #  - dateRange: Reactive expression that returns the date range to filter the data with.
 #               Date range format must be a list containing:
 #               + min: Date, the lower bound to filter the date
@@ -225,25 +224,41 @@ grabSamplesTimeSeries <- function(input, output, session, df, dateRange, pool) {
     }
     
     # Filter the data using the selected sites and the date range
-    df %<>% filter(
-      Site_ID %in% selectedSites_d(),
-      DATE_reading >= dateRange()$min,
-      DATE_reading <= dateRange()$max
+    # And select the columns
+    df <- getRows(
+      pool = pool,
+      table = 'data',
+      station %in% local(selectedSites_d()),
+      DATE_reading >= local(dateRange()$min),
+      DATE_reading <= local(dateRange()$max),
+      columns = c(
+        'station', 'DATE_reading', 'TIME_reading_GMT',
+        paramCols, sdCols, minMaxCols
+      )
+      # Parse the DATE and time
+    ) %>% mutate(
+      station = as.factor(station),
+      DATETIME_GMT = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT'),
+      DATE_reading = ymd(DATE_reading),
+      DATETIME_month_day_time_GMT = `year<-`(DATETIME_GMT, 2020)
+      # Rename for the plotting function
+    ) %>% rename(
+      Site_ID = station
     )
     
     # If there is no data return NULL
     if (nrow(df) == 0) return(NULL)
     
-    # Select all relevant data.frame columns and pivot it to a long format
-    df %<>% select(Site_ID, DATETIME_GMT, all_of(paramCols), all_of(sdCols), all_of(minMaxCols)) %>% 
-      pivot_longer(cols = c(all_of(paramCols), all_of(minMaxCols)), names_to = 'parameter', values_to = 'value')
-    
-    # Create a new DATE column with the same arbitrary year for all the samples to plot all the results on one year
-    df %<>% mutate(DATETIME_month_day_time_GMT = DATETIME_GMT)
+    # Set the same arbitrary year for all the samples to plot all the results on one year
     year(df$DATETIME_month_day_time_GMT) <- 2020
     
-    # Return the formatted data
-    df
+    # Select all relevant data.frame columns and pivot it to a long format
+
+    df %>% pivot_longer(
+      cols = c(all_of(paramCols), all_of(minMaxCols)),
+      names_to = 'parameter',
+      values_to = 'value'
+    )
   })
   
   

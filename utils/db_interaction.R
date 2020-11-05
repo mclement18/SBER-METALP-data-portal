@@ -98,6 +98,22 @@ getEnumValues <- function(pool, table, column) {
 
 
 
+getMinMaxValues <- function(pool, table, column, ...) {
+  # Enquote the column name
+  column <- enquo(column)
+  
+  # Get the min and max values
+  pool %>% tbl(table) %>%
+    filter(...) %>%
+    summarise(
+      min = min(!!column, na.rm = TRUE),
+      max = max(!!column, na.rm = TRUE)
+    ) %>%
+    collect()
+}
+
+
+
 getRows <- function(pool, table, ..., columns = NULL) {
   # Start query by selecting the table and filtering it
   query <- pool %>% tbl(table) %>% filter(...)

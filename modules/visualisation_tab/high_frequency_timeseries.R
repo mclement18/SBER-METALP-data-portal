@@ -188,11 +188,8 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
       ) %>% select(Date, Site_ID, 'value' = param()$data)
     }
     
-    # If there is no data return NULL
-    if (nrow(df) == 0) return(NULL)
-    
-    # Return the formatted data
-    df
+    # If there is no data return NULL else df
+    if (nrow(df) == 0) NULL else df
   })
   
   

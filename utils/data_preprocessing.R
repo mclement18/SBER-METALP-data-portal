@@ -1,22 +1,5 @@
 # Contains all the code for data load and preprocessing
 
-## Load Grab Samples data #########################################################
-
-loadGrabSampleDf <- function() {
-  # Load data
-  grabSampleDf <- fread('./data/Metalp_grab_20201009_ND.csv', header = TRUE, na.strings=c("", "NA", "<0.05"))
-  
-  # Convert Date to Date data type and create a DATETIME_GMT POSIXct column
-  grabSampleDf$DATETIME_GMT <- paste(grabSampleDf$DATE_reading, grabSampleDf$TIME_reading_GMT) %>% dmy_hm(tz = 'GMT')
-  grabSampleDf$DATE_reading <- dmy(grabSampleDf$DATE_reading)
-  
-  # Convert Site_ID to factor
-  grabSampleDf$Site_ID <- grabSampleDf$Site_ID %>% as.factor()
-  
-  return(grabSampleDf)
-}
-
-
 
 ## Load HF data ###################################################################
 
@@ -87,7 +70,25 @@ loadHighFreqDf <- function() {
 
 
 
-## Old functions to get parameters and sites infos from csv files ###################
+## Old functions to get data, parameters and sites infos from csv files ###################
+# ## Load Grab Samples data #########################################################
+# 
+# loadGrabSampleDf <- function() {
+#   # Load data
+#   grabSampleDf <- fread('./data/Metalp_grab_20201009_ND.csv', header = TRUE, na.strings=c("", "NA", "<0.05"))
+#   
+#   # Convert Date to Date data type and create a DATETIME_GMT POSIXct column
+#   grabSampleDf$DATETIME_GMT <- paste(grabSampleDf$DATE_reading, grabSampleDf$TIME_reading_GMT) %>% dmy_hm(tz = 'GMT')
+#   grabSampleDf$DATE_reading <- dmy(grabSampleDf$DATE_reading)
+#   
+#   # Convert Site_ID to factor
+#   grabSampleDf$Site_ID <- grabSampleDf$Site_ID %>% as.factor()
+#   
+#   return(grabSampleDf)
+# }
+# 
+# 
+# 
 # ## Load Sites data ################################################################
 # 
 # loadSites <- function() {

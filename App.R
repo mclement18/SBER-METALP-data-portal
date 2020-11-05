@@ -86,7 +86,6 @@ if (ENV == 'development') {
 # Load data loading functions
 source('./utils/data_preprocessing.R')
 
-grabSampleDf <- loadGrabSampleDf()
 hfDf <- loadHighFreqDf()
 
 
@@ -164,7 +163,7 @@ ui <- tagList(
           # Create a tab title with an icon
           tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
           # Load the visualisationTab module UI elements
-          visualisationTabUI('visu', pool, grabSampleDf, hfDf),
+          visualisationTabUI('visu', pool, hfDf),
           value = 'visu'
         ),
         # Create the download tab
@@ -174,8 +173,10 @@ ui <- tagList(
           downloadTabUI(
             'dl',
             pool = pool,
-            minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-            maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE)
+            hfDfMinMaxDates = list(
+              min = min(date(hfDf$`10min`$Date), na.rm = TRUE),
+              max = max(date(hfDf$`10min`$Date), na.rm = TRUE)
+            )
           ),
           value = 'dl'
         )
@@ -198,19 +199,13 @@ server <- function(input, output, session) {
 
 
   ## Load visualisationTab module server logic ####################################
-  callModule(visualisationTab, 'visu',
-             pool, user,
-             grabSampleDf, hfDf)
+  callModule(visualisationTab, 'visu', pool, user, hfDf)
 
 
 
   ## Load downloadTab module server logic #########################################
-  callModule(downloadTab, 'dl',
-             pool = pool,
-             user,
-             grabSampleDf, hfDf,
-             minDate = min(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE),
-             maxDate = max(grabSampleDf$DATE_reading, date(hfDf$`10min`$Date), na.rm = TRUE))
+  callModule(downloadTab, 'dl', pool, user, hfDf)
+  
 
 
   ## Check authorizations #########################################################
