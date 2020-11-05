@@ -16,18 +16,26 @@ editableDTUI<- function(id) {
   div(
     class = 'table-with-controls',
     div(
-      class = 'btn-group table-controls',
-      actionButton(ns('create_top'), 'New', icon = icon('plus'), class = 'custom-style'),
-      actionButton(ns('edit_top'), 'Edit', icon = icon('edit'), class = 'custom-style'),
-      actionButton(ns('delete_top'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+      class = 'table-controls',
+      div(
+        class = 'btn-group',
+        actionButton(ns('create_top'), 'New', icon = icon('plus'), class = 'custom-style'),
+        actionButton(ns('edit_top'), 'Edit', icon = icon('edit'), class = 'custom-style'),
+        actionButton(ns('delete_top'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+      ),
+      actionButton(ns('refresh_top'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
     ),
     # Create a table of users
     DTOutput(ns('table')),
     div(
-      class = 'btn-group table-controls',
-      actionButton(ns('create_bottom'), 'New', icon = icon('plus'), class = 'custom-style'),
-      actionButton(ns('edit_bottom'), 'Edit', icon = icon('edit'), class = 'custom-style'),
-      actionButton(ns('delete_bottom'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+      class = 'table-controls',
+      div(
+        class = 'btn-group',
+        actionButton(ns('create_bottom'), 'New', icon = icon('plus'), class = 'custom-style'),
+        actionButton(ns('edit_bottom'), 'Edit', icon = icon('edit'), class = 'custom-style'),
+        actionButton(ns('delete_bottom'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
+      ),
+      actionButton(ns('refresh_bottom'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
     )
   )
 }
@@ -78,6 +86,14 @@ editableDT <- function(input, output, session, pool, tableName, element,
     # Retrieve table
     eval(tableLoading)
   })
+  
+  # Create an observe event that react to both refresh buttons
+  observeEvent(input$refresh_top | input$refresh_bottom, ignoreInit = TRUE, {
+    req(input$refresh_top != 0 | input$refresh_bottom != 0)
+    
+    reloadTable(reloadTable() + 1)
+  })
+  
   
   
   

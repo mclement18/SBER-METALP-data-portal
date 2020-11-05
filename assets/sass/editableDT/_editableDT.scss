@@ -9,6 +9,11 @@
     .table-controls {
         margin: 0 0 1.5em;
     }
+
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+    }
 }
 
 .table-edit-form {
