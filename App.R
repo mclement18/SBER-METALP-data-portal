@@ -110,7 +110,7 @@ source('./modules/login/login.R')
 source('./modules/visualisation_tab/visualisation_tab.R')
 source('./modules/download_tab/download_tab.R')
 source('./modules/data_management_tab/data_management_tab.R')
-source('./modules/users_tab/users_tab.R')
+source('./modules/portal_management/portal_management.R')
 source('./modules/editableDT/editableDT.R')
 
 
@@ -156,7 +156,7 @@ ui <- tagList(
             toolboxIcon = icon('toolbox'),
             downloadIcon = icon('download')
           ),
-          value = 'home'
+          value = 'homeTab'
         ),
         # Create the visualisation tab
         tabPanel(
@@ -164,7 +164,7 @@ ui <- tagList(
           tags$span(icon('chart-bar'),tags$span('Data visualisation', class = 'navbar-menu-name')),
           # Load the visualisationTab module UI elements
           visualisationTabUI('visu', pool, hfDf),
-          value = 'visu'
+          value = 'visuTab'
         ),
         # Create the download tab
         tabPanel(
@@ -178,7 +178,7 @@ ui <- tagList(
               max = max(date(hfDf$`10min`$Date), na.rm = TRUE)
             )
           ),
-          value = 'dl'
+          value = 'dlTab'
         )
       ),
       # Add the login module UI
@@ -212,24 +212,7 @@ server <- function(input, output, session) {
 
   # Do it when the user role changes
   observeEvent(user$role, {
-    # if (user$role %in% c('intern', 'sber', 'admin')) {
-    #   ## Generate toolsTab ##########################################################
-    #
-    #   # Create the toolbox tab
-    #   appendTab(
-    #     'main-nav',
-    #     tabPanel(
-    #       # Create a tab title with an icon
-    #       tags$span(icon('toolbox'),tags$span('Toolbox', class = 'navbar-menu-name')),
-    #       value = 'tools'
-    #     )
-    #   )
-    #
-    #   # Load tools tab server logic
-    # }
-
-
-    if (user$role %in% c('sber', 'admin')) {
+    if (user$role %in% c('intern', 'sber', 'admin')) {
       ## Generate dataManagementTab #################################################
 
       # Create the data management tab
@@ -237,33 +220,33 @@ server <- function(input, output, session) {
         'main-nav',
         tabPanel(
           # Create a tab title with an icon
-          tags$span(icon('database'),tags$span('Data management', class = 'navbar-menu-name')),
-          dataManagementTabUI('data', pool),
-          value = 'data'
+          tags$span(icon('database'),tags$span('Data', class = 'navbar-menu-name')),
+          dataManagementTabUI('data', pool, user$role),
+          value = 'dataTab'
         )
       )
 
       # Load data management server logic
-      callModule(dataManagementTab, 'data', pool)
+      callModule(dataManagementTab, 'data', pool, user$role)
     }
 
 
     if (user$role == 'admin') {
-      ## Generate usersTab ##########################################################
+      ## Generate portalManagement tab ##########################################################
 
       # Create users tab
       appendTab(
         'main-nav',
         tabPanel(
           # Create a tab title with an icon
-          tags$span(icon('user'), tags$span('Users', class = 'navbar-menu-name')),
-          usersTabUI('users'),
-          value = 'users'
+          tags$span(icon('empire'), tags$span('Portal', class = 'navbar-menu-name')),
+          portalManagementUI('portal'),
+          value = 'portalTab'
         )
       )
 
       # Load users tab server logic
-      callModule(usersTab, 'users', pool)
+      callModule(portalManagement, 'portal', pool)
     }
   })
 }

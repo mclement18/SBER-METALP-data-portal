@@ -12,10 +12,8 @@ usersTabUI <- function(id) {
   # Create namespace
   ns <- NS(id)
   
-  # Create and return the payout
+  # Create and return the layout
   tagList(
-    # Create a main header
-    h1(class = 'global-header', 'Users Management'),
     htmlTemplate('./html_components/user_tab_info.html'),
     editableDTUI(ns('users'))
   )
