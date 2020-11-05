@@ -91,7 +91,8 @@ grabDataUI <- function(id, pool) {
           # Refresh button
           actionButton(ns('refresh_bottom'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
         )
-      )
+      ),
+      downloadButton(ns('download'), class = 'custom-style custom-style--primary')
     )
   )
 }
@@ -456,7 +457,7 @@ grabData <- function(input, output, session, pool) {
     # Build the handsontable with the first 3 columns fixed and no context menu
     hot <- rhandsontable(
       data,
-      height = 800,
+      height = if (nrow(data) > 35) 800 else NULL,
       fixedColumnsLeft = 3,
       contextMenu = FALSE
     ) %>%
@@ -486,4 +487,21 @@ grabData <- function(input, output, session, pool) {
     # Add hooks callback to the table
     hot %>% htmlwidgets::onRender(onTableRender)
   })
+  
+  
+  
+  
+  ## Download logic ##############################################################
+  
+  output$download <- downloadHandler(
+    filename = function() {
+      filename <- paste(input$site, 'grab-data', sub('[ _]', '-', input$paramCategory), Sys.Date(), sep = '_')
+      year <- input$year
+      if (year != '') filename <- paste(year, filename, sep = '_')
+      paste0(filename, '.csv')
+    },
+    content = function(file) {
+      write.csv(data(), file, row.names = FALSE)
+    }
+  )
 }
