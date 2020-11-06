@@ -114,27 +114,13 @@ grabData <- function(input, output, session, pool) {
   # JavaScript logic in './assets/js/custom_handsontable.js'
   
   # Callback to render the date in 'YYYY-MM-DD' format
-  dateRanderer <- '
-  function (hotInstance, td, row, column, prop, value, cellProperties) {
-    CustomHandsontable.dateRenderer(hotInstance, td, row, column, prop, value, cellProperties);
-  }
-  '
+  dateRanderer <- 'CustomHandsontable.dateRenderer'
   
   # Callback to validate string in a time format (HH:MM:SS)
-  timeValidator <- '
-  function (value, callback) {
-    CustomHandsontable.timeFormatValidator(value, callback);
-  }
-  '
+  timeValidator <- 'CustomHandsontable.timeFormatValidator'
   
   # Callback that register table hooks
-  onTableRender <- str_interp("
-  function (el, x, data) {
-    const hot = this.hot;
-    CustomHandsontable.onChange(el, hot, '${session$ns('tableChanges')}');
-    CustomHandsontable.afterSelection(el, hot, '${session$ns('rowsSelected')}');
-  }
-  ")
+  onTableRender <- 'CustomHandsontable.grabDataOnRenderCallback'
   
   
   
@@ -318,7 +304,7 @@ grabData <- function(input, output, session, pool) {
     data <- data()
     columns <- colnames(data)
     changes <- jsonlite::fromJSON(input$tableChanges)
-
+    
     # For each change
     for (i in c(1:nrow(changes))) {
       # Get the change
@@ -485,10 +471,16 @@ grabData <- function(input, output, session, pool) {
     if ('WTW_DO_2_time' %in% colNames) hot %<>% hot_col('WTW_DO_2_time', validator = timeValidator)
     
     # Add hooks callback to the table
-    hot %>% htmlwidgets::onRender(onTableRender)
+    hot %>% htmlwidgets::onRender(
+      onTableRender,
+      data = list(
+        onChangeId = session$ns('tableChanges'),
+        afterSelectionId = session$ns('rowsSelected')
+      )
+    )
   })
   
-  
+
   
   
   ## Download logic ##############################################################

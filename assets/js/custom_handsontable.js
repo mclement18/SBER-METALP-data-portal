@@ -105,3 +105,10 @@ CustomHandsontable.afterSelection = function (tableDOM, hot, inputId) {
     hot.addHook('afterSelectionEnd', CustomHandsontable.afterSelectionCallback);
     hot.addHook('afterDeselect', CustomHandsontable.afterDeselectCallback);
 };
+
+// Create onRender callback for the grab data table
+CustomHandsontable.grabDataOnRenderCallback = function (el, x, data) {
+    const hot = this.hot;
+    CustomHandsontable.onChange(el, hot, data.onChangeId);
+    CustomHandsontable.afterSelection(el, hot, data.afterSelectionId);
+};
