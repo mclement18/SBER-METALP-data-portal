@@ -204,7 +204,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
     highFreqTimeSeriePlot(
       df = data(),
       parameter = param(),
-      plotTitle = 'Sensors High Frequency Time Serie',
+      plotTitle = 'Sensor High Frequency Time Serie',
       sites = sites,
       modeledData = 'data_type' %in% colnames(data())
     )
