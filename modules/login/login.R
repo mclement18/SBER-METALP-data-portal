@@ -87,9 +87,12 @@ login <- function(input, output, session, pool) {
   
   ## Login logic ##################################################################
   
+  # Track login attempts
+  loginAttempts <- reactiveVal(0)
+  
   # Create an observeEvent that react to the login button
   observeEvent(input$login, ignoreInit = TRUE, {
-    req(user$loggedin == FALSE)
+    req(user$loggedin == FALSE, loginAttempts() < 5)
     
     # Get user from db
     userResult <- loginUser(pool, input$username)
@@ -112,8 +115,15 @@ login <- function(input, output, session, pool) {
       }
     }
     
+    # Increment attempts
+    loginAttempts(loginAttempts() + 1)
+    
     # Save errors
-    user$error <- 'Incorrect username / password combination!'
+    if (loginAttempts() >= 5) {
+      user$error <- 'Too many login attempts... Session is blocked!'
+    } else {
+      user$error <- 'Incorrect username / password combination!'
+    }
   })
   
   
@@ -123,8 +133,8 @@ login <- function(input, output, session, pool) {
   
   # Create an observeEvent that react to the cancel button
   observeEvent(input$cancel, ignoreInit = TRUE, {
-    # Clear user loggin error
-    user$error <- ''
+    # Clear user log in error
+    if (loginAttempts() < 5) user$error <- ''
     
     # Close modal
     removeModal()
