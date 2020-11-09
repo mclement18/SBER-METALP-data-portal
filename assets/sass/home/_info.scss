@@ -3,17 +3,33 @@
 // ####################################
 
 .info {
-    text-align: center;
-
-    h2 {
-        margin: 0 auto 2em;
+    margin: 0 0 3.5em;
+    
+    h3 {
+        text-align: center;
+        margin: 0 auto 1.5em;
         padding: 0 0 .5em;
         max-width: 1300px;
         border-bottom: 1px solid $primary-color;
 
         @include laptop {
             width: 95%;
-            font-size: 2.6em;
+            font-size: 2em;
         }
+    }
+
+    h4 {
+        font-weight: bold;
+        margin-top: 1.5em;
+    }
+
+    p {
+        font-size: 1.2em;
+        text-align: justify;
+    }
+    
+    .content {
+        max-width: 800px;
+        margin: 0 auto;
     }
 }

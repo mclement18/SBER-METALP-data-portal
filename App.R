@@ -86,7 +86,7 @@ if (ENV == 'development') {
 # Load data loading functions
 source('./utils/data_preprocessing.R')
 
-hfDf <- loadHighFreqDf()
+# hfDf <- loadHighFreqDf()
 
 
 
@@ -144,19 +144,17 @@ ui <- tagList(
         htmlTemplate('./html_components/logo.html'),
         # Set a window browser window title
         windowTitle = 'METALP DATA PORTAL',
-        # Create the home tab
+        # Create the about tab
         tabPanel(
           # Create a tab title with an icon
-          tags$span(icon('home'),tags$span('Home', class = 'navbar-menu-name')),
-          # Load the home page template with some icons
+          tags$span(icon('campground'),tags$span('About', class = 'navbar-menu-name')),
           htmlTemplate(
-            'html_components/home.html',
-            chartIcon = icon('chart-bar'),
-            dataIcon = icon('database'),
-            toolboxIcon = icon('toolbox'),
-            downloadIcon = icon('download')
+            './html_components/about.html',
+            extLinkIcon = icon('external-link-alt', class = 'ext-link'),
+            githubIcon = icon('github'),
+            linkedinIcon = icon('linkedin')
           ),
-          value = 'homeTab'
+          value = 'aboutTab'
         ),
         # Create the visualisation tab
         tabPanel(
@@ -185,7 +183,14 @@ ui <- tagList(
       loginUI('login')
     ),
     # Add footer to navbarPageWithWrapper
-    footer = htmlTemplate('html_components/footer.html')
+    footer = htmlTemplate(
+      'html_components/footer.html',
+      aboutLink = actionLink('aboutLink', 'About'),
+      visuLink = actionLink('visuLink', 'Visualisation'),
+      dlLink = actionLink('dlLink', 'Download'),
+      githubIcon = icon('github'),
+      linkedinIcon = icon('linkedin')
+    )
   )
 )
 
@@ -194,6 +199,17 @@ ui <- tagList(
 ## Create server function #########################################################
 
 server <- function(input, output, session) {
+  ## Open specific tab when accessing the app #####################################
+  
+  isolate({
+    if ('tab' %in% names(getQueryString())) {
+      updateNavbarPage(session, 'main-nav', selected = getQueryString()$tab)
+    }
+  })
+  
+  
+  
+  
   ## Load login module server logic ###############################################
   user <- callModule(login, 'login', pool)
 
@@ -205,6 +221,17 @@ server <- function(input, output, session) {
 
   ## Load downloadTab module server logic #########################################
   callModule(downloadTab, 'dl', pool, user, hfDf)
+  
+  
+  
+  ## Footer Navigation logic ######################################################
+  
+  observeEvent(input$aboutLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'aboutTab'))
+  
+  observeEvent(input$visuLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'visuTab'))
+  
+  observeEvent(input$dlLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'dlTab'))
+  
   
 
 
@@ -228,6 +255,17 @@ server <- function(input, output, session) {
 
       # Load data management server logic
       callModule(dataManagementTab, 'data', pool, user$role)
+      
+      # Add link to footer
+      insertUI(
+        selector = '#footer-nav-insertion',
+        where = 'beforeBegin',
+        ui = tags$li(actionLink('dataLink', 'Data')),
+        immediate = TRUE
+      )
+      
+      # Add nav update logic
+      observeEvent(input$dataLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'dataTab'))
     }
 
 
@@ -247,6 +285,17 @@ server <- function(input, output, session) {
 
       # Load users tab server logic
       callModule(portalManagement, 'portal', pool)
+      
+      # Add link to footer
+      insertUI(
+        selector = '#footer-nav-insertion',
+        where = 'beforeBegin',
+        ui = tags$li(actionLink('portalLink', 'Portal')),
+        immediate = TRUE
+      )
+      
+      # Add nav update logic
+      observeEvent(input$portalLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'portalTab'))
     }
   })
 }

@@ -24,6 +24,7 @@
     
     .content-wrapper {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
     }
 
@@ -32,6 +33,7 @@
     }
 
     a {
+        margin: 0;
         color: $grey4;
 
         &:hover {
@@ -39,7 +41,23 @@
         }
     }
 
+    .footer-nav {
+        display: flex;
+        flex-wrap: wrap;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+            margin: 0 1.5em 0 0;
+        }
+    }
+
     .copyright {
         margin: 0 0 0 auto;
+
+        &__links {
+            margin: 0 0 0 1em;
+        }
     }
 }

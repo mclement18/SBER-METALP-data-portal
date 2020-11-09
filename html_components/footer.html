@@ -1,7 +1,26 @@
 <div class="footer footer-to-bottom">
     <div class="content-wrapper">
         <span class="logo logo--inverted">M<em>ETALP</em> PORTAL</span>
-        <a class="toplink" href="#top">To Top</a>
-        <span class="copyright"><a href="https://github.com/mclement18">By Mathieu Clément</a></span>
+
+        <ul class="footer-nav" id="footer-nav">
+            <li>
+                {{ aboutLink }}
+            </li>
+            <li>
+                {{ visuLink }}
+            </li>
+            <li>
+                {{ dlLink }}
+            </li>
+            <li id="footer-nav-insertion">
+                <a class="toplink" href="#top">To Top</a>
+            </li>
+        </ul>
+
+        <span class="copyright">
+            By Mathieu Clément
+            <a class="copyright__links" href="https://github.com/mclement18">{{ githubIcon }}</a>
+            <a class="copyright__links" href="https://www.linkedin.com/in/mathieu-cl%C3%A9ment-604305141/">{{ linkedinIcon }}</a>
+        </span>
     </div>
 </div>
