@@ -26,10 +26,11 @@ requestDataUI <- function(id) {
 
 ## Create module server function ##################################################
 
-requestData <- function(input, output, session, selectedData, dataSelectionInput) {
+requestData <- function(input, output, session, pool, selectedData, dataSelectionInput) {
 # Create the logic for the requestData module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
+#  - pool: The pool connection to the database
 #  - selectedData: Reactive expression, the data selected with the form in the outer module
 #  - dataSelectionInput: Reactive expression, return a list of the data selection inputs
 # 
@@ -61,13 +62,25 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
           div(
             class = 'requisitor-info',
             # Name
-            textInput(session$ns('requisitorName'), 'Name*', placeholder = 'Otto Octavius'),
+            withAttributes(
+              textInput(session$ns('requisitorName'), 'Name*', placeholder = 'Otto Octavius'),
+              maxlength = 50
+              ),
             # Email
-            textInput(session$ns('requisitorEmail'), 'Email*', placeholder = 'otto.octavius@octaviusindustries.com'),
+            withAttributes(
+              textInput(session$ns('requisitorEmail'), 'Email*', placeholder = 'otto.octavius@octaviusindustries.com'),
+              maxlength = 75
+            ),
             # Institution
-            textInput(session$ns('requisitoInstitution'), 'Institution / Company*', placeholder = 'Octavius Industries'),
+            withAttributes(
+              textInput(session$ns('requisitoInstitution'), 'Institution / Company*', placeholder = 'Octavius Industries'),
+              maxlength = 50
+            ),
             # Reasons
-            textAreaInput(session$ns('requisitorReason'), 'Motivations*', resize = 'vertical', placeholder = 'Kill Spider-Man, Destroy Oscorp, Take revenge on Norman Osborn'),
+            withAttributes(
+              textAreaInput(session$ns('requisitorReason'), 'Motivations*', resize = 'vertical', placeholder = 'Kill Spider-Man, Destroy Oscorp, Take revenge on Norman Osborn'),
+              maxlength = 250
+            ),
           ),
           div(
             class = 'data-terms',
@@ -100,9 +113,13 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
   # Create a reactive expression returning a boolean vector of checks
   checkInputs <- reactive(c(
     input$requisitorName != '',
+    nchar(input$requisitorName) <= 50,
     isValidEmail(input$requisitorEmail),
+    nchar(input$requisitorEmail) <= 75,
     input$requisitoInstitution != '',
+    nchar(input$requisitoInstitution) <= 50,
     input$requisitorReason != '',
+    nchar(input$requisitorReason) <= 250,
     input$dataTermsUse
   ))
   
@@ -120,27 +137,10 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
   # Create an observeEvent that react to sendRequest button
   observeEvent(input$sendRequest, ignoreInit = TRUE, {
     # Run only if all fields are filled and correct
-    req(
-      input$requisitorName,
-      isValidEmail(input$requisitorEmail),
-      input$requisitoInstitution,
-      input$requisitorReason,
-      input$dataTermsUse
-    )
+    req(checkInputs())
     
-    # Set the sender email address
-    from <- paste0('From: <', NOREPLY_ADDRESS, '>')
-    # Set the recipient email address
-    to <- paste0('To: <', TO_ADDRESS, '>')
-    # Set the reply to email address, i.e. the requisitor
-    replyTo <- paste0('Reply-To: ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
-    # Create the email subject
-    subject <- paste0('Subject: Data Request from ', input$requisitorName, ' <', str_trim(input$requisitorEmail), '>')
-    # Create the email body
-    body <- paste(
-      # Add the requisitor's name and institution
-      paste0(input$requisitorName, ' from ', input$requisitoInstitution, ' would like to get the following data:'),
-      '',
+    # Create the requested data
+    data <- paste(
       # Add the date range and data type requested
       paste0('Date Range: ', dataSelectionInput()$min, ' - ', dataSelectionInput()$max),
       paste0('Data Type: ', dataSelectionInput()$data),
@@ -149,61 +149,46 @@ requestData <- function(input, output, session, selectedData, dataSelectionInput
     
     # If sensor data are requested
     if (dataSelectionInput()$data == 'sensor') {
-      # Append to the body
-      body <- paste(
-        body,
-        # The data interval frequency and modeled data
+      # Append the data interval frequency and modeled data
+      data <- paste(
+        data,
         paste0('Data frequency: ', dataSelectionInput()$dataFreq),
         paste0('Modeled Data: ', dataSelectionInput()$modeled),
         sep = '\n'
       )
     }
     
-    # Finally append to the body
-    body <- paste(
-      body,
-      # The selected parameters and stations
+
+    # The selected parameters and stations
+    data <- paste(
+      data,
       paste0('Stations: [', paste(dataSelectionInput()$sites, collapse = ', '), ']'),
       paste0('Parameters: [', paste(dataSelectionInput()$parameters, collapse = ', '), ']'),
-      '\n',
-      # And the reasons for the request
-      'For the following reasons:',
-      '',
-      input$requisitorReason,
       sep = '\n')
     
-    # Create email
-    email <- paste(
-      to,
-      from,
-      replyTo,
-      subject,
-      '',
-      body,
-      sep = '\n'
+    # Save request
+    error <- createRequest(
+      pool = pool,
+      name = input$requisitorName,
+      email = input$requisitorEmail,
+      institution = input$requisitoInstitution,
+      data = data,
+      reason = input$requisitorReason
     )
     
-    # Send email with UNIX sendmail command
-    tryCatch({
-      # Send email
-      system2('sendmail', args = c('-t'), input = email)
-      # Close modal
-      removeModal()
-      # Show success notification
+    # Show success or error
+    if (error == '') {
       showNotification('Request sent successfully!', type = 'message')
-    },
-    # Show error notification
-      error = function(e) showNotification(
+      removeModal()
+    } else {
+      showNotification(
         paste(
           'Request could not be sent...',
-          e$message,
+          error,
           sep = '\n'
         ),
         type = 'error'
       )
-    )
-    
-    # Cleanup email
-    rm(email)
+    }
   })
 }

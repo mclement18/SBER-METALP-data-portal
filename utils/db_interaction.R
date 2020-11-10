@@ -114,6 +114,16 @@ getMinMaxValues <- function(pool, table, column, ...) {
 
 
 
+countRows <- function(pool, table, ...) {
+  # Count the rows
+  countDf <- pool %>% tbl(table) %>% filter(...) %>% summarise(nb = n()) %>% collect()
+  
+  # Return only the count
+  countDf$nb
+}
+
+
+
 getRows <- function(pool, table, ..., columns = NULL) {
   # Start query by selecting the table and filtering it
   query <- pool %>% tbl(table) %>% filter(...)
@@ -577,6 +587,46 @@ updateGrabParamCat <- function(pool, grabParamCat, category = '', param_name = '
   
   # Send Query and catch errors
   sendQueryWithError(pool, query)
+}
+
+
+
+
+
+## Data requests queries ###################################################################
+
+createRequest <- function(pool, name, email, institution, data, reason) {
+  # Check for valid input string
+  name <- validInputString(name)
+  email <- validInputString(email)
+  institution <- validInputString(institution)
+  data <- validInputString(data)
+  reason <- validInputString(reason)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO data_requests (name, email, institution, data, reason)
+    values(?name, ?email, ?institution, ?data, ?reason);',
+    name = name, email = email, institution = institution, data = data, reason = reason
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
+updateRequest <- function(pool, request) {
+  # Toggle read / unread
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE `data_requests` SET `read` = ?read WHERE id = ?id;',
+    id = request$id, read = !request$read 
+  )
+
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)  
 }
 
 

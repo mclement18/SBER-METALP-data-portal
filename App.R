@@ -111,6 +111,7 @@ source('./modules/visualisation_tab/visualisation_tab.R')
 source('./modules/download_tab/download_tab.R')
 source('./modules/data_management_tab/data_management_tab.R')
 source('./modules/portal_management/portal_management.R')
+source('./modules/data_requests_management/data_requests_management.R')
 source('./modules/editableDT/editableDT.R')
 
 
@@ -296,6 +297,36 @@ server <- function(input, output, session) {
       
       # Add nav update logic
       observeEvent(input$portalLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'portalTab'))
+    }
+    
+    
+    
+    
+    ## Generate data request tab ##########################################################
+    if (user$role %in% c('sber', 'admin')) {
+      # Get the UI
+      requestUI <- requestsManagementUI('requests', pool)
+      
+      # Insert the link into navbar
+      insertUI('#login-ui', 'beforeBegin', requestUI$navbarUI, immediate = TRUE)
+      
+      # Add data requests tab
+      appendTab(
+        'main-nav',
+        tabPanel(
+          # Create a tab title with an icon
+          'Data Requests',
+          requestUI$tabContent,
+          value = 'requestsTab'
+        )
+      )
+      
+      # Call request tab module
+      callModule(requestsManagement, 'requests',
+                 pool = pool,
+                 navbarSession = session,
+                 navbarId = 'main-nav',
+                 requestTabId = 'requestsTab')
     }
   })
 }

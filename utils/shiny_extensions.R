@@ -102,6 +102,32 @@ modalButtonWithClass <- function(label, icon = NULL, class) {
 }
 
 
+withAttributes <- function(textInput, ...) {
+# Takes a Shiny textInput or textAreaInput and add attribute to its input element
+# Parameters:
+#  - textInput: A Shiny textInput or textAreaInput
+#  - ...: named arguments to set as attribute
+# 
+# Returns an updated Shiny input
+  
+  # Parse named arguments
+  args <- list(...)
+  args <- args[names(args) != '']
+  
+  # If list is not empty
+  if (length(args) > 0) {
+    for (i in c(1:length(args))) {
+      attributeName <- names(args)[i]
+      attributeValue <- args[[i]]
+      textInput$children[[2]]$attribs[[attributeName]] <- attributeValue
+    }
+  }
+  
+  # Return textInput
+  textInput
+}
+
+
 
 roleToIcon <- function(role) {
 # Convert user role to an icon

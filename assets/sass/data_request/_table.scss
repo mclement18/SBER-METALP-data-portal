@@ -1,0 +1,12 @@
+// ####################################
+// Data request table style
+// ####################################
+
+#requests-table {
+    tr {
+        td:nth-child(5),
+        td:nth-child(6) {
+            white-space: pre;
+        }
+    }
+}

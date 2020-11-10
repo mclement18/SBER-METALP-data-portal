@@ -1,0 +1,38 @@
+// ####################################
+// Data request navabar elements style
+// ####################################
+
+.navbar-nav > li a[data-value="requestsTab"] {
+    display: none;
+}
+
+.data-requests-link {
+    float: right;
+    margin: 0;
+    padding: 14px 0;
+    position: relative;
+
+    .icon-btn {
+        color: $grey1;
+
+        &:hover,
+        &:focus,
+        &:active {
+            color: $primary-color;
+            background: none;
+        }
+    }
+
+    .request-nb {
+        font-size: .9em;
+        padding: 0 4.5px;
+        width: 16px;
+        height: 16px;
+        border-radius: 100%;
+        background: $primary-color;
+
+        position: absolute;
+        top: 10px;
+        right: -10px;
+    }
+}

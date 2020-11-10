@@ -15,6 +15,7 @@ loginUI <- function(id) {
   # Create and return a div
   div(
     class = 'navbar-login',
+    id = 'login-ui',
     # Create a login link
     actionLink(ns('showLoginForm'), 'Log In', class = 'custom-links'),
     # Create a HTML output that will contain the logged in user info and logout link

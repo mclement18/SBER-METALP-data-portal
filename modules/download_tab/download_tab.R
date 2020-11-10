@@ -228,7 +228,7 @@ downloadTab <- function(input, output, session, pool, user, hfDf) {
       })
       
       # Call the module
-      callModule(requestData, 'request', selectedData, dataSelectionInput)
+      callModule(requestData, 'request', pool, selectedData, dataSelectionInput)
     } else {
       output$button <- renderUI(downloadDataUI(session$ns('download')))
       output$disclaimer <- renderUI({})
