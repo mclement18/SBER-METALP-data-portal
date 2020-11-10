@@ -3,18 +3,22 @@
 ## Create module UI ###############################################################
 
 gbPlotOptionsUI <- function(id) {
-  # Create the UI for the gbPlotOptions module
-  # Parameters:
-  #  - id: String, the module id
-  # 
-  # Returns a tagList with the layout
+# Create the UI for the gbPlotOptions module
+# Parameters:
+#  - id: String, the module id
+# 
+# Returns a tagList with the layout
   
   # Create namespace
   ns <- NS(id)
   
   # Create and return the layout
   tagList(
-    htmlTemplate('./html_components/grab_params_info.html'),
+    instructionsPanelUI(
+      ns('info'),
+      htmlTemplate('./html_components/grab_params_info.html'),
+      initStateHidden = TRUE
+    ),
     editableDTUI(ns('gbPlotOptions'))
   )
 }
@@ -24,12 +28,15 @@ gbPlotOptionsUI <- function(id) {
 ## Create module server function ##################################################
 
 gbPlotOptions <- function(input, output, session, pool) {
-  # Create the logic for the gbPlotOptions module
-  # Parameters:
-  #  - input, output, session: Default needed parameters to create a module
-  #  - pool: The pool connection to the database
-  # 
-  # Returns NULL
+# Create the logic for the gbPlotOptions module
+# Parameters:
+#  - input, output, session: Default needed parameters to create a module
+#  - pool: The pool connection to the database
+# 
+# Returns NULL
+  
+  # Call instruction panel module
+  callModule(instructionsPanel, 'info', initStateHidden = TRUE)
   
   # Call editableDT module
   callModule(editableDT, 'gbPlotOptions', pool = pool, tableName = 'grab_params_plotting', element = 'plotted grab parameter',

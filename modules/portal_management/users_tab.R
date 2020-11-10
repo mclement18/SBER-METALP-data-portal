@@ -14,12 +14,16 @@ usersTabUI <- function(id) {
   
   # Create and return the layout
   tagList(
-    htmlTemplate(
-      './html_components/user_tab_info.html',
-      download = roleToIcon('download'),
-      intern = roleToIcon('intern'),
-      sber = roleToIcon('sber'),
-      admin = roleToIcon('admin')
+    instructionsPanelUI(
+      ns('info'),
+      htmlTemplate(
+        './html_components/user_tab_info.html',
+        download = roleToIcon('download'),
+        intern = roleToIcon('intern'),
+        sber = roleToIcon('sber'),
+        admin = roleToIcon('admin')
+      ),
+      initStateHidden = TRUE
     ),
     editableDTUI(ns('users'))
   )
@@ -36,6 +40,9 @@ usersTab <- function(input, output, session, pool) {
 #  - pool: The pool connection to the database
 # 
 # Returns NULL
+  
+  # Call instruction panel module
+  callModule(instructionsPanel, 'info', initStateHidden = TRUE)
   
   # Call editableDT module
   callModule(editableDT, 'users', pool = pool, tableName = 'users', element = 'user',

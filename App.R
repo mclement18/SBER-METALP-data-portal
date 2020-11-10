@@ -113,6 +113,7 @@ source('./modules/data_management_tab/data_management_tab.R')
 source('./modules/portal_management/portal_management.R')
 source('./modules/data_requests_management/data_requests_management.R')
 source('./modules/editableDT/editableDT.R')
+source('./modules/instruction_panel/intruction_panel.R')
 
 
 

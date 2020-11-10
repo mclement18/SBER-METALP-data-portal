@@ -3,18 +3,22 @@
 ## Create module UI ###############################################################
 
 sensorPlotOptionsUI <- function(id) {
-  # Create the UI for the sensorPlotOptions module
-  # Parameters:
-  #  - id: String, the module id
-  # 
-  # Returns a tagList with the layout
+# Create the UI for the sensorPlotOptions module
+# Parameters:
+#  - id: String, the module id
+# 
+# Returns a tagList with the layout
   
   # Create namespace
   ns <- NS(id)
   
   # Create and return the layout
   tagList(
-    htmlTemplate('./html_components/sensor_params_info.html'),
+    instructionsPanelUI(
+      ns('info'),
+      htmlTemplate('./html_components/sensor_params_info.html'),
+      initStateHidden = TRUE
+    ),
     editableDTUI(ns('sensorPlotOptions'))
   )
 }
@@ -24,12 +28,15 @@ sensorPlotOptionsUI <- function(id) {
 ## Create module server function ##################################################
 
 sensorPlotOptions <- function(input, output, session, pool) {
-  # Create the logic for the sensorPlotOptions module
-  # Parameters:
-  #  - input, output, session: Default needed parameters to create a module
-  #  - pool: The pool connection to the database
-  # 
-  # Returns NULL
+# Create the logic for the sensorPlotOptions module
+# Parameters:
+#  - input, output, session: Default needed parameters to create a module
+#  - pool: The pool connection to the database
+# 
+# Returns NULL
+  
+  # Call instruction panel module
+  callModule(instructionsPanel, 'info', initStateHidden = TRUE)
   
   # Call editableDT module
   callModule(editableDT, 'sensorPlotOptions', pool = pool, tableName = 'sensor_params_plotting', element = 'plotted sensor parameter',

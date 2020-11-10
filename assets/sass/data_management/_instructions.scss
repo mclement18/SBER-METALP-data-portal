@@ -9,6 +9,20 @@
     border-radius: 5px;
     background: lighten($grey5, 25);
 
+    .title {
+        display: flex;
+        margin: 0;
+    }
+
+    .content {
+        margin: 1em 0 0;
+    }
+
+    .instruction-toggle {
+        margin: 0 0 0 auto;
+        font-size: .7em;
+    }
+
     .option {
         font-weight: bold;
         margin: 0 10px 0 0;

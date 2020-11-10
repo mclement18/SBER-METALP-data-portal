@@ -3,18 +3,22 @@
 ## Create module UI ###############################################################
 
 grabParamCategoriesUI <- function(id) {
-  # Create the UI for the grabParamCategories module
-  # Parameters:
-  #  - id: String, the module id
-  # 
-  # Returns a tagList with the layout
+# Create the UI for the grabParamCategories module
+# Parameters:
+#  - id: String, the module id
+# 
+# Returns a tagList with the layout
   
   # Create namespace
   ns <- NS(id)
   
   # Create and return the layout
   tagList(
-    htmlTemplate('./html_components/grab_param_categories_tab_info.html'),  
+    instructionsPanelUI(
+      ns('info'),
+      htmlTemplate('./html_components/grab_param_categories_tab_info.html'),
+      initStateHidden = TRUE
+    ),
     editableDTUI(ns('gPCat'))
   )
 }
@@ -24,12 +28,15 @@ grabParamCategoriesUI <- function(id) {
 ## Create module server function ##################################################
 
 grabParamCategories <- function(input, output, session, pool) {
-  # Create the logic for the grabParamCategories module
-  # Parameters:
-  #  - input, output, session: Default needed parameters to create a module
-  #  - pool: The pool connection to the database
-  # 
-  # Returns NULL
+# Create the logic for the grabParamCategories module
+# Parameters:
+#  - input, output, session: Default needed parameters to create a module
+#  - pool: The pool connection to the database
+# 
+# Returns NULL
+  
+  # Call instruction panel module
+  callModule(instructionsPanel, 'info', initStateHidden = TRUE)
   
   # Call editableDT module
   callModule(editableDT, 'gPCat', pool = pool, tableName = 'grab_param_categories', element = 'grab param category',

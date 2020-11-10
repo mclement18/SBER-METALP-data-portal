@@ -3,18 +3,22 @@
 ## Create module UI ###############################################################
 
 stationsManagementUI <- function(id) {
-  # Create the UI for the stationsManagement module
-  # Parameters:
-  #  - id: String, the module id
-  # 
-  # Returns a tagList with the layout
+# Create the UI for the stationsManagement module
+# Parameters:
+#  - id: String, the module id
+# 
+# Returns a tagList with the layout
   
   # Create namespace
   ns <- NS(id)
   
   # Create and return the layout
   tagList(
-    htmlTemplate('./html_components/stations_tab_info.html'),  
+    instructionsPanelUI(
+      ns('info'),
+      htmlTemplate('./html_components/stations_tab_info.html'),
+      initStateHidden = TRUE
+    ),  
     editableDTUI(ns('stations'))
   )
 }
@@ -24,12 +28,15 @@ stationsManagementUI <- function(id) {
 ## Create module server function ##################################################
 
 stationsManagement <- function(input, output, session, pool) {
-  # Create the logic for the stationsManagement module
-  # Parameters:
-  #  - input, output, session: Default needed parameters to create a module
-  #  - pool: The pool connection to the database
-  # 
-  # Returns NULL
+# Create the logic for the stationsManagement module
+# Parameters:
+#  - input, output, session: Default needed parameters to create a module
+#  - pool: The pool connection to the database
+# 
+# Returns NULL
+  
+  # Call instruction panel module
+  callModule(instructionsPanel, 'info', initStateHidden = TRUE)
   
   # Call editableDT module
   callModule(editableDT, 'stations', pool = pool, tableName = 'stations', element = 'station',

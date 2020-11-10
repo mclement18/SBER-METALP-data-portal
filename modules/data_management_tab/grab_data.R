@@ -3,19 +3,23 @@
 ## Create module UI ###############################################################
 
 grabDataUI <- function(id, pool) {
-  # Create the UI for the grabData module
-  # Parameters:
-  #  - id: String, the module id
-  #  - pool: The pool connection to the database
-  # 
-  # Returns a tagList with the layout
+# Create the UI for the grabData module
+# Parameters:
+#  - id: String, the module id
+#  - pool: The pool connection to the database
+# 
+# Returns a tagList with the layout
   
   # Create namespace
   ns <- NS(id)
   
   # Create and return the layout
   tagList(
-    htmlTemplate('./html_components/grab_data_help.html'),
+    instructionsPanelUI(
+      ns('info'),
+      htmlTemplate('./html_components/grab_data_info.html'),
+      initStateHidden = TRUE
+    ),
     # Data selection inputs
     div(
       class = 'data-filter',
@@ -102,12 +106,18 @@ grabDataUI <- function(id, pool) {
 ## Create module server function ##################################################
 
 grabData <- function(input, output, session, pool) {
-  # Create the logic for the grabData module
-  # Parameters:
-  #  - input, output, session: Default needed parameters to create a module
-  #  - pool: The pool connection to the database
-  # 
-  # Returns NULL
+# Create the logic for the grabData module
+# Parameters:
+#  - input, output, session: Default needed parameters to create a module
+#  - pool: The pool connection to the database
+# 
+# Returns NULL
+  
+  ## Call instruction panel module ################################################
+  callModule(instructionsPanel, 'info', initStateHidden = TRUE)
+  
+  
+  
   
   ## JavaScript callback functions for the Handsontable ###########################
   
