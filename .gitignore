@@ -6,3 +6,5 @@ data/*
 www/main.css
 www/metalpdataportal.js
 secrets.R
+db_backups/*.sql
+restart.txt

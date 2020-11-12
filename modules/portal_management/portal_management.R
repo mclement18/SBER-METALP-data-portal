@@ -8,6 +8,7 @@ source('./modules/portal_management/stations_management.R')
 source('./modules/portal_management/grab_param_categories.R')
 source('./modules/portal_management/grab_sample_plotting_options.R')
 source('./modules/portal_management/sensor_plotting_options.R')
+source('./modules/portal_management/portal_actions.R')
 
 
 
@@ -66,6 +67,14 @@ portalManagementUI <- function(id, pool) {
       # Tab content
       sensorPlotOptionsUI(ns('sensorPlot')),
       value = ns('sensorPlotTab')
+    ),
+    # Create the portal actions
+    tabPanel(
+      # Tab title
+      'Portal actions',
+      # Tab content
+      portalActionsUI(ns('actions')),
+      value = ns('actionsTab')
     )
   )
 }
@@ -98,5 +107,8 @@ portalManagement <- function(input, output, session, pool) {
   
   # Sensor plotting options
   callModule(sensorPlotOptions, 'sensorPlot', pool)
+  
+  # Sensor plotting options
+  callModule(portalActions, 'actions')
 }
 
