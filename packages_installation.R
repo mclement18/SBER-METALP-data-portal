@@ -18,10 +18,13 @@ install.packages(
            "DBI",
            "RMySQL",
            "pool",
-           "dbplyr",
            "sodium",
            "DT",
            "rhandsontable"
   ),
   repos = 'https://cran.rstudio.com/'
 )
+
+# Install specific versions
+# dbplyr 2 is adding a `` to the SELECT query which make the query invalid
+devtools::install_version('dbplyr', version='1.4.4', repos='https://cran.rstudio.com/', upgrade = 'never')
