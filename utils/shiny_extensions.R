@@ -139,7 +139,7 @@ roleToIcon <- function(role) {
   # Create the role mapping
   mapping <- list(
     download = 'cloud-download-alt',
-    intern = 'poo',
+    intern = 'user-graduate',
     sber = 'mountain',
     admin = 'hat-wizard'
   )
