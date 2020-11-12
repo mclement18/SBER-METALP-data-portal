@@ -167,7 +167,7 @@ js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd()) {
   outputDir <- file.path(wd, outputDir)
   
   # Load the manifest file
-  manifest <- read_json(file.path(inputDir, 'manifest.json'), simplifyVector = TRUE)
+  manifest <- jsonlite::read_json(file.path(inputDir, 'manifest.json'), simplifyVector = TRUE)
   
   # Create an empty variable for the compiled JS
   compiled <- ''
