@@ -49,10 +49,10 @@ stationsManagement <- function(input, output, session, pool) {
                  )
              ),
              templateInputsCreate = expression(
-               inputsTemplate %>% select(name, full_name, catchment, color)
+               inputsTemplate %>% select(name, full_name, catchment, color, elevation)
              ),
              templateInputsEdit = expression(
-               selectedRow %>% select(id, name, full_name, catchment, color)
+               selectedRow %>% select(id, name, full_name, catchment, color, elevation)
              ),
              creationExpr = expression(
                createStation(
@@ -60,7 +60,8 @@ stationsManagement <- function(input, output, session, pool) {
                  name = input$name,
                  full_name = input$full_name,
                  catchment = input$catchment,
-                 color = input$color
+                 color = input$color,
+                 elevation = input$elevation
                )
              ),
              updateExpr = expression(
@@ -70,7 +71,8 @@ stationsManagement <- function(input, output, session, pool) {
                  name = input$name,
                  full_name = input$full_name,
                  catchment = input$catchment,
-                 color = input$color
+                 color = input$color,
+                 elevation = input$elevation
                )
              ),
              deleteExpr = expression(

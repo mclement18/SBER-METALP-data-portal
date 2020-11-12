@@ -25,13 +25,21 @@ connectToDB <- function() {
 ## Parameters validation and parsing #######################################################
 
 validInputString <- function(input) {
-  if (!is.character(input)){
-    return(SQL('NULL'))
-  }
+  if (!is.character(input)) return(SQL('NULL'))
   
-  if (input == '' | is.na(input) | length(input) != 1) {
-    return(SQL('NULL'))
-  }
+  if (input == '' | any(is.na(input)) | length(input) != 1) return(SQL('NULL'))
+  
+  return(input)
+}
+
+
+
+validInputNumber <- function(input, int = FALSE) {
+  if (!is.numeric(input)) input <- as.numeric(input)
+  
+  if (any(is.na(input)) |length(input) != 1) return(SQL('NULL'))
+  
+  if (int & !is.integer(input)) return(as.integer(input))
   
   return(input)
 }
@@ -348,18 +356,21 @@ updateData <- function(pool, id, columns, values) {
 
 ## Stations queries ###################################################################
 
-createStation <- function(pool, name, full_name, catchment, color) {
+createStation <- function(pool, name, full_name, catchment, color, elevation = '') {
   # Check for valid input string
   name <- validInputString(name)
   full_name <- validInputString(full_name)
   catchment <- validInputString(catchment)
   color <- validInputString(color)
+  elevation <- validInputNumber(elevation, int = TRUE)
   
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    'INSERT INTO stations (name, full_name, catchment, color) values(?name, ?full_name, ?catchment, ?color);',
-    name = name, full_name = full_name, catchment = catchment, color = color
+    'INSERT INTO stations (name, full_name, catchment, color, elevation)
+    values(?name, ?full_name, ?catchment, ?color, ?elevation);',
+    name = name, full_name = full_name, catchment = catchment,
+    color = color, elevation = elevation
   )
   
   # Send Query and catch errors
@@ -369,24 +380,29 @@ createStation <- function(pool, name, full_name, catchment, color) {
 
 
 
-updateStation <- function(pool, station, name = '', full_name = '', catchment = '', color = '') {
+updateStation <- function(pool, station, name = '', full_name = '', catchment = '', color = '', elevation = '') {
   # Check for valid input string
   name <- validInputString(name)
   full_name <- validInputString(full_name)
   catchment <- validInputString(catchment)
   color <- validInputString(color)
+  elevation <- validInputNumber(elevation, int = TRUE)
   
   # Use previous values if not defined
   if (name == SQL('NULL')) name <- station$name
   if (full_name == SQL('NULL')) full_name <- station$full_name
   if (catchment == SQL('NULL')) catchment <- station$catchment
   if (color == SQL('NULL')) color <- station$color
+  if (elevation == SQL('NULL')) elevation <- station$elevation
   
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    "UPDATE stations SET name = ?name, full_name = ?full_name, full_name = ?full_name, color = ?color WHERE id = ?id;",
-    id = station$id, name = name, full_name = full_name, catchment = catchment, color = color
+    "UPDATE stations SET name = ?name, full_name = ?full_name,
+    catchment = ?catchment, color = ?color, elevation = ?elevation
+    WHERE id = ?id;",
+    id = station$id, name = name, full_name = full_name,
+    catchment = catchment, color = color, elevation = elevation
   )
   
   # Send Query and catch errors
