@@ -204,7 +204,7 @@ grabData <- function(input, output, session, pool) {
         station = factor(station, levels = allSites),
         across(matches('DATE', ignore.case = FALSE), ymd),
         across(ends_with('_at'), ymd_hms)
-      )
+      ) %>% arrange(station, DATE_reading, TIME_reading_GMT)
   })
   
   # Refresh the data when refresh button is pressed
