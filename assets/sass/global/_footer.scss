@@ -3,14 +3,8 @@
 // ####################################
 
 .footer-to-bottom-container {
-    position: relative;
-    min-height: 100vh;
-}
-  
-.footer-to-bottom {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 // ####################################
@@ -20,16 +14,12 @@
 .footer {
     background-color: $grey1;
     padding: 3em 0;
+    width: 100%;
     color: $grey5;
-    
-    .content-wrapper {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-    }
 
     .logo {
-        margin: 0 1.5em 0 0;
+        display: block;
+        margin: 0 0 .5em;
     }
 
     a {
@@ -45,19 +35,47 @@
         display: flex;
         flex-wrap: wrap;
         list-style: none;
-        margin: 0;
+        margin: 0 0 1.5em;
         padding: 0;
 
         li {
-            margin: 0 1.5em 0 0;
+            margin: 0 .7em 0 0;
         }
     }
 
     .copyright {
-        margin: 0 0 0 auto;
+        margin: 0;
 
         &__links {
-            margin: 0 0 0 1em;
+            margin: 0 0 0 3px;
+        }
+
+        .spacer {
+            margin: 0 2px;
+        }
+
+        .smaller {
+            font-size: .9em;
+        }
+    }
+
+    @include laptop {
+        .content-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .logo {
+            margin: 0 1.5em 0 0;
+        }
+
+        .footer-nav {
+            margin: 0;
+        }
+
+        .copyright {
+            margin: 0 0 0 auto;
         }
     }
 }

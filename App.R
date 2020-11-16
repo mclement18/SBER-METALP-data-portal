@@ -153,9 +153,8 @@ ui <- tagList(
           tags$span(icon('campground'),tags$span('About', class = 'navbar-menu-name')),
           htmlTemplate(
             './html_components/about.html',
-            extLinkIcon = icon('external-link-alt', class = 'ext-link'),
-            githubIcon = icon('github'),
-            linkedinIcon = icon('linkedin')
+            dlTabLink = actionLink('aboutDlLink', 'Download tab'),
+            extLinkIcon = icon('external-link-alt', class = 'ext-link')
           ),
           value = 'aboutTab'
         ),
@@ -191,8 +190,10 @@ ui <- tagList(
       aboutLink = actionLink('aboutLink', 'About'),
       visuLink = actionLink('visuLink', 'Visualisation'),
       dlLink = actionLink('dlLink', 'Download'),
+      creditsLink = actionLink('credits', 'Credits & Source code'),
       githubIcon = icon('github'),
-      linkedinIcon = icon('linkedin')
+      linkedinIcon = icon('linkedin'),
+      twitterIcon = icon('twitter')
     )
   )
 )
@@ -233,7 +234,23 @@ server <- function(input, output, session) {
   
   observeEvent(input$visuLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'visuTab'))
   
-  observeEvent(input$dlLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'dlTab'))
+  observeEvent(input$dlLink | input$aboutDlLink, ignoreInit = TRUE, {
+    req(input$dlLink != 0 | input$aboutDlLink != 0)
+    updateNavbarPage(session, 'main-nav', selected = 'dlTab')
+  })
+  
+  observeEvent(input$credits, ignoreInit = TRUE, {
+    showModal(modalDialog(
+      htmlTemplate(
+        './html_components/credits.html',
+        githubIcon = icon('github'),
+        linkedinIcon = icon('linkedin'),
+        twitterIcon = icon('twitter')
+      ),
+      footer = modalButtonWithClass('Close', class = 'custom-style'),
+      easyClose = TRUE
+    ))
+  })
   
   
 
