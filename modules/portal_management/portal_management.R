@@ -49,7 +49,7 @@ portalManagementUI <- function(id, pool) {
       # Tab title
       'Grab sample categories',
       # Tab content
-      grabParamCategoriesUI(ns('grabCat')),
+      grabParamCategoriesUI(ns('grabCat'), pool),
       value = ns('grabCatTab')
     ),
     # Create the Grab sample plotting options management tab
@@ -57,7 +57,7 @@ portalManagementUI <- function(id, pool) {
       # Tab title
       'Grab sample plotting options',
       # Tab content
-      gbPlotOptionsUI(ns('grabPlot')),
+      gbPlotOptionsUI(ns('grabPlot'), pool),
       value = ns('grabPlotTab')
     ),
     # Create the Sensor plotting options management tab

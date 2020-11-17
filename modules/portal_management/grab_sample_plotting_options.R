@@ -2,10 +2,11 @@
 
 ## Create module UI ###############################################################
 
-gbPlotOptionsUI <- function(id) {
+gbPlotOptionsUI <- function(id, pool) {
 # Create the UI for the gbPlotOptions module
 # Parameters:
 #  - id: String, the module id
+#  - pool: The pool connection to the database
 # 
 # Returns a tagList with the layout
   
@@ -18,6 +19,14 @@ gbPlotOptionsUI <- function(id) {
       ns('info'),
       htmlTemplate('./html_components/grab_params_info.html'),
       initStateHidden = TRUE
+    ),
+    selectInput(
+      ns('sectionFilter'),
+      'Filter by section_name',
+      choices = c(
+        'All',
+        getEnumValues(pool, 'grab_params_plotting', 'section_name')
+      )
     ),
     editableDTUI(ns('gbPlotOptions'))
   )
@@ -40,15 +49,23 @@ gbPlotOptions <- function(input, output, session, pool) {
   
   # Call editableDT module
   callModule(editableDT, 'gbPlotOptions', pool = pool, tableName = 'grab_params_plotting', element = 'plotted grab parameter',
-             tableLoading = expression(
-               getRows(pool, 'grab_params_plotting') %>%
-                 # Cast data types
-                 mutate(
-                   section_name = as.factor(section_name),
-                   plot_func = as.factor(plot_func),
-                   across(ends_with('_at'), ymd_hms)
-                 )
-             ),
+             tableLoading = expression({
+               # Get rows
+               # Use the reactive expression passed to the '...' as additional argument
+               # To access the input$sectionFilter from the current module
+               if (sectionFilter() == 'All') {
+                 table <- getRows(pool, 'grab_params_plotting')
+               } else {
+                 # Use local to evaluate the sectionFilter reactive expression in the editableDT module and not in the DB context
+                 table <- getRows(pool, 'grab_params_plotting', section_name == local(sectionFilter()))
+               }
+               # Cast data types
+               table %>% mutate(
+                 section_name = as.factor(section_name),
+                 plot_func = as.factor(plot_func),
+                 across(ends_with('_at'), ymd_hms)
+               )
+             }),
              templateInputsCreate = expression(
                inputsTemplate %>% select(
                  section_name,
@@ -116,5 +133,8 @@ gbPlotOptions <- function(input, output, session, pool) {
                loadedTable %>% mutate(
                  across(c(data, sd, min_max), ~gsub(',', ', ', .x))
                )
-             ))
+             ),
+             # Pass the sectionFilter input as an additional reactive expression which is used in the above expressions
+             sectionFilter = reactive(input$sectionFilter)
+             )
 }

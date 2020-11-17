@@ -298,7 +298,7 @@ server <- function(input, output, session) {
         tabPanel(
           # Create a tab title with an icon
           tags$span(icon('empire'), tags$span('Portal', class = 'navbar-menu-name')),
-          portalManagementUI('portal'),
+          portalManagementUI('portal', pool),
           value = 'portalTab'
         )
       )

@@ -46,7 +46,7 @@ editableDTUI<- function(id) {
 
 editableDT <- function(input, output, session, pool, tableName, element,
                        tableLoading, templateInputsCreate, templateInputsEdit,
-                       creationExpr, updateExpr, deleteExpr, outputTableExpr = NULL) {
+                       creationExpr, updateExpr, deleteExpr, outputTableExpr = NULL, ...) {
 # Create the logic for the editableDT module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -70,8 +70,17 @@ editableDT <- function(input, output, session, pool, tableName, element,
 #                You can use the 'selectedRowIds' symbol in your expression which is the a numeric vector of the selected row ids.
 #  - outputTableExpr: Expression, the expression to run in order to apply modification to the df before create the datatable
 #                     You can use the 'loadedTable' symbol in your expression which is the loaded df.
+#  - ...: Other variables to use in the passed expressions, usually reactive expression giving access to inputs from the outer module
 # 
 # Returns NULL
+  
+  ## Unwrap dots ################################################################
+  
+  # Make the arguments passed through the '...' accessible by converting them into a list and attaching it
+  attach(list(...), warn.conflicts = FALSE)
+  
+  
+  
   
   ## Table loading ################################################################
   
@@ -299,6 +308,7 @@ editableDT <- function(input, output, session, pool, tableName, element,
         scrollX = TRUE,
         columnDefs = list(list(targets = 0, visible = FALSE))
       )) %>%
-      formatDate(c('created_at', 'updated_at'), method = 'toUTCString')
+      formatDate(c('created_at', 'updated_at'), method = 'toUTCString') %>%
+      htmlwidgets::onRender('(el, x, data) => console.log([el, x, data])')
   })
 }

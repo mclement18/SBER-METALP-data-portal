@@ -2,10 +2,11 @@
 
 ## Create module UI ###############################################################
 
-grabParamCategoriesUI <- function(id) {
+grabParamCategoriesUI <- function(id, pool) {
 # Create the UI for the grabParamCategories module
 # Parameters:
 #  - id: String, the module id
+#  - pool: The pool connection to the database
 # 
 # Returns a tagList with the layout
   
@@ -18,6 +19,17 @@ grabParamCategoriesUI <- function(id) {
       ns('info'),
       htmlTemplate('./html_components/grab_param_categories_tab_info.html'),
       initStateHidden = TRUE
+    ),
+    selectInput(
+      ns('categoryFilter'),
+      'Filter by category',
+      choices = c(
+        'All',
+        parseOptions(
+          getRows(pool, 'grab_param_categories', columns = 'category'),
+          'category'
+        )
+      )
     ),
     editableDTUI(ns('gPCat'))
   )
@@ -38,15 +50,24 @@ grabParamCategories <- function(input, output, session, pool) {
   # Call instruction panel module
   callModule(instructionsPanel, 'info', initStateHidden = TRUE)
   
+  
   # Call editableDT module
   callModule(editableDT, 'gPCat', pool = pool, tableName = 'grab_param_categories', element = 'grab param category',
-             tableLoading = expression(
-               getRows(pool, 'grab_param_categories') %>%
-                 # Cast data types
-                 mutate(
-                   across(ends_with('_at'), ymd_hms)
-                 )
-             ),
+             tableLoading = expression({
+               # Get rows
+               # Use the reactive expression passed to the '...' as additional argument
+               # To access the input$categoryFilter from the current module
+               if (categoryFilter() == 'All') {
+                 table <- getRows(pool, 'grab_param_categories')
+               } else {
+                 # Use local to evaluate the categoryFilter reactive expression in the editableDT module and not in the DB context
+                 table <- getRows(pool, 'grab_param_categories', category == local(categoryFilter()))
+               }
+               # Cast data types
+               table %>% mutate(
+                 across(ends_with('_at'), ymd_hms)
+               )
+             }),
              templateInputsCreate = expression(
                inputsTemplate %>% select(category, param_name, description)
              ),
@@ -76,5 +97,8 @@ grabParamCategories <- function(input, output, session, pool) {
                  table = 'grab_param_categories',
                  ids = selectedRowIds
                )
-             ))
+             ),
+             # Pass the categoryFilter input as an additional reactive expression which is used in the above expressions
+             categoryFilter = reactive(input$categoryFilter)
+             )
 }
