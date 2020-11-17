@@ -19,13 +19,13 @@ portalActionsUI <- function(id) {
       class = 'action',
       h2('Force restart app'),
       p('Create a new ', tags$code('restart.txt'), 'file in the app root directory.'),
-      actionButton(ns('restart'), 'Restart', class = 'custom-style custom-style--primary')
+      actionButton(ns('restart'), 'Restart', icon = icon('redo'), class = 'custom-style custom-style--primary')
     ),
     div(
       class = 'action',
       h2('Create SQL DB backup file'),
       p('Create a new DB backup in the ', tags$code('app_dir/db_backups'), ' directory.'),
-      actionButton(ns('backup'), 'Backup', class = 'custom-style custom-style--primary')
+      actionButton(ns('backup'), 'Backup', icon = icon('save'), class = 'custom-style custom-style--primary')
     ),
     div(
       class = 'action',
@@ -39,7 +39,7 @@ portalActionsUI <- function(id) {
           # Add "onclick = 'return false;'" additional attribute to disable the button which is in reality a hyper link
           downloadButton(ns('download'), class = 'custom-style custom-style--primary', onclick = 'return false;')
         ),
-        actionButton(ns('delete'), 'Delete', class = 'custom-style custom-style--primary'),
+        actionButton(ns('delete'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary'),
       )
     )
   )
