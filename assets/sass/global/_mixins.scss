@@ -19,3 +19,9 @@
         @content;
     }
 }
+
+@mixin tallscreens {
+    @media screen and (min-height: 1041px) {
+        @content;
+    }
+}

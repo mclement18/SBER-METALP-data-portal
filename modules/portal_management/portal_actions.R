@@ -17,7 +17,7 @@ portalActionsUI <- function(id) {
     class = 'portal-actions',
     div(
       class = 'action',
-      h2('App force restart'),
+      h2('Force restart app'),
       p('Create a new ', tags$code('restart.txt'), 'file in the app root directory.'),
       actionButton(ns('restart'), 'Restart', class = 'custom-style custom-style--primary')
     ),

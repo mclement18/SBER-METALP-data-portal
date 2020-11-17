@@ -103,7 +103,15 @@ downloadTabUI <- function(id, pool, hfDfMinMaxDates) {
               class = 'checkbox-grid'        
             ),
             # Select for modeled data
-            checkboxInput(ns('addModeledData'), 'Add modeled data', value = FALSE),
+            checkboxInput(
+              ns('addModeledData'),
+              # Create a label with an icon button
+              tags$span(
+                'Add modeled data',
+                # Create an icon button that trigger a modal to display the modeled data description
+                actionButton(ns('modeledHelper'), icon('question-circle'), class = 'icon-btn')
+              ),
+              value = FALSE),
             # Select HF parameters
             selectizeInput(
               inputId =  ns('hfParam'),
@@ -537,13 +545,23 @@ downloadTab <- function(input, output, session, pool, user, hfDf) {
   
   
   
-  ## Data Frequency helper logic ####################################################
+  ## Data helpers logic ####################################################
   
   # Create an observeEvent that react to the data freq helper button
   observeEvent(input$hfFreqHelper, ignoreInit = TRUE, {
     showModal(modalDialog(
       title = 'Sensor data frequency selection',
       htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
+      easyClose = TRUE
+    ))
+  })
+  
+  # Create an observeEvent that react to modeled data helper button
+  observeEvent(input$modeledHelper, ignoreInit = TRUE, {
+    showModal(modalDialog(
+      title = 'Modeled data',
+      htmlTemplate('./html_components/data_modeled_help.html'),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))

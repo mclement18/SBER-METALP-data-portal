@@ -1,6 +1,15 @@
 <div class="content">
-    <p>The option name, param name, data and grab param name columns can be 75 characters long maximum.</p>
+    <p>The option_name, param_name, data and grab_param_name columns can be 75 characters long maximum.</p>
+    <p>The grab_param_name field can have multiple values by separating them with a comma (i.e., 'value1,value2,value3').</p>
     <p>The units can be 10 characters long maximum.</p>
-    <p>Section name, option name, param name, units and data are mandatory.</p>
-    <p>The possible plotting functions are the following:</p>
+    <p>The section_name, option_name, param_name, units and data fields are mandatory.</p>
+    <p>Fields definition:</p>
+    <ul class="options">
+        <li><span class="option">section_name:</span><span class="desc">defines the parameter groups displayed in the dropdown menu.</span></li>
+        <li><span class="option">option_name:</span><span class="desc">defines the parameter name displayed in the dropdown menu.</span></li>
+        <li><span class="option">param_name:</span><span class="desc">the parameter name or acronym displayed in the Y-axis of the plots.</span></li>
+        <li><span class="option">units:</span><span class="desc">the units of the parameters, displayed in the Y-axis of the plots.</span></li>
+        <li><span class="option">data:</span><span class="desc">the name of the sensor parameter from csv file generated with the SensorDataPreprocessing tool (it has to exactly match to allow the parameter to be displayed correctly).</span></li>
+        <li><span class="option">grab_param_name:</span><span class="desc">the name of the grab sample parameter in the SQL table (it has to exactly match to allow the parameter to be displayed correctly).</span></li>
+    </ul>
 </div>

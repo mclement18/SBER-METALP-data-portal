@@ -49,7 +49,15 @@ highFreqTimeSeriesUI <- function(id, pool) {
         )
       ),
       # Create a checkbox to select or unselect modeled data
-      checkboxInput(ns('showModeledData'), 'Show modeled data', value = TRUE),
+      checkboxInput(
+        ns('showModeledData'),
+        # Create a label with an icon button
+        tags$span(
+          'Show modeled data',
+          # Create an icon button that trigger a modal to display the modeled data description
+          actionButton(ns('modeledHelper'), icon('question-circle'), class = 'icon-btn')
+        ),
+        value = TRUE),
       # Create radio buttons to select the data frequency to display
       checkboxGroupInputWithClass(
         radioButtons(
@@ -244,13 +252,23 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
   
   
   
-  ## Data Frequency helper logic ####################################################
+  ## Data helpers logic ####################################################
   
   # Create an observeEvent that react to the data freq helper button
   observeEvent(input$freqHelper, ignoreInit = TRUE, {
     showModal(modalDialog(
       title = 'Sensor data frequency selection',
       htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
+      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
+      easyClose = TRUE
+    ))
+  })
+  
+  # Create an observeEvent that react to modeled data helper button
+  observeEvent(input$modeledHelper, ignoreInit = TRUE, {
+    showModal(modalDialog(
+      title = 'Modeled data',
+      htmlTemplate('./html_components/data_modeled_help.html'),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))

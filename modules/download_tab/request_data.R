@@ -63,22 +63,22 @@ requestData <- function(input, output, session, pool, selectedData, dataSelectio
             class = 'requisitor-info',
             # Name
             withAttributes(
-              textInput(session$ns('requisitorName'), 'Name*', placeholder = 'Otto Octavius'),
+              textInput(session$ns('requisitorName'), 'Name*', placeholder = 'max 50 char...'),
               maxlength = 50
               ),
             # Email
             withAttributes(
-              textInput(session$ns('requisitorEmail'), 'Email*', placeholder = 'otto.octavius@octaviusindustries.com'),
+              textInput(session$ns('requisitorEmail'), 'Email*', placeholder = 'john.doe@epfl.com'),
               maxlength = 75
             ),
             # Institution
             withAttributes(
-              textInput(session$ns('requisitoInstitution'), 'Institution / Company*', placeholder = 'Octavius Industries'),
+              textInput(session$ns('requisitoInstitution'), 'Institution / Company*', placeholder = 'max 50 char...'),
               maxlength = 50
             ),
             # Reasons
             withAttributes(
-              textAreaInput(session$ns('requisitorReason'), 'Motivations*', resize = 'vertical', placeholder = 'Kill Spider-Man, Destroy Oscorp, Take revenge on Norman Osborn'),
+              textAreaInput(session$ns('requisitorReason'), 'Motivations*', resize = 'vertical', placeholder = 'max 250 char...'),
               maxlength = 250
             ),
           ),

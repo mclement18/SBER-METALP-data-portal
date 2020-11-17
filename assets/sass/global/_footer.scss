@@ -5,6 +5,16 @@
 .footer-to-bottom-container {
     display: flex;
     flex-direction: column;
+    height: 100vh;
+}
+
+.before-footer {
+    flex: 1 0 auto;
+    margin-bottom: 3em;
+}
+
+.navbar {
+    flex: 0 0 auto;
 }
 
 // ####################################

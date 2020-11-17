@@ -1,13 +1,25 @@
 <div class="content">
-    <p>The option name, data, sd and min_max columns can be 75 characters long maximum.</p>
-    <p>The param name can be 25 characters long maximum.</p>
+    <p>The option_name, data, sd and min_max columns can be 75 characters long maximum.</p>
+    <p>The data, sd and min_max fields can have multiple values by separating them with a comma (i.e., 'value1,value2,value3').</p>
+    <p>The param_name can be 25 characters long maximum.</p>
     <p>The units can be 10 characters long maximum.</p>
-    <p>Section name, option name, param name, units, data and plot func are mandatory.</p>
+    <p>The section_name, option_name, param_name, units, data and plot_func fields are mandatory.</p>
     <p>The possible plotting functions are the following:</p>
     <ul class="options">
-        <li><span class="option">basicPlot:</span><span class="desc">A simple scatter plot with a Loess fitting curve.</span></li>
-        <li><span class="option">multiPlot:</span><span class="desc">The same as the basicPlot but with multiple parameters.</span></li>
-        <li><span class="option">sdPlot:</span><span class="desc">The same as the basicPlot but with error bars usind the standard deviation.</span></li>
-        <li><span class="option">minMaxPlot:</span><span class="desc"></span>The same as the basicPlot but with the minimum and maximum values displayed for each measurment.</li>
+        <li><span class="option">basicPlot:</span><span class="desc">a simple scatter plot with a Loess fitting curve.</span></li>
+        <li><span class="option">multiPlot:</span><span class="desc">same as the basicPlot but with multiple parameters.</span></li>
+        <li><span class="option">sdPlot:</span><span class="desc">same as the basicPlot but with error bars indicating the standard deviation.</span></li>
+        <li><span class="option">minMaxPlot:</span><span class="desc"></span>same as the basicPlot with minimum and maximum values displayed for each measurement.</li>
+    </ul>
+    <p>Fields definition:</p>
+    <ul class="options">
+        <li><span class="option">section_name:</span><span class="desc">defines the parameter groups displayed in the dropdown menu.</span></li>
+        <li><span class="option">option_name:</span><span class="desc">defines the parameter name displayed in the dropdown menu.</span></li>
+        <li><span class="option">param_name:</span><span class="desc">the parameter name or acronym displayed in the Y-axis of the plots.</span></li>
+        <li><span class="option">units:</span><span class="desc">the units of the parameters, displayed in the Y-axis of the plots.</span></li>
+        <li><span class="option">data:</span><span class="desc">the name of the parameter in the SQL table (it has to exactly match to allow the parameter to be displayed correctly).</span></li>
+        <li><span class="option">sd:</span><span class="desc">the parameters in the SQL table that refers for a standard deviation of a parameter (mainly used for sdPlot plot).</span></li>
+        <li><span class="option">min_max:</span><span class="desc">the parameters in the SQL table that refers to a minimum or a maxim of a parameter (mainly used for minMaxPlot plot).</span></li>
+        <li><span class="option">plot_func:</span><span class="desc">defines the type of plot function that will be displayed.</span></li>
     </ul>
 </div>
