@@ -132,6 +132,9 @@ grabData <- function(input, output, session, pool) {
   # Callback that register table hooks
   onTableRender <- 'CustomHandsontable.grabDataOnRenderCallback'
   
+  # Callback to render the numbers up to the 4th decimal if any
+  numericRenderer <- 'CustomHandsontable.numericRenderer'
+  
   
   
   
@@ -457,6 +460,8 @@ grabData <- function(input, output, session, pool) {
       fixedColumnsLeft = 3,
       contextMenu = FALSE
     ) %>%
+      # Set the custom numeric renderer globally
+      hot_cols(renderer = numericRenderer) %>%
       # Hide and mark as read only the id
       hot_col('id', readOnly = TRUE, colWidths=0.1) %>%
       # Set the dropdown options for the station
@@ -471,6 +476,7 @@ grabData <- function(input, output, session, pool) {
       # Add a time validator for the always present time columns
       hot_col(
         c('TIME_reading', 'Convert_to_GMT', 'TIME_reading_GMT'),
+        type = 'text',
         validator = timeValidator
       ) %>%
       # Mark the created and updated at columns as read only

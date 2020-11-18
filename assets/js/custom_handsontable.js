@@ -20,6 +20,18 @@ CustomHandsontable.dateRenderer = function (hotInstance, td, row, column, prop, 
     td.textContent = value;
 };
 
+// Create numeric type renderer that display up to 4 decimals if present
+CustomHandsontable.numericRenderer = function (hotInstance, td, row, column, prop, value, cellProperties) {
+    Handsontable.renderers.NumericRenderer.apply(this, arguments);
+
+    if (cellProperties.type === 'numeric' && value !== null && value !== '') {
+        value = Number(value);
+        if (!Number.isNaN(value)) {
+            td.textContent = Number(value.toFixed(4)).toString();
+        }
+    }
+};
+
 // Set table input
 CustomHandsontable.setInputId = function (tableDOM, attrName, inputId) {
     tableDOM.dataset[attrName] = inputId;
@@ -31,7 +43,7 @@ CustomHandsontable.onChangeCallback = function (changes) {
         const inputId = this.rootElement.dataset.onChangeId;
         const message = [];
         changes.forEach(([row, col, oldValue, newValue]) => {
-            if (oldValue !== newValue) {
+            if (oldValue !== newValue && !(oldValue === null && newValue === '')) {
 
                 message.push({
                     row: row + 1,
