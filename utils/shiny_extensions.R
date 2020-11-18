@@ -334,6 +334,7 @@ pointHoverWidgetServer <- function(session, plotId, df, input,
           'pointInfo' = unbox(pointInfo),
           'mapping' = mapping,
           'coords_img' = input()$coords_img,
+          'range' = input()$range,
           'x_y_labels' = x_y_labels,
           'plotId' = plotId
         ), auto_unbox = TRUE)

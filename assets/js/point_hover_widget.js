@@ -31,7 +31,7 @@ PointHoverWidget.buildValueInfo = function(axis, name, value) {
 };
 
 // Build and a widget to the plot
-PointHoverWidget.addWidget = function(plotId, pointInfo, mapping, coords_img, x_y_labels) {
+PointHoverWidget.addWidget = function(plotId, pointInfo, mapping, coords_img, range, x_y_labels) {
     // Build bubble with infos
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
@@ -39,17 +39,28 @@ PointHoverWidget.addWidget = function(plotId, pointInfo, mapping, coords_img, x_
     bubble.appendChild(this.buildValueInfo('y', x_y_labels.y, pointInfo[mapping.y]));
     bubble.appendChild(this.buildValueInfo('site', 'Station', pointInfo.Site_ID));
     
+    // Get plot
+    const plot = this.getPlot(plotId);
+
     // Build widget
     const widget = document.createElement('div');
     widget.className = 'point-hover-widget';
     // Adjust position so that the bubble arrow point the right place
     // Using the padding and position defined in CSS
-    widget.style.left = `${coords_img.x - 25}px`;
+    // Adjust orientation depending on the right or left position
+    const middle = (range.right - range.left) / 2 + range.left;
+    if (coords_img.x <= middle) {
+        widget.style.left = `${coords_img.x - 25}px`;
+        bubble.classList.add('left');
+    } else if (coords_img.x > middle){
+        widget.style.right = `${plot.clientWidth - coords_img.x - 25}px`;
+        bubble.classList.add('right');
+    }
     widget.style.bottom = `${400 - coords_img.y + 10}px`;
     widget.appendChild(bubble);
 
     // Add widget to plot
-    this.getPlot(plotId).appendChild(widget);
+    plot.appendChild(widget);
 };
 
 // Remove widget from plot, only if a widget is present
@@ -79,13 +90,13 @@ PointHoverWidget.needUpdate = function(plotId, pointInfo, mapping) {
 // Create a callback function to for the shiny 'addHoverWidget' custom event
 PointHoverWidget.addWidgetCallback = function(message) {
     // Destructure message
-    const {pointInfo, mapping, coords_img, x_y_labels, plotId} = message;
+    const {pointInfo, mapping, coords_img, range, x_y_labels, plotId} = message;
 
     // If widget need to be updated
     // Remove old one and add new one
     if (this.needUpdate(plotId, pointInfo, mapping)) {
         this.removeWidget(plotId);
-        this.addWidget(plotId, pointInfo, mapping, coords_img, x_y_labels);
+        this.addWidget(plotId, pointInfo, mapping, coords_img, range, x_y_labels);
     }
 };
 
