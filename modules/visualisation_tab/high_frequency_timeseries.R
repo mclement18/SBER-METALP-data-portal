@@ -224,8 +224,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
   ## Plot hovering logic ##########################################################
   
   # Activate the hover widget for the regular timeserie plot
-  pointHoverWidgetServer(session, 'highfreq', data, reactive(input$highfreq_hover),
-                         x_label = 'Date', y_label = 'Parameter')
+  pointHoverWidgetServer(session, 'highfreq', data, reactive(input$highfreq_hover), y_label = 'Parameter')
 
   
   
@@ -281,8 +280,10 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
   
   # Create a reactive expression returning the the summarised data
   statsData <- reactive({
+    # SHow spinner
+    show_spinner('hf-stats')
     # Take the 10min data and filter by sites and date
-    df$`10min` %>% filter(
+    stats <- df$`10min` %>% filter(
       Site_ID %in% selectedSites_d(),
       date(Date) >= dateRange()$min,
       date(Date) <= dateRange()$max
@@ -328,6 +329,10 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
       names_pattern = '^([A-Z]*)_(.*)'
       # Capitalize the stats name
     ) %>% mutate(Stats = str_to_title(Stats))
+    # Hide spinner
+    hide_spinner('hf-stats')
+    # Return stats table
+    stats
   })
   
   # Render the stats tables in the modal
@@ -343,6 +348,9 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
     # Create a moadal containing the stats output
     showModal(modalDialog(
       title = 'Sensor summary statistics',
+      # Add spinner
+      use_busy_spinner(spin = 'fading-circle', color = "#e24727", position = 'full-page', spin_id = 'hf-stats', margins = c(30, 10)),
+      # Add UI output
       htmlOutput(session$ns('sensorStats'), class = 'stats-summary'),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE

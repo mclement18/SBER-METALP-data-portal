@@ -315,7 +315,7 @@ grabSamplesTimeSeries <- function(input, output, session, dateRange, pool) {
   output$stats <- renderStatsTables(
     elements = selectedSites_d,
     data = data,
-    sites = currentSites(),
+    sites = currentSites,
     tableFunction = createStatsTablePerSite
   )
   
@@ -324,7 +324,10 @@ grabSamplesTimeSeries <- function(input, output, session, dateRange, pool) {
     # Create modal with the corresponding htmlOutput
     showModal(modalDialog(
       title = paste('Summary statistics of the', currentCatchment(), 'catchment'),
-      htmlOutput(session$ns('stats'), class = 'stats-summary'),
+      withSpinner(
+        htmlOutput(session$ns('stats'), class = 'stats-summary'),
+        type = 4, color = "#e24727", size = .5
+      ),
       footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
       easyClose = TRUE
     ))

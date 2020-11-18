@@ -225,6 +225,7 @@ renderStatsTables <- function(elements, data, sites, tableFunction) {
     # If the elements are in a reactive expression
     # Retrieve them
     if (is.reactive(elements)) elements <- elements()
+    if (is.reactive(sites)) sites <- sites()
     # Create and return all tables
     lapply(elements, function(element){tableFunction(element, data, sites)})
   })
