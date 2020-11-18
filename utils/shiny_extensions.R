@@ -451,6 +451,17 @@ createInput <- function(type, label, value = NULL, table, pool, session = getDef
       timepicker = TRUE,
       timepickerOpts = timepickerOptions(timeFormat = 'hh:ii')
     )
+  } else if (type == 'date') {
+    airDatepickerInput(
+      inputId = session$ns(label),
+      label = label,
+      value = value,
+      clearButton = TRUE,
+      todayButton = TRUE,
+      autoClose = TRUE,
+      update_on = 'close',
+      addon = 'none'
+    )
   }
 }
 

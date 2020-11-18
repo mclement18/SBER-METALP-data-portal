@@ -33,6 +33,14 @@ validInputString <- function(input) {
 }
 
 
+validInputDate <- function(input) {
+  if (!is.Date(input)) input <- as_date(input)
+  
+  if (any(is.na(input)) | length(input) != 1) return(SQL('NULL'))
+  
+  return(as.character(input))
+}
+
 
 validInputNumber <- function(input, int = FALSE) {
   if (!is.numeric(input)) input <- as.numeric(input)
@@ -641,6 +649,84 @@ updateRequest <- function(pool, request) {
     id = request$id, read = !request$read 
   )
 
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)  
+}
+
+
+
+
+## Sensor inventory queries ###################################################################
+
+createSensor <- function(pool, station = '', param_name, param_full, model, serial_nb = '',
+                         installation_date = '', calibration_a = '', calibration_b = '', description = '') {
+  # Check for valid input string
+  station <- validInputString(station)
+  param_name <- validInputString(param_name)
+  param_full <- validInputString(param_full)
+  model <- validInputString(model)
+  serial_nb <- validInputString(serial_nb)
+  installation_date <- validInputDate(installation_date)
+  calibration_a <- validInputNumber(calibration_a)
+  calibration_b <- validInputNumber(calibration_b)
+  description <- validInputString(description)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO sensor_inventory
+    (station, param_name, param_full, model, serial_nb,
+    installation_date, calibration_a, calibration_b, description)
+    values(?station, ?param_name, ?param_full, ?model, ?serial_nb,
+    ?installation_date, ?calibration_a, ?calibration_b, ?description);',
+    station = station, param_name = param_name, param_full = param_full,
+    model = model, serial_nb = serial_nb, installation_date = installation_date,
+    calibration_a = calibration_a, calibration_b = calibration_b, description = description
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
+updateSensor <- function(pool, sensor, station = '', param_name = '', param_full = '', model = '', serial_nb = '',
+                         installation_date = '', calibration_a = '', calibration_b = '', description = '') {
+  # Check for valid input string
+  station <- validInputString(station)
+  param_name <- validInputString(param_name)
+  param_full <- validInputString(param_full)
+  model <- validInputString(model)
+  serial_nb <- validInputString(serial_nb)
+  installation_date <- validInputDate(installation_date)
+  calibration_a <- validInputNumber(calibration_a)
+  calibration_b <- validInputNumber(calibration_b)
+  description <- validInputString(description)
+  
+  # Use previous values if not defined
+  if (station == SQL('NULL')) station <- sensor$station
+  if (param_name == SQL('NULL')) param_name <- sensor$param_name
+  if (param_full == SQL('NULL')) param_full <- sensor$param_full
+  if (model == SQL('NULL')) model <- sensor$model
+  if (serial_nb == SQL('NULL')) serial_nb <- sensor$serial_nb
+  if (installation_date == SQL('NULL')) installation_date <- validInputDate(sensor$installation_date)
+  if (calibration_a == SQL('NULL')) calibration_a <- sensor$calibration_a
+  if (calibration_b == SQL('NULL')) calibration_b <- sensor$calibration_b
+  if (description == SQL('NULL')) description <- sensor$description
+  
+  # Toggle read / unread
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE sensor_inventory
+    SET station = ?station, param_name = ?param_name, param_full = ?param_full,
+    model = ?model, serial_nb = ?serial_nb, installation_date = ?installation_date,
+    calibration_a = ?calibration_a, calibration_b = ?calibration_b, description = ?description
+    WHERE id = ?id;',
+    id = sensor$id, station = station, param_name = param_name, param_full = param_full,
+    model = model, serial_nb = serial_nb, installation_date = installation_date,
+    calibration_a = calibration_a, calibration_b = calibration_b, description = description
+  )
+  
   # Send Query and catch errors
   sendQueryWithError(pool, query)  
 }

@@ -3,6 +3,7 @@
 ## Source needed files ############################################################
 
 source('./modules/data_management_tab/grab_data.R')
+source('./modules/data_management_tab/sensor_inventory.R')
 
 
 
@@ -32,6 +33,14 @@ dataManagementTabUI <- function(id, pool, userRole) {
         # Tab content
         grabDataUI(ns('grabData'), pool),
         value = ns('grabDataTab')
+      ),
+      # And the sensor inventory tab
+      tabPanel(
+        # Tab title
+        'Sensor inventory',
+        # Tab content
+        sensorInventoryUI(ns('sensorsTab'), pool),
+        value = ns('sensorsTab')
       ),
       # And the tools tab
       navbarMenu(
@@ -89,6 +98,8 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   if (userRole %in% c('sber', 'admin')) {
     # Call the grab data module
     callModule(grabData, 'grabData', pool)
+    # Call the grab data module
+    callModule(sensorInventory, 'sensorsTab', pool)
   }
 }
 
