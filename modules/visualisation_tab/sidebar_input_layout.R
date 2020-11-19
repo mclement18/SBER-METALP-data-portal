@@ -41,6 +41,8 @@ sidebarInputLayoutUI <- function(id, minDate, maxDate, innerModuleUI, ...) {
         # Button group containing the global actions
         div(
           class = 'btn-group',
+          # Button to set plot width
+          actionButton(ns('plotWidth'), 'Plot Width', class = 'custom-style'),
           # Button to toggle sidebar visibility
           actionButton(ns('toggleSidebar'), 'Hide inputs', class = 'custom-style'),
           # Button to add an additional unit
@@ -299,6 +301,51 @@ sidebarInputLayout <- function(input, output, session,
     # Update toggling button label
     updateActionButton(session, 'toggleSidebar', label = newBtnLabel)
   })
+  
+  
+  
+  
+  
+  
+  ## Plot width logic #############################################################
+  
+  # Create an observeEvent that react to the plotWidth button
+  observeEvent(input$plotWidth, ignoreInit = TRUE, {
+    showModal(modalDialog(
+      size = 's',
+      title = 'Set plot width',
+      p("Accepted values are valid CSS units, such as '100%' (default) or '400px'"),
+      p('This setting affect all visible plots. Meaning that newly created plot will still by created with the default settings.'),
+      p('Setting an empty string will reset to the default value.'),
+      textInput(session$ns('newWidth'), 'New width', placeholder = 'Default: 100%'),
+      footer = tagList(
+        actionButton(session$ns('setWidth'), 'Set width', class = 'custom-style custom-style--primary'),
+        modalButtonWithClass('Cancel', class = 'custom-style')
+      )
+    ))
+  })
+  
+  # Create an observeEvent that react to the setWidth button
+  observeEvent(input$setWidth, ignoreInit = TRUE, {
+    # Parse new width
+    width <- input$newWidth
+    if (width == '') width <- '100%'
+    
+    # Create JSON message
+    messageJSON <- toJSON(list(
+      'containerId' = session$ns('main-plots'),
+      'width' = width
+    ), auto_unbox = TRUE)
+    
+    # Send the shiny custom message to toggle sidebar visibility
+    # Linked to some JavaScript defined in './assets/js/custom_plot_width.js'
+    session$sendCustomMessage('setPlotWidth', messageJSON)
+    
+    # Close modal
+    removeModal()
+  })
+  
+  
   
   
   
