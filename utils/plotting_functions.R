@@ -314,6 +314,12 @@ onVsOnePlot <- function(df, x, y, parameterX, parameterY, plotTitle, color) {
 #
 # Returns a ggplot2 plot
   
+  # Set axis labels
+  xLabsUnits <- ''
+  yLabsUnits <- ''
+  if (!is.null(parameterX$units)) xLabsUnits <- paste0(' [', parameterX$units, ']')
+  if (!is.null(parameterY$units)) yLabsUnits <- paste0(' [', parameterY$units, ']')
+  
   p <- ggplot(df, aes(!!sym(x), !!sym(y)))+
     # Plot the lm confidence interval
     geom_smooth(method = lm, fill = color, alpha = .17, linetype = 0, na.rm = TRUE, fullrange = TRUE)+
@@ -326,8 +332,8 @@ onVsOnePlot <- function(df, x, y, parameterX, parameterY, plotTitle, color) {
              label = lm_eqn(df, x, y), parse = TRUE, size = 5)+
     # Set plot title and axis names
     ggtitle(plotTitle)+
-    ylab(paste0(parameterY$param_name, ' [', parameterY$units, ']'))+
-    xlab(paste0(parameterX$param_name, ' [', parameterX$units, ']'))+
+    ylab(paste0(parameterY$param_name, yLabsUnits))+
+    xlab(paste0(parameterX$param_name, xLabsUnits))+
     # Set theme
     theme_bw()+
     # Remove legend title, move legend to the bottom of the plot and set text size
@@ -364,6 +370,33 @@ addOneToOneLine <- function(p, minData, maxData) {
   
   # Return the updated plot
   return(p)
+}
+
+
+
+highlightDataSubset <- function(p, color, data, x, y, ...) {
+# Highlight data to a VS plot and add fitting line plus equation
+# Parameters:
+# - p: ggplot2 object, plot returned by the oneVsOnePlot function
+# - color: String, color to use for the hignlighting
+# - data: Data.frame, the df to subset, ideally the same one which was used to build the plot
+# - x, y: String, df column names to use as x and y coordinates, should be the same ones which were used to build the plot
+# - ...: tidy-eval to pass to the dplyr filter() function
+# 
+# Returns a ggplot object
+  
+  # Filter data
+  dataSubset <- data %>% filter(...)
+  
+  # Plot the lm confidence interval
+  p + geom_smooth(data = dataSubset, method = lm, fill = color, alpha = .17, linetype = 0, na.rm = TRUE, fullrange = TRUE)+
+    # PLot the lm line
+    geom_line(data = dataSubset, stat = 'smooth', method = "lm", formula = y ~ x, size = 1.5, color = color, alpha = .5, fullrange = TRUE)+
+    # Plot the data points
+    geom_point(data = dataSubset, size = 2.5, color = color, na.rm = TRUE)+
+    # Add the lm equation and r2 on top left under the first one
+    annotate('text', -Inf, Inf, hjust = -.1, vjust = 2.5,
+             label = lm_eqn(dataSubset, x, y), parse = TRUE, size = 5, color = color)
 }
 
 

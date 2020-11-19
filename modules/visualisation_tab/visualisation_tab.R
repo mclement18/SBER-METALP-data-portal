@@ -11,6 +11,7 @@ source('./modules/visualisation_tab/grab_samples_timeseries.R')
 source('./modules/visualisation_tab/high_frequency_timeseries.R')
 source('./modules/visualisation_tab/grab_samples_comparison.R')
 source('./modules/visualisation_tab/sensor_grab_comparison.R')
+source('./modules/visualisation_tab/global_grab_sample_comparison.R')
 
 
 
@@ -144,6 +145,26 @@ visualisationTab <- function(input, output, session, pool, user, hfDf) {
           value = session$ns('grabVSgrab')
         )
       )
+      
+      
+      # Create the global grab samples comparison tab
+      appendTab(
+        'visuTabs',
+        tabPanel(
+          # Tab title
+          'Global grab sample comparison',
+          # Tab content
+          # Create a sidebarInputLayout UI with for the grabSamplesComparison module
+          sidebarInputLayoutUI(
+            session$ns('globalGrabVsGrab'),
+            minDate = grabMinMaxDates$min,
+            maxDate = grabMinMaxDates$max,
+            innerModuleUI = globalGrabSamplesComparisonUI,
+            pool = pool
+          ),
+          value = session$ns('globalGrabVSgrab')
+        )
+      )
 
 
       # Create the sensors vs grab samples comparison tab
@@ -173,6 +194,19 @@ visualisationTab <- function(input, output, session, pool, user, hfDf) {
                  innerModulePrefixIds = list(
                    'inputs' = 'grab-vs-grab-plot-input',
                    'plots' = 'grab-vs-grab-plots'
+                 ),
+                 minDate = grabMinMaxDates$min,
+                 maxDate = grabMinMaxDates$max,
+                 plotDateRangeSelection = FALSE,
+                 pool = pool)
+      
+      # Load the server logic for the globalGrabSamplesComparison module inside the sidebarInputLayout module
+      callModule(sidebarInputLayout, 'globalGrabVsGrab',
+                 innerModule = globalGrabSamplesComparison,
+                 innerModuleUI = globalGrabSamplesComparisonUI,
+                 innerModulePrefixIds = list(
+                   'inputs' = 'global-grab-vs-grab-plot-input',
+                   'plots' = 'global-grab-vs-grab-plots'
                  ),
                  minDate = grabMinMaxDates$min,
                  maxDate = grabMinMaxDates$max,
