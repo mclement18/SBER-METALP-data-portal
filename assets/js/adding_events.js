@@ -3,4 +3,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     Utils.addScrollTopToFooterNav();
     Utils.addBannerWidthCorrection();
+    PlotDownload.addEventListeners();
 });

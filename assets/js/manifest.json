@@ -4,6 +4,7 @@
     "download_button_state.js",
     "custom_handsontable.js",
     "custom_plot_width.js",
+    "plot_dowload.js",
     "utils.js",
     "adding_events.js",
     "shiny_custom_events.js"

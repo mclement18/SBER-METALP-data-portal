@@ -1,0 +1,38 @@
+// ####################################
+// Plot download style and layout
+// ####################################
+
+.has-download-icon {
+    position: relative;
+}
+
+.plot-download {
+    position: absolute;
+    left: 5px;
+    bottom: 5px;
+
+    width: 20px;
+    height: 20px;
+    
+    font-size: 1.6rem;
+    line-height: 1;
+
+    padding: 1px 1.9px;
+    background: $grey2;
+    color: $white;
+    border-radius: 3px;
+    border: 1px solid $black;
+
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+        background: $primary-color;
+        color: $white;
+    }
+
+    &:active {
+        background: darken($primary-color, 15);
+        color: $white;
+    }
+}
