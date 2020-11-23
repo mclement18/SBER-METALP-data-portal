@@ -3,6 +3,7 @@
 ## Source needed files ############################################################
 source('./modules/download_tab/download_layout.R')
 source('./modules/download_tab/main_download.R')
+source('./modules/download_tab/sensor_vs_grab_download.R')
 source('./modules/download_tab/download_data.R')
 source('./modules/download_tab/request_data.R')
 
@@ -71,40 +72,40 @@ downloadTab <- function(input, output, session, pool, user, hfDf) {
   
   ## Check authorization ##########################################################
   
-  # observeEvent(user$role, ignoreInit = TRUE, {
-  #   if (user$role %in% c('intern', 'sber', 'admin')) {
-  #     ## Get min and max dates ####################################################
-  #     
-  #     # Get grab data min and max dates
-  #     grabMinMaxDates <- getMinMaxValues(pool, 'data', DATE_reading) %>%
-  #       mutate(across(everything(), ymd))
-  #     
-  #     # Get min and max dates
-  #     minDate <- min(grabMinMaxDates$min, date(hfDf$`10min`$Date), na.rm = TRUE)
-  #     maxDate <- max(grabMinMaxDates$max, date(hfDf$`10min`$Date), na.rm = TRUE)
-  #     
-  #     
-  #     
-  #     ## Create Sensor vs Grab download  ##########################################
-  # 
-  #     # Append new tab
-  #     appendTab(
-  #       session$ns('downloadTabs'),
-  #       tabPanel(
-  #         title = 'Sensor VS Grab download',
-  #         downloadLayoutUI(
-  #           ns('sensorVSGrabDl'),
-  #           pool = pool,
-  #           minDate = minDate,
-  #           maxDate = maxDate,
-  #           innerModuleUI = mainDownloadUI
-  #         ),
-  #         value = session$ns('sensorVSGrabDl')
-  #       )
-  #     )
-  # 
-  #     # Call Sensor VS Grab download module
-  #     callModule(downloadLayout, 'mainDl', pool, user, hfDf, mainDownload)
-  #   }
-  # })
+  observeEvent(user$role, ignoreInit = TRUE, {
+    if (user$role %in% c('intern', 'sber', 'admin')) {
+      ## Get min and max dates ####################################################
+
+      # Get grab data min and max dates
+      grabMinMaxDates <- getMinMaxValues(pool, 'data', DATE_reading) %>%
+        mutate(across(everything(), ymd))
+
+      # Get min and max dates
+      minDate <- min(grabMinMaxDates$min, date(hfDf$`10min`$Date), na.rm = TRUE)
+      maxDate <- max(grabMinMaxDates$max, date(hfDf$`10min`$Date), na.rm = TRUE)
+
+
+
+      ## Create Sensor vs Grab download  ##########################################
+
+      # Append new tab
+      appendTab(
+        'downloadTabs',
+        tabPanel(
+          title = 'Sensor VS Grab download',
+          downloadLayoutUI(
+            session$ns('sensorVSGrabDl'),
+            pool = pool,
+            minDate = minDate,
+            maxDate = maxDate,
+            innerModuleUI = sensorVSGrabDownloadUI
+          ),
+          value = session$ns('sensorVSGrabDl')
+        )
+      )
+
+      # Call Sensor VS Grab download module
+      callModule(downloadLayout, 'sensorVSGrabDl', pool, user, hfDf, sensorVSGrabDownload)
+    }
+  })
 }

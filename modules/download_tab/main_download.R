@@ -8,109 +8,103 @@ mainDownloadUI <- function(id, pool) {
 #  - id: String, the module id
 #  - pool: The pool connection to the database
 # 
-# Returns a list containing the UI elements
+# Returns a tagList containing the UI elements
   
   # Create namespace
   ns <- NS(id)
   
-  # Create the list containing the UI elements
-  list(
-    # Global inputs for layout
-    globalInputs = tagList(
-      # Data selection
-      selectInput(
-        ns('data'),
-        'Data',
-        choices = list(
-          'Choose data...' = '',
-          'Sensors data' = 'hfDf',
-          'Grab samples data' = 'grabDf'
-        )
+  # Create the tagList containing the UI elements
+  tagList(
+    # Data selection
+    selectInput(
+      ns('data'),
+      'Data',
+      choices = list(
+        'Choose data...' = '',
+        'Sensors data' = 'hfDf',
+        'Grab samples data' = 'grabDf'
       )
     ),
-    # Specific inputs for layout
-    specificInputs = tagList(
-      # Hide by default high frequency data inputs
-      hidden(
-        # High frequency data specific inputs
-        div(
-          id = 'download-hf-inputs',
-          checkboxGroupInputWithClass(
-            radioButtons(
-              inputId = ns('hfDataFreq'),
-              label = tags$span(
-                'Data frequency',
-                # Create an icon button that trigger a modal to display the parameter description
-                actionButton(ns('hfFreqHelper'), icon('question-circle'), class = 'icon-btn')
-              ),
-              choices = list('10min (raw)' = '10min', '6H', '12H', '24H'),
-              selected = '10min'
+    # Hide by default high frequency data inputs
+    hidden(
+      # High frequency data specific inputs
+      div(
+        id = 'download-hf-inputs',
+        checkboxGroupInputWithClass(
+          radioButtons(
+            inputId = ns('hfDataFreq'),
+            label = tags$span(
+              'Data frequency',
+              # Create an icon button that trigger a modal to display the parameter description
+              actionButton(ns('hfFreqHelper'), icon('question-circle'), class = 'icon-btn')
             ),
-            class = 'checkbox-grid'        
+            choices = list('10min (raw)' = '10min', '6H', '12H', '24H'),
+            selected = '10min'
           ),
-          # Select for modeled data
-          checkboxInput(
-            ns('addModeledData'),
-            # Create a label with an icon button
-            tags$span(
-              'Add modeled data',
-              # Create an icon button that trigger a modal to display the modeled data description
-              actionButton(ns('modeledHelper'), icon('question-circle'), class = 'icon-btn')
-            ),
-            value = FALSE),
-          # Select HF parameters
-          selectizeInput(
-            inputId =  ns('hfParam'),
-            # Create a label with an icon button
-            label = tags$span(
-              'Parameter',
-              # Create an icon button that trigger a modal to display the parameter description
-              actionButton(ns('hfParamHelper'), icon('question-circle'), class = 'icon-btn')
-            ),
-            choices = parseOptionsWithSections(
-              getRows(pool, 'sensor_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
-              'param_name'
-            ),
-            multiple = TRUE,
-            options = list(
-              'placeholder' = 'Select some parameters...',
-              'plugins' = list('remove_button')
-            )
+          class = 'checkbox-grid'        
+        ),
+        # Select for modeled data
+        checkboxInput(
+          ns('addModeledData'),
+          # Create a label with an icon button
+          tags$span(
+            'Add modeled data',
+            # Create an icon button that trigger a modal to display the modeled data description
+            actionButton(ns('modeledHelper'), icon('question-circle'), class = 'icon-btn')
+          ),
+          value = FALSE),
+        # Select HF parameters
+        selectizeInput(
+          inputId =  ns('hfParam'),
+          # Create a label with an icon button
+          label = tags$span(
+            'Parameter',
+            # Create an icon button that trigger a modal to display the parameter description
+            actionButton(ns('hfParamHelper'), icon('question-circle'), class = 'icon-btn')
+          ),
+          choices = parseOptionsWithSections(
+            getRows(pool, 'sensor_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+            'param_name'
+          ),
+          multiple = TRUE,
+          options = list(
+            'placeholder' = 'Select some parameters...',
+            'plugins' = list('remove_button')
           )
-          # End download__specific-inputs
         )
-        # End hidden object
-      ),
-      # Hide by default the grab specific inputs
-      hidden(
-        # Create the grab specific inputs
-        div(
-          id = 'download-grab-inputs',
-          # Grab parameter selection
-          selectizeInput(
-            inputId =  ns('grabParam'),
-            # Create a label with an icon button
-            label = tags$span(
-              'Parameter',
-              # Create an icon button that trigger a modal to display the parameter description
-              actionButton(ns('grabParamHelper'), icon('question-circle'), class = 'icon-btn')
-            ),
-            choices = parseOptionsWithSections(
-              getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
-              'param_name'
-            ),
-            multiple = TRUE,
-            options = list(
-              'placeholder' = 'Select some parameters...',
-              'plugins' = list('remove_button')
-            )
-          )
-          # End grab-inputs
-        )
-        # End hidden object
+        # End download__specific-inputs
       )
-      # End of tagList
+      # End hidden object
+    ),
+    # Hide by default the grab specific inputs
+    hidden(
+      # Create the grab specific inputs
+      div(
+        id = 'download-grab-inputs',
+        # Grab parameter selection
+        selectizeInput(
+          inputId =  ns('grabParam'),
+          # Create a label with an icon button
+          label = tags$span(
+            'Parameter',
+            # Create an icon button that trigger a modal to display the parameter description
+            actionButton(ns('grabParamHelper'), icon('question-circle'), class = 'icon-btn')
+          ),
+          choices = parseOptionsWithSections(
+            getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+            'param_name'
+          ),
+          multiple = TRUE,
+          options = list(
+            'placeholder' = 'Select some parameters...',
+            'plugins' = list('remove_button')
+          )
+        )
+        # End grab-inputs
+      )
+      # End hidden object
     )
+    # End of tagList
   )
 }
 
@@ -336,7 +330,12 @@ mainDownload <- function(input, output, session, pool, user, hfDf, selectedSites
       ) %>% rename(
         Site_ID = station
         # Reorder columns and filter columns
-      ) %>% select(Date, Site_ID, all_of(parameters()))
+      ) %>% select(
+        Date, Site_ID, all_of(parameters())
+        # Reorder rows
+      ) %>% arrange(
+        Date, Site_ID
+      )
     } else {
       # If no data is selected set df as an empty data.table
       df <- data.table()
@@ -463,6 +462,7 @@ mainDownload <- function(input, output, session, pool, user, hfDf, selectedSites
   return(
     list(
       selectedData = selectedData,
+      parameters = parameters,
       disclaimer = disclaimer,
       button = dlButton,
       clearInputs = clearInputs

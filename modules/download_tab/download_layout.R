@@ -15,9 +15,6 @@ downloadLayoutUI <- function(id, pool, minDate, maxDate, innerModuleUI) {
   # Create namespace
   ns <- NS(id)
   
-  # Get innerModule UI elements
-  innerModuleUIElements <- innerModuleUI(ns('innerDl'), pool)
-  
   # Create main download tab element
   div(
     class = 'download-main',
@@ -58,15 +55,13 @@ downloadLayoutUI <- function(id, pool, minDate, maxDate, innerModuleUI) {
             'placeholder' = 'Select some stations...',
             'plugins' = list('remove_button')
           ),
-        ),
-        # innerModule global inputs
-        innerModuleUIElements$globalInputs
+        )
       ),
       # Create download data specific inputs
       div(
         class = 'download__specific-inputs',
-        # innerModule specific inputs
-        innerModuleUIElements$specificInputs
+        # innerModule UI elements
+        innerModuleUI(ns('innerDl'), pool)
       )
     ),
     # Create the data preview table output
@@ -156,8 +151,9 @@ downloadLayout <- function(input, output, session, pool, user, hfDf, innerModule
   
   # Preview output
   output$preview <- renderPrint({
-    # Get inner module selected data
+    # Get inner module selected data and parameters
     selectedData <- innerModuleOutput$selectedData()
+    parameters <- innerModuleOutput$parameters()
     
     # Get selected data column names
     columnsNames <- colnames(selectedData)
@@ -186,10 +182,10 @@ downloadLayout <- function(input, output, session, pool, user, hfDf, innerModule
     
     # If user as the right to see
     if (user$role != 'visitor') {
-      # If there is at least one parameter selected
+      # If there is at least one parameter selected and more than 2 columns in the df (i.e. more than just Date and Site_ID)
       # Summarise each parameter
       # Else display only Stat column
-      if (length(parameters()) > 0) {
+      if (length(parameters) > 0 & length(columnsNames) > 2) {
         parametersSummary <- selectedData %>% summarise_if(is.numeric, list(
           'Min' = ~ min(.x, na.rm = TRUE),
           'Mean' = ~ mean(.x, na.rm = TRUE),
@@ -197,9 +193,11 @@ downloadLayout <- function(input, output, session, pool, user, hfDf, innerModule
           'NAs' = ~ sum(is.na(.x))
         ))
         
-        # If there is only one parameter and three or four columns set manually the summary columns names
+        # If there is only one parameter and three columns
+        # Or 4 columns in the parametersSummary table (i.e. only the Min, Mean, Max and NAs columns)
+        # Set manually the summary columns names
         # Else get them programmatically
-        if (length(parameters()) == 1 & length(columnsNames) %in% c(3, 4)) {
+        if ((length(parameters) == 1 & length(columnsNames) == 3) | ncol(parametersSummary) == 4) {
           parametersSummary %<>% pivot_longer(everything(), names_to = 'Stat', values_to = columnsNames[3])
         } else {
           parametersSummary %<>% pivot_longer(everything(), names_to = c('.value', 'Stat'), names_pattern = '(.*)_(.*)')
