@@ -1,6 +1,8 @@
 ## This module contains the UI and server code for the Download tab
 
 ## Source needed files ############################################################
+source('./modules/download_tab/download_layout.R')
+source('./modules/download_tab/main_download.R')
 source('./modules/download_tab/download_data.R')
 source('./modules/download_tab/request_data.R')
 
@@ -28,163 +30,20 @@ downloadTabUI <- function(id, pool, hfDfMinMaxDates) {
   minDate <- min(grabMinMaxDates$min, hfDfMinMaxDates$min)
   maxDate <- max(grabMinMaxDates$max, hfDfMinMaxDates$max)
   
-  # Create main download tab element
-  div(
-    class = 'download-main',
-    # Create download inputs element
-    div(
-      class = 'download__inputs',
-      # Create download global inputs element
-      div(
-        class = 'download__global-inputs',
-        # Date selection
-        div(
-          class = 'download__date-range',
-          # Create data range
-          dateRangeInput(
-            ns('time'), 'Date range:',
-            start = minDate,
-            end = maxDate,
-            min = minDate,
-            max = maxDate,
-            format = 'dd/mm/yyyy',
-            separator = '-'
-          ),
-          # Create a nutton to reset the date range
-          actionButton(ns('resetDateRange'), 'Reset Date', class = 'custom-style')
-        ),
-        # Site selection
-        selectizeInput(
-          inputId =  ns('sites'),
-          label = 'Stations',
-          choices = parseOptionsWithSections(
-            getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
-            valueColumn = 'name',
-            sectionColumn = 'catchment',
-            optionColumn = 'full_name'
-          ),
-          multiple = TRUE,
-          options = list(
-            'placeholder' = 'Select some stations...',
-            'plugins' = list('remove_button')
-          ),
-        ),
-        # Data selection
-        selectInput(
-          ns('data'),
-          'Data',
-          choices = list(
-            'Choose data...' = '',
-            'Sensors data' = 'hfDf',
-            'Grab samples data' = 'grabDf'
-          )
-        )
-        # End download__global-inputs
+  # Create tab panel for the different downloads
+  tabsetPanel(
+    id = ns('downloadTabs'),
+    # Create the main download panel
+    tabPanel(
+      title = 'Main download',
+      downloadLayoutUI(
+        ns('mainDl'),
+        pool = pool,
+        minDate = minDate,
+        maxDate = maxDate,
+        innerModuleUI = mainDownloadUI
       ),
-      # Create download data specific inputs
-      div(
-        class = 'download__specific-inputs',
-        # Hide by default high frequency data inputs
-        hidden(
-          # High frequency data specific inputs
-          div(
-            id = 'download-hf-inputs',
-            checkboxGroupInputWithClass(
-              radioButtons(
-                inputId = ns('hfDataFreq'),
-                label = tags$span(
-                  'Data frequency',
-                  # Create an icon button that trigger a modal to display the parameter description
-                  actionButton(ns('hfFreqHelper'), icon('question-circle'), class = 'icon-btn')
-                ),
-                choices = list('10min (raw)' = '10min', '6H', '12H', '24H'),
-                selected = '10min'
-              ),
-              class = 'checkbox-grid'        
-            ),
-            # Select for modeled data
-            checkboxInput(
-              ns('addModeledData'),
-              # Create a label with an icon button
-              tags$span(
-                'Add modeled data',
-                # Create an icon button that trigger a modal to display the modeled data description
-                actionButton(ns('modeledHelper'), icon('question-circle'), class = 'icon-btn')
-              ),
-              value = FALSE),
-            # Select HF parameters
-            selectizeInput(
-              inputId =  ns('hfParam'),
-              # Create a label with an icon button
-              label = tags$span(
-                'Parameter',
-                # Create an icon button that trigger a modal to display the parameter description
-                actionButton(ns('hfParamHelper'), icon('question-circle'), class = 'icon-btn')
-              ),
-              choices = parseOptionsWithSections(
-                getRows(pool, 'sensor_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
-                'param_name'
-              ),
-              multiple = TRUE,
-              options = list(
-                'placeholder' = 'Select some parameters...',
-                'plugins' = list('remove_button')
-              )
-            )
-            # End download__specific-inputs
-          )
-          # End hidden object
-        ),
-        # Hide by default the grab specific inputs
-        hidden(
-          # Create the grab specific inputs
-          div(
-            id = 'download-grab-inputs',
-            # Grab parameter selection
-            selectizeInput(
-              inputId =  ns('grabParam'),
-              # Create a label with an icon button
-              label = tags$span(
-                'Parameter',
-                # Create an icon button that trigger a modal to display the parameter description
-                actionButton(ns('grabParamHelper'), icon('question-circle'), class = 'icon-btn')
-              ),
-              choices = parseOptionsWithSections(
-                getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
-                'param_name'
-              ),
-              multiple = TRUE,
-              options = list(
-                'placeholder' = 'Select some parameters...',
-                'plugins' = list('remove_button')
-              )
-            )
-            # End grab-inputs
-          )
-          # End hidden object
-        )
-        # End download__specific-inputs
-      )
-      # End download__inputs
-    ),
-    # Create the data preview table output
-    div(
-      class = 'download__data-preview',
-      # Create a text output with a spinner
-      withSpinner(verbatimTextOutput(ns('preview')), type = 4, color = "#e24727", size = .5)
-    ),
-    # Add disclaimer if present
-    div(
-      class = 'download__data-privacy',
-      htmlOutput(ns('disclaimer'))
-    ),
-    # Create the download actions
-    div(
-      class = 'download__actions',
-      # Add the download or request button
-      htmlOutput(ns('button')),
-      # Clear form button
-      actionButton(ns('clear'), 'Clear', class = 'custom-style')
+      value = ns('mainDl')
     )
   )
 }
@@ -203,422 +62,49 @@ downloadTab <- function(input, output, session, pool, user, hfDf) {
 # 
 # Returns NULL
   
-  ## Download and request data logic according to authorization ###################
+  ## Call main download module ####################################################
   
-  # Look for user update
-  observeEvent(user$role, {
-    # Get the correct button depending on the user role
-    # Call the downloadData or requestData module
-    if (user$role == 'visitor') {
-      ui <- requestDataUI(session$ns('request'))
-      output$button <- renderUI(ui$button)
-      output$disclaimer <- renderUI(ui$disclaimer)
-      
-      # Create a reactive expression returning a list of the data selection inputs
-      dataSelectionInput <- reactive({
-        # Define the selected data
-        if (input$data == 'hfDf') {
-          data <- 'sensor'
-        } else {
-          data <- 'grab samples'
-        }
-        
-        # Create the returned list with all the inputs info
-        list(
-          'min' = input$time[1],
-          'max' = input$time[2],
-          'data' = data,
-          'dataFreq' = input$hfDataFreq,
-          'modeled' = input$addModeledData,
-          'sites' = sitesReactive_d(),
-          'parameters' = parameters()
-        )
-      })
-      
-      # Call the module
-      callModule(requestData, 'request', pool, selectedData, dataSelectionInput)
-    } else {
-      output$button <- renderUI(downloadDataUI(session$ns('download')))
-      output$disclaimer <- renderUI({})
-      callModule(downloadData, 'download', selectedData)
-    }
-  })
-  
-
-
-  
-
-  
-  
-  
-  ## Data specific inputs display logic ###########################################
-  
-  # Create an observeEvent that react to data selection changes
-  # Show and hide correct specific inputs depending on the selected data
-  observeEvent(input$data, {
-    df <- input$data
-    toggleElement(selector = '#download-hf-inputs', condition = df == 'hfDf')
-    toggleElement(selector = '#download-grab-inputs', condition = df == 'grabDf')
-  })
-  
-  
-  
-  ## Modeled data selection logic #################################################
-  
-  # Create observeEvent that react to frequence update
-  # Display addModeledData checkbox if the selected data frequence is 10min
-  observeEvent(input$hfDataFreq, ignoreInit = TRUE, {
-    toggleElement('addModeledData', condition = input$hfDataFreq == '10min')
-  })
+  callModule(downloadLayout, 'mainDl', pool, user, hfDf, mainDownload)
   
   
   
   
-  ## Multi selection inputs debouncing ############################################
+  ## Check authorization ##########################################################
   
-  # Debouce sites select input
-  sitesReactive <- reactive(input$sites)
-  sitesReactive_d <- debounce(sitesReactive, 1000)
-  
-  # Debounce HF parameters selection
-  hfParamReactive <- reactive(input$hfParam)
-  hfParamReactive_d <- debounce(hfParamReactive, 1000)
-  
-  # Debounce Grab parameters selection
-  grabParamReactive <- reactive(input$grabParam)
-  grabParamReactive_d <- debounce(grabParamReactive, 1000)
-  
-  
-  
-  
-  
-  ## Parameters selection logic ###################################################
-  
-  # Create a reactive expression that retrieve the selected parameters
-  parameters <- reactive({
-    inputDf <- input$data
-    if (inputDf == 'hfDf') {
-      getRows(
-        pool, 'sensor_params_plotting',
-        param_name %in% local(hfParamReactive_d()),
-        columns = 'data'
-      ) %>% pull()
-    } else if (inputDf == 'grabDf') {
-      # Get parameters info
-      parametersInfo <- getRows(
-        pool, 'grab_params_plotting',
-        param_name %in% local(grabParamReactive_d()),
-        columns = c('data', 'sd', 'min_max')
-      )
-      
-      # Get parameters
-      raw_params <- na.exclude(c(parametersInfo$data, parametersInfo$sd, parametersInfo$min_max))
-      
-      # Create an empty vector
-      params <- c()
-      # For each parameter unlist them and concatenate to params vector
-      for (param in raw_params) {
-        params <- c(params, unlist(str_split(param, ',')))
-      }
-      
-      # Return parameters
-      params
-    }
-  })
-  
-  
-  
-  
-  
-  ## Data filtering logic #########################################################
-  
-  # Create a reactive expression returning the selected data
-  selectedData <- reactive({
-    # Get df input
-    inputDf <- input$data
-    
-    # If th hf data is selected
-    if (inputDf == 'hfDf') {
-      df <- hfDf[[input$hfDataFreq]] %>%
-        # Filter rows
-        filter(
-          date(Date) >= input$time[1],
-          date(Date) <= input$time[2],
-          Site_ID %in% sitesReactive_d()
-        )
-      
-      # If the selected data is the raw HF data
-      if (input$hfDataFreq == '10min') {
-        # If add modeled data is selected
-        if (input$addModeledData) {
-          # Create a new df with the date and sites columns
-          newDf <- df %>% select(Date, Site_ID)
-          
-          # For each parameter create a combined column
-          for (parameter in parameters()) {
-            # Select the parameter columns
-            tmpDf <- df %>% select(starts_with(parameter), -ends_with('singlePoint'))
-            # Create combined column name
-            newcolName <- paste0(parameter, '_combined')
-            # Create the combined column
-            tmpDf %<>% mutate(!!newcolName := rowSums(tmpDf, na.rm=TRUE) * NA ^ !rowSums(!is.na(tmpDf)))
-            # Add parameter columns to the new df
-            newDf <- bind_cols(newDf, tmpDf)
-          }
-          
-          # Assigne the new df to the df
-          df <- newDf
-          
-          # Remove the tmpDf and newDf
-          rm(tmpDf, newDf, tmpSPCol)
-        } else {
-          # If modeled data is not selected
-          # Keep only the measured value and rename the columns
-          df %<>% select(Date, Site_ID, starts_with(parameters()), -ends_with(c('modeled', 'singlePoint')))
-        }
-      } else {
-        # For all the other HF data
-        # Select date, stations and all parameters
-        df %<>% select(Date, Site_ID, all_of(parameters()))
-      }
-      
-      # If the grab data is selected
-    } else if (inputDf == 'grabDf') {
-      # Get the data
-      df <- getRows(
-        pool = pool,
-        table = 'data',
-        station %in% local(sitesReactive_d()),
-        DATE_reading >= local(input$time[1]),
-        DATE_reading <= local(input$time[2]),
-        columns = c(
-          'station', 'DATE_reading', 'TIME_reading_GMT',
-          local(parameters())
-        )
-        # Parse the DATE and time
-      ) %>% mutate(
-        station = as.factor(station),
-        Date = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT')
-        # Rename for the download
-      ) %>% rename(
-        Site_ID = station
-        # Reorder columns and filter columns
-      ) %>% select(Date, Site_ID, all_of(parameters()))
-    } else {
-      # If no data is selected set df as an empty data.table
-      df <- data.table()
-    }
-    
-    # Convert df to data.table for print output
-    as.data.table(df)
-  })
-  
-  
-  
-  
-  ## Preview table rendering logic ################################################
-  
-  # Render the preview table and summary
-  output$preview <- renderPrint({
-    # Get selected data column names
-    columnsNames <- colnames(selectedData())
-    
-    # If date is present, display the min and max dates
-    # Else display NAs
-    if ('Date' %in% columnsNames) {
-      dateSummary <- selectedData() %>% summarise_if(is.POSIXct, list(
-        'Min' = min,
-        'Max' = max
-      ), na.rm = TRUE) %>% pivot_longer(everything(), names_to = 'Stat', values_to = 'Date') %>% 
-        as.data.table()
-    } else {
-      dateSummary <- data.table('Stats' = c('Min', 'Max'), 'Date' = c(NA, NA))
-    }
-    
-    # If Site_ID is present, display the selected stations and there number of observation
-    # Else display NAs
-    if ('Site_ID' %in% columnsNames) {
-      sitesSummary <- selectedData() %>% pull(Site_ID) %>% fct_count() %>%
-        rename(Station = 'f', N = 'n') %>% filter(N != 0) %>% as.data.table()
-    } else {
-      sitesSummary <- data.table('Station' = c(NA), 'N' = c(NA))
-    }
-    
-    
-    # If user as the right to see
-    if (user$role != 'visitor') {
-      # If there is at least one parameter selected
-      # Summarise each parameter
-      # Else display only Stat column
-      if (length(parameters()) > 0) {
-        parametersSummary <- selectedData() %>% summarise_if(is.numeric, list(
-          'Min' = ~ min(.x, na.rm = TRUE),
-          'Mean' = ~ mean(.x, na.rm = TRUE),
-          'Max' = ~ max(.x, na.rm = TRUE),
-          'NAs' = ~ sum(is.na(.x))
-        ))
-        
-        # If there is only one parameter and three or four columns set manually the summary columns names
-        # Else get them programmatically
-        if (length(parameters()) == 1 & length(columnsNames) %in% c(3, 4)) {
-          parametersSummary %<>% pivot_longer(everything(), names_to = 'Stat', values_to = columnsNames[3])
-        } else {
-          parametersSummary %<>% pivot_longer(everything(), names_to = c('.value', 'Stat'), names_pattern = '(.*)_(.*)')
-        }
-        
-        # Convert summary to data.table
-        parametersSummary %<>% as.data.table()
-      } else {
-        parametersSummary <- data.table('Stat' = c('Min', 'Mean', 'Max', 'NAs'))
-      }
-    }
-    
-
-    # Create print layout
-    cat('# Data summary:', '\n\n')
-    cat('## Date info', '\n\n')
-    print(dateSummary)
-    cat('\n')
-    cat('## Stations info', '\n\n')
-    print(sitesSummary)
-    cat('\n')
-    cat('## Parameters info', '\n\n')
-    # If user as the right to see it
-    if (user$role != 'visitor') {
-      print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)
-      cat('\n\n')
-      cat('---------------------------------------------------------------------------')
-      cat('\n\n')
-      cat('# Selected data preview:', '\n\n')
-      print(selectedData(), topn = 5, nrows = 15)
-    } else {
-      print(colnames(selectedData()))
-    }
-  })
-  
-  
-  ## Parameter description modal logic ############################################
-  
-  # Create an observeEvent that react to the HF parameter helper icon button
-  observeEvent(input$hfParamHelper | input$grabParamHelper, ignoreInit = TRUE, {
-    # Select the correct parameters df
-    if (input$data == 'hfDf') {
-      parameters <- getRows(pool, 'sensor_params_plotting', columns = c('option_name', 'description'))
-    } else if (input$data == 'grabDf') {
-      parameters <- getRows(pool, 'grab_params_plotting', columns = c('option_name', 'description'))
-    }
-    
-    # Render the descriptions UI in the modal
-    output$description <- renderUI({
-      descriptions <- tagList()
-      
-      # For each selected parameter
-      for (i in c(1:nrow(parameters))) {
-        descriptions <- tagList(
-          descriptions,
-          # Add the parameter name ad its description
-          div(
-            class = 'description-group',
-            h5(parameters %>% slice(i) %>% pull(option_name)),
-            p(
-              class = 'description',
-              parameters %>% slice(i) %>% pull(description)
-            )
-          )
-        )
-      }
-      
-      # Return the descriptions
-      return(descriptions)
-    })
-      
-    
-    # Create modal with the corresponding htmlOutput
-    showModal(modalDialog(
-      title = 'Parameter description',
-      htmlOutput(session$ns('description')),
-      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
-      easyClose = TRUE
-    ))
-  })
-  
-  
-  
-  
-  ## Data helpers logic ####################################################
-  
-  # Create an observeEvent that react to the data freq helper button
-  observeEvent(input$hfFreqHelper, ignoreInit = TRUE, {
-    showModal(modalDialog(
-      title = 'Sensor data frequency selection',
-      htmlTemplate('./html_components/data_freq_help.html', icon = icon('exclamation-triangle')),
-      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
-      easyClose = TRUE
-    ))
-  })
-  
-  # Create an observeEvent that react to modeled data helper button
-  observeEvent(input$modeledHelper, ignoreInit = TRUE, {
-    showModal(modalDialog(
-      title = 'Modeled data',
-      htmlTemplate('./html_components/data_modeled_help.html'),
-      footer = modalButtonWithClass('Dismiss', class = 'custom-style'),
-      easyClose = TRUE
-    ))
-  })
-  
-  
-  
-  
-  ## Date resetting logic #########################################################
-  
-  # Get min and max dates
-  grabMinMaxDates <- getMinMaxValues(pool, 'data', DATE_reading) %>%
-    mutate(across(everything(), ymd))
-  
-  minDate <- min(grabMinMaxDates$min, date(hfDf$`10min`$Date), na.rm = TRUE)
-  maxDate <- max(grabMinMaxDates$max, date(hfDf$`10min`$Date), na.rm = TRUE)
-  
-  # Create an observeEvent that allows to reset the date range when resetDateRange is clicked
-  observeEvent(input$resetDateRange, ignoreInit = TRUE, {
-    updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
-  })
-  
-  
-  
-  
-  ## Clear form logic #############################################################
-  
-  # Create an observeEvent that react to clear button
-  observeEvent(input$clear, ignoreInit = TRUE, {
-    # Add modal spinner to block user interaction
-    show_modal_spinner(spin = 'cube-grid', color = '#e24727',
-                       text = 'Clearing form...')
-    
-    # Clear data selection
-    updateSelectInput(session, 'data', selected = '')
-    
-    # Reset date range
-    updateDateRangeInput(session, 'time', start = minDate, end = maxDate)
-    
-    # Clear sites selection
-    updateSelectizeInput(session, 'sites', selected = '')
-    
-    # HF specific clearing
-    
-    # Reset data frequency and modeled data selection
-    updateRadioButtons(session, 'hfDataFreq', selected = '10min')
-    updateCheckboxInput(session, 'addModeledData', value = FALSE)
-    
-    # Clear parameters selection
-    updateSelectizeInput(session, 'hfParam', selected = '')
-    
-    # Grab specific clearing
-    
-    # Clear parameters selection
-    updateSelectizeInput(session, 'grabParam', selected = '')
-    
-    # Remove modal when finished
-    remove_modal_spinner()
-  })
+  # observeEvent(user$role, ignoreInit = TRUE, {
+  #   if (user$role %in% c('intern', 'sber', 'admin')) {
+  #     ## Get min and max dates ####################################################
+  #     
+  #     # Get grab data min and max dates
+  #     grabMinMaxDates <- getMinMaxValues(pool, 'data', DATE_reading) %>%
+  #       mutate(across(everything(), ymd))
+  #     
+  #     # Get min and max dates
+  #     minDate <- min(grabMinMaxDates$min, date(hfDf$`10min`$Date), na.rm = TRUE)
+  #     maxDate <- max(grabMinMaxDates$max, date(hfDf$`10min`$Date), na.rm = TRUE)
+  #     
+  #     
+  #     
+  #     ## Create Sensor vs Grab download  ##########################################
+  # 
+  #     # Append new tab
+  #     appendTab(
+  #       session$ns('downloadTabs'),
+  #       tabPanel(
+  #         title = 'Sensor VS Grab download',
+  #         downloadLayoutUI(
+  #           ns('sensorVSGrabDl'),
+  #           pool = pool,
+  #           minDate = minDate,
+  #           maxDate = maxDate,
+  #           innerModuleUI = mainDownloadUI
+  #         ),
+  #         value = session$ns('sensorVSGrabDl')
+  #       )
+  #     )
+  # 
+  #     # Call Sensor VS Grab download module
+  #     callModule(downloadLayout, 'mainDl', pool, user, hfDf, mainDownload)
+  #   }
+  # })
 }
