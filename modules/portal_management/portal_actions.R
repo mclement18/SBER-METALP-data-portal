@@ -54,7 +54,7 @@ portalActionsUI <- function(id) {
         tags$code('HF_data'),
         ' and zipped into a single archive file. It is advised to use the best compression method (e.g. ', tags$code(-9), ' option in UNIX command).'
       ),
-      p('Upload the zip archive to update the data files. The archive will be automatically unzipped and the existing files will be overwritten.'),
+      p('Upload the zip archive (max size 100MB) to update the data files. The archive will be automatically unzipped and the existing files will be overwritten.'),
       p('The latest uploaded archive can be downloaded via the Download button.'),
       div(
         class = 'file-input-and-download',
