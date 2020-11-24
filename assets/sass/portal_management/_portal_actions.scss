@@ -13,5 +13,14 @@
         h2 {
             margin: 0 0 .5em;
         }
+
+        .file-input-and-download {
+            display: flex;
+            align-items: flex-start;
+
+            > .btn {
+                margin: 0 1.5em 0 0;
+            }
+        }
     }
 }
