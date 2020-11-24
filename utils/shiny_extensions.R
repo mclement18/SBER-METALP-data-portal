@@ -102,6 +102,42 @@ modalButtonWithClass <- function(label, icon = NULL, class) {
 }
 
 
+
+fileInputWithClass <- function(inputId, label, class, multiple = FALSE, accept = NULL,
+                               width = NULL, buttonLabel = "Browse...", placeholder = "No file selected") {
+# Create a shiny fileInput with additional custom class names for the button
+# Parameters:
+# - inputId, label,
+#   multiple, accept,
+#   width, buttonLabel,
+#   placeholder:        Arguments from the Shiny file input
+# - class: String, contains the class names to add, separated by space
+#
+# Returns an updated shiny fileInput UI element
+  
+  # Create input
+  input <- fileInput(
+    inputId = inputId,
+    label = label,
+    multiple = multiple,
+    accept = accept,
+    width = width,
+    buttonLabel = buttonLabel,
+    placeholder = placeholder
+  )
+  
+  # Add class to button
+  input$children[[2]]$children[[1]]$children[[1]]$attribs$class <- paste(
+    input$children[[2]]$children[[1]]$children[[1]]$attribs$class,
+    class
+  )
+  
+  # Return the updated input
+  input
+}
+
+
+
 withAttributes <- function(textInput, ...) {
 # Takes a Shiny textInput or textAreaInput and add attribute to its input element
 # Parameters:

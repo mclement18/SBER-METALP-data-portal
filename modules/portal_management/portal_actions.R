@@ -41,6 +41,32 @@ portalActionsUI <- function(id) {
         ),
         actionButton(ns('delete'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary'),
       )
+    ),
+    div(
+      class = 'action',
+      h2('Upload and download sensor data'),
+      p('The three needed files',
+        tags$code('10min_data.csv'), ', ',
+        tags$code('6H_data.csv'), ', ',
+        tags$code('12H_data.csv'), ' and ',
+        tags$code('24H_data.csv'),
+        ' need to be in a diretory named ',
+        tags$code('HF_data'),
+        ' and zipped into a single archive file. It is advised to use the best compression method (e.g. ', tags$code(-9), ' option in UNIX command).'
+      ),
+      p('Upload the zip archive to update the data files. The archive will be automatically unzipped and the existing files will be overwritten.'),
+      p('The latest uploaded archive can be downloaded via the Download button.'),
+      div(
+        class = 'file-input-and-download',
+        downloadButton(ns('sensorDownload'), class = 'custom-style custom-style--primary'),
+        fileInputWithClass(
+          inputId = ns('upload'),
+          label = NULL,
+          accept = 'application/zip',
+          buttonLabel = span(icon('upload'), 'Upload'),
+          class = 'custom-style custom-style--primary'
+        )
+      )
     )
   )
 }
@@ -149,7 +175,7 @@ portalActions <- function(input, output, session) {
   
   
   
-  ## Delete logic ################################################################
+  ## Delete backup logic ################################################################
   
   # Delete button event
   observeEvent(input$delete, ignoreInit = TRUE, {
@@ -185,7 +211,7 @@ portalActions <- function(input, output, session) {
   
   
   
-  ## Download logic ################################################################
+  ## Download backup logic ################################################################
   
   # Create an observeEvent that react to backupFile to set downloadButton state
   observeEvent(input$backupFile, ignoreInit = TRUE, {
@@ -280,5 +306,129 @@ portalActions <- function(input, output, session) {
     # Close modal
     removeModal()
   })
+  
+  
+  
+  
+  
+  
+  ## Upload sensor data logic #####################################################
+  
+  # Create an observeEvent that react to file upload
+  observeEvent(input$upload, ignoreInit = TRUE, {
+    # Show spinner
+    show_modal_spinner(spin = 'cube-grid', color = '#e24727',
+                       text = 'Parsing zip file...')
+    
+    # Get uploaded file info
+    uploadedFile <- input$upload
+    # Check requirements
+    # Must be a zip file
+    if (uploadedFile$type != 'application/zip') {
+      showNotification('Please upload a zip archive file.', type = 'error')
+      # Remove spinner
+      remove_modal_spinner()
+      return()
+    }
+    # Cannot be empty
+    if (uploadedFile$size == 0) {
+      showNotification('File cannot be empty!', type = 'error')
+      # Remove spinner
+      remove_modal_spinner()
+      return()
+    }
+    
+    # Get zip content
+    content <- tryCatch(
+      {
+        system2('unzip', args = c('-l', uploadedFile$datapath), stdout = TRUE)
+      },
+      error = function(e) return(e$message)
+    )
+    
+    # Check for error
+    if (length(content) == 1) {
+      showNotification(
+        paste(
+          'Could not check zip content...',
+          content,
+          sep = '\n'
+        ),
+        type = 'error'
+      )
+      # Remove spinner
+      remove_modal_spinner()
+      return()
+    }
+    
+    # Parse content to matrix
+    content <- content[c(-1, -3, -(length(content)-1), -length(content))] %>%
+      str_trim() %>% str_split(pattern = '[:space:]+', simplify = TRUE)
+    
+    # Get content file names
+    content <- `colnames<-`(content, content[1,])[-1, 'Name']
+    
+    # Check content
+    if (!all(
+      # Only one folder
+      length(grep('/$', content)) == 1,
+      # Correct folder name
+      any(grepl('^HF_data/$', content)),
+      # Correct files
+      any(grepl('^HF_data/10min_data.csv$', content)),
+      any(grepl('^HF_data/6H_data.csv$', content)),
+      any(grepl('^HF_data/12H_data.csv$', content)),
+      any(grepl('^HF_data/24H_data.csv$', content))
+    )) {
+      showNotification('Zip file does not have the correct content...', type = 'error')
+      # Remove spinner
+      remove_modal_spinner()
+      return()
+    }
+    
+    # Copy zip file into data directory
+    # If the copy failed, notify and return
+    if (!file.copy(uploadedFile$datapath, './data/HF_data.zip', overwrite = TRUE)) {
+      showNotification('Could not copy the zip file to the data directory...', type = 'error')
+      # Remove spinner
+      remove_modal_spinner()
+      return()
+    }
+    
+    # Unzip
+    tryCatch(
+      {
+        system2('unzip', args = c('-o', './data/HF_data.zip', '-d', './data'))
+        showNotification('Successfully uploaded and unzipped new sensor data.', type = 'message')
+      },
+      error = function(e) showNotification(
+        paste(
+          'Could not unzip file...',
+          e$message,
+          sep = '\n'
+        ),
+        type = 'error'
+      )
+    )
+    
+    # Remove spinner
+    remove_modal_spinner()
+  })
+  
+  
+  
+  
+  
+  
+  ## Download sensor data logic ###################################################
+  
+  # Create download handler for sensor data
+  output$sensorDownload <- downloadHandler(
+    filename = 'HF_data.zip',
+    content = function(file) {
+      file.copy('./data/HF_data.zip', file)
+    },
+    contentType = 'application/zip'
+  )  
 }
 

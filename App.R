@@ -87,7 +87,7 @@ if (ENV == 'development') {
 # Load data loading functions
 source('./utils/data_preprocessing.R')
 
-hfDf <- loadHighFreqDf()
+# hfDf <- loadHighFreqDf()
 
 
 
@@ -203,13 +203,18 @@ ui <- tagList(
 ## Create server function #########################################################
 
 server <- function(input, output, session) {
-  ## Open specific tab when accessing the app #####################################
   
+  ## Open specific tab when accessing the app #####################################
   isolate({
     if ('tab' %in% names(getQueryString())) {
       updateNavbarPage(session, 'main-nav', selected = getQueryString()$tab)
     }
   })
+  
+  
+  ## Set maximum request size big enough for sensor data upload ###################
+  # Set it to 100MB
+  options(shiny.maxRequestSize=100*1024^2)
   
   
   

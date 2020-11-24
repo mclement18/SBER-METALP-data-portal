@@ -8,3 +8,6 @@ www/metalpdataportal.js
 secrets.R
 db_backups/*.sql
 restart.txt
+
+# keep empty folders
+!.keep
