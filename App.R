@@ -87,7 +87,7 @@ if (ENV == 'development') {
 # Load data loading functions
 source('./utils/data_preprocessing.R')
 
-# hfDf <- loadHighFreqDf()
+hfDf <- loadHighFreqDf()
 
 
 
