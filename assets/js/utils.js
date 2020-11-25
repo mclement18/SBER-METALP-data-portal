@@ -31,3 +31,9 @@ Utils.addBannerWidthCorrection = function() {
     this.setBannerWidth();
     window.addEventListener('resize', this.setBannerWidth);    
 };
+
+Utils.randomHex = function(n = 10) {
+    return Array.from(window.crypto.getRandomValues(new Uint8Array(n)))
+        .map(c => (c < 16 ? '0' : '') + c.toString(16))
+        .join([]);
+};

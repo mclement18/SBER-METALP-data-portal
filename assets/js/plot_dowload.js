@@ -4,13 +4,16 @@ PlotDownload.buildDownloadIcon = function(link) {
     const icon = document.createElement('i');
     icon.className = 'far fa-save';
 
+    const id = `download-icon-${Utils.randomHex()}`;
+
     const aTag = document.createElement('a');
+    aTag.id = id;
     aTag.href = link;
     aTag.download = 'metalp_plot.png';
     aTag.className = 'plot-download';
     aTag.appendChild(icon);
 
-    return aTag;
+    return [id, aTag];
 };
 
 PlotDownload.showDowloadIcon = function(image) {
@@ -19,16 +22,36 @@ PlotDownload.showDowloadIcon = function(image) {
     // Set class
     imageContainer.classList.add('has-download-icon');
     // Create download icon and add it
-    const dowloadIcon = this.buildDownloadIcon(image.src);
+    const [id, dowloadIcon] = this.buildDownloadIcon(image.src);
     imageContainer.appendChild(dowloadIcon);
+
+    return id;
 };
 
-PlotDownload.removeDowloadIcon = function(image) {
+PlotDownload.removeDowloadIcon = function(image, iconId) {
     // Get parent container
     const imageContainer = image.parentElement;
-    // Remove icon and class
-    imageContainer.removeChild(imageContainer.querySelector('.plot-download'));
-    imageContainer.classList.remove('has-download-icon');
+    if (iconId) {
+        // Remove icon
+        const downloadIcon = document.querySelector(`#${iconId}`);
+        if (downloadIcon) {
+            imageContainer.removeChild(downloadIcon);
+        }
+    } else {
+        // Remove all icons
+        imageContainer.querySelectorAll('.plot-download').forEach(icon => {
+            imageContainer.removeChild(icon);
+        });
+    }
+
+    // Remove class if no icon left
+    this.removeContainerClass(imageContainer);
+};
+
+PlotDownload.removeContainerClass = function(container) {
+    if (container.querySelector('.plot-download') === null) {
+        container.classList.remove('has-download-icon');
+    }
 };
 
 PlotDownload.addEventListeners = function() {
@@ -37,10 +60,11 @@ PlotDownload.addEventListeners = function() {
         const target = e.target;
 
         if (target.tagName === 'IMG') {
-            PlotDownload.showDowloadIcon(target);
+            PlotDownload.removeDowloadIcon(target);
+            const id = PlotDownload.showDowloadIcon(target);
 
             setTimeout(() => {
-                PlotDownload.removeDowloadIcon(target);
+                PlotDownload.removeDowloadIcon(target, id);
             }, 2000);
         }
     });
