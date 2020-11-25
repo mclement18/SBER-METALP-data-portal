@@ -24,33 +24,64 @@ connectToDB <- function() {
 
 ## Parameters validation and parsing #######################################################
 
-validInputString <- function(input) {
-  if (!is.character(input)) return(SQL('NULL'))
-  
-  if (input == '' | any(is.na(input)) | length(input) != 1) return(SQL('NULL'))
-  
-  return(input)
+# Decorator function using tinsel package
+validInputDecorator <- function(f) {
+  function(input, oldValue = NULL, ...) {
+    # Check for keyword to delete value
+    if (!is.null(input)) {
+      if (!is.na(input) & as.character(input) == 'NULL') return(SQL(input))
+    }
+    
+    # Run validation function
+    input <- f(input, ...)
+    
+    # Use oldValue if provided in case of NULL
+    if (!is.null(oldValue) & input == SQL('NULL')) {
+      oldValue
+    } else {
+      input
+    }
+  }
 }
 
+# Decorate function
+validInputString <- validInputDecorator(
+  function(input) {
+    if (!is.character(input)) return(SQL('NULL'))
+    
+    if (input == '' | any(is.na(input)) | length(input) != 1) return(SQL('NULL'))
+    
+    return(input)
+  }
+)
 
-validInputDate <- function(input) {
-  if (!is.Date(input)) input <- as_date(input)
-  
-  if (any(is.na(input)) | length(input) != 1) return(SQL('NULL'))
-  
-  return(as.character(input))
-}
 
 
-validInputNumber <- function(input, int = FALSE) {
-  if (!is.numeric(input)) input <- as.numeric(input)
-  
-  if (any(is.na(input)) |length(input) != 1) return(SQL('NULL'))
-  
-  if (int & !is.integer(input)) return(as.integer(input))
-  
-  return(input)
-}
+# Decorate function
+validInputDate <- validInputDecorator(
+  function(input) {
+    if (!is.Date(input)) input <- as_date(input)
+    
+    if (any(is.na(input)) | length(input) != 1) return(SQL('NULL'))
+    
+    return(as.character(input))
+  }
+)
+
+
+
+# Decorate function
+validInputNumber <- validInputDecorator(
+  function(input, int = FALSE) {
+    if (!is.numeric(input)) input <- as.numeric(input)
+    
+    if (any(is.na(input)) |length(input) != 1) return(SQL('NULL'))
+    
+    if (int & !is.integer(input)) return(as.integer(input))
+    
+    return(input)
+  }
+)
 
 
 
@@ -250,13 +281,11 @@ createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
 
 updateUser <- function(pool, user, username = '', password = '', role = '', active = TRUE) {
   # Check for valid input string
-  username <- validInputString(username)
+  username <- validInputString(username, user$name)
   password <- validInputString(password)
-  role <- validInputString(role)
+  role <- validInputString(role, user$role)
   
   # Use previous values if not defined
-  if (username == SQL('NULL')) username <- user$name
-  if (role == SQL('NULL')) role <- user$role
   if (!is.logical(active) | is.na(active)) active <- user$active
   
   # UPdate password only if a new one is provided
@@ -315,6 +344,7 @@ createData <- function(pool, station, DATE_reading, TIME_reading, Convert_to_GMT
 
 
 updateData <- function(pool, id, columns, values) {
+  browser()
   # Check for NA in inputs
   if (any(is.na(id)) | any(is.na(columns)) | any(is.na(values))) return('Inputs cannot contain NA.')
   # Validate id
@@ -325,8 +355,15 @@ updateData <- function(pool, id, columns, values) {
   if ('id' %in% columns) return('Columns to update cannot contain id.')
   # Validate values
   if (length(columns) != length(values)) return('Must provide the same number of columns and values.')
-  for (value in values) {
-    if (value == '') value <- SQL('NULL')
+  for (i in 1:length(values)) {
+    # If the value id an empty string ignore changes
+    if (values[[i]] == '') {
+      values <- values[-i]
+      columns <- columns[-i]
+      # Set value to SQL NULL (i.e. delete) only when explicitly asked via 'NULL' string
+    } else if (values[[i]] == 'NULL') {
+      values[[i]] <- SQL('NULL')
+    }
   }
   
   # Build base sql query
@@ -390,18 +427,11 @@ createStation <- function(pool, name, full_name, catchment, color, elevation = '
 
 updateStation <- function(pool, station, name = '', full_name = '', catchment = '', color = '', elevation = '') {
   # Check for valid input string
-  name <- validInputString(name)
-  full_name <- validInputString(full_name)
-  catchment <- validInputString(catchment)
-  color <- validInputString(color)
-  elevation <- validInputNumber(elevation, int = TRUE)
-  
-  # Use previous values if not defined
-  if (name == SQL('NULL')) name <- station$name
-  if (full_name == SQL('NULL')) full_name <- station$full_name
-  if (catchment == SQL('NULL')) catchment <- station$catchment
-  if (color == SQL('NULL')) color <- station$color
-  if (elevation == SQL('NULL')) elevation <- station$elevation
+  name <- validInputString(name, station$name)
+  full_name <- validInputString(full_name, station$full_name)
+  catchment <- validInputString(catchment, station$catchment)
+  color <- validInputString(color, station$color)
+  elevation <- validInputNumber(elevation, station$elevation, int = TRUE)
   
   # Create SQL query
   query <- sqlInterpolate(
@@ -457,26 +487,15 @@ createGbPlotOption <- function(pool, section_name, option_name, param_name, unit
 updateGbPlotOption <- function(pool, gbPlotOption, section_name = '', option_name = '', param_name = '', units = '', data = '',
                                sd = '', min_max = '', plot_func = '', description = '') {
   # Check for valid input string
-  section_name <- validInputString(section_name)
-  option_name <- validInputString(option_name)
-  param_name <- validInputString(param_name)
-  units <- validInputString(units)
-  data <- validInputString(data)
-  sd <- validInputString(sd)
-  min_max <- validInputString(min_max)
-  plot_func <- validInputString(plot_func)
-  description <- validInputString(description)
-  
-  # Use previous values if not defined
-  if (section_name == SQL('NULL')) section_name <- gbPlotOption$section_name
-  if (option_name == SQL('NULL')) option_name <- gbPlotOption$option_name
-  if (param_name == SQL('NULL')) param_name <- gbPlotOption$param_name
-  if (units == SQL('NULL')) units <- gbPlotOption$units
-  if (data == SQL('NULL')) data <- gbPlotOption$data
-  if (sd == SQL('NULL')) sd <- gbPlotOption$sd
-  if (min_max == SQL('NULL')) min_max <- gbPlotOption$min_max
-  if (plot_func == SQL('NULL')) plot_func <- gbPlotOption$plot_func
-  if (description == SQL('NULL')) description <- gbPlotOption$description
+  section_name <- validInputString(section_name, gbPlotOption$section_name)
+  option_name <- validInputString(option_name, gbPlotOption$option_name)
+  param_name <- validInputString(param_name, gbPlotOption$param_name)
+  units <- validInputString(units, gbPlotOption$units)
+  data <- validInputString(data, gbPlotOption$data)
+  sd <- validInputString(sd, gbPlotOption$sd)
+  min_max <- validInputString(min_max, gbPlotOption$min_max)
+  plot_func <- validInputString(plot_func, gbPlotOption$plot_func)
+  description <- validInputString(description, gbPlotOption$description)
   
   # Create SQL query
   query <- sqlInterpolate(
@@ -530,22 +549,13 @@ createSensorPlotOption <- function(pool, section_name, option_name, param_name, 
 updateSensorPlotOption <- function(pool, sensorPlotOption, section_name = '', option_name = '', param_name = '', units = '', data = '',
                                    grab_param_name = '', description = '') {
   # Check for valid input string
-  section_name <- validInputString(section_name)
-  option_name <- validInputString(option_name)
-  param_name <- validInputString(param_name)
-  units <- validInputString(units)
-  data <- validInputString(data)
-  grab_param_name <- validInputString(grab_param_name)
-  description <- validInputString(description)
-  
-  # Use previous values if not defined
-  if (section_name == SQL('NULL')) section_name <- sensorPlotOption$section_name
-  if (option_name == SQL('NULL')) option_name <- sensorPlotOption$option_name
-  if (param_name == SQL('NULL')) param_name <- sensorPlotOption$param_name
-  if (units == SQL('NULL')) units <- sensorPlotOption$units
-  if (data == SQL('NULL')) data <- sensorPlotOption$data
-  if (grab_param_name == SQL('NULL')) grab_param_name <- sensorPlotOption$grab_param_name
-  if (description == SQL('NULL')) description <- sensorPlotOption$description
+  section_name <- validInputString(section_name, sensorPlotOption$section_name)
+  option_name <- validInputString(option_name, sensorPlotOption$option_name)
+  param_name <- validInputString(param_name, sensorPlotOption$param_name)
+  units <- validInputString(units, sensorPlotOption$units)
+  data <- validInputString(data, sensorPlotOption$data)
+  grab_param_name <- validInputString(grab_param_name, sensorPlotOption$grab_param_name)
+  description <- validInputString(description, sensorPlotOption$description)
   
   # Create SQL query
   query <- sqlInterpolate(
@@ -590,14 +600,9 @@ createGrabParamCat <- function(pool, category, param_name, description = '') {
 
 updateGrabParamCat <- function(pool, grabParamCat, category = '', param_name = '', description = '') {
   # Check for valid input string
-  category <- validInputString(category)
-  param_name <- validInputString(param_name)
-  description <- validInputString(description)
-  
-  # Use previous values if not defined
-  if (category == SQL('NULL')) category <- grabParamCat$category
-  if (param_name == SQL('NULL')) param_name <- grabParamCat$param_name
-  if (description == SQL('NULL')) description <- grabParamCat$description
+  category <- validInputString(category, grabParamCat$category)
+  param_name <- validInputString(param_name, grabParamCat$param_name)
+  description <- validInputString(description, grabParamCat$description)
   
   # Create SQL query
   query <- sqlInterpolate(
@@ -693,26 +698,15 @@ createSensor <- function(pool, station = '', param_name, param_full, model, seri
 updateSensor <- function(pool, sensor, station = '', param_name = '', param_full = '', model = '', serial_nb = '',
                          installation_date = '', calibration_a = '', calibration_b = '', description = '') {
   # Check for valid input string
-  station <- validInputString(station)
-  param_name <- validInputString(param_name)
-  param_full <- validInputString(param_full)
-  model <- validInputString(model)
-  serial_nb <- validInputString(serial_nb)
-  installation_date <- validInputDate(installation_date)
-  calibration_a <- validInputNumber(calibration_a)
-  calibration_b <- validInputNumber(calibration_b)
-  description <- validInputString(description)
-  
-  # Use previous values if not defined
-  if (station == SQL('NULL')) station <- sensor$station
-  if (param_name == SQL('NULL')) param_name <- sensor$param_name
-  if (param_full == SQL('NULL')) param_full <- sensor$param_full
-  if (model == SQL('NULL')) model <- sensor$model
-  if (serial_nb == SQL('NULL')) serial_nb <- sensor$serial_nb
-  if (installation_date == SQL('NULL')) installation_date <- validInputDate(sensor$installation_date)
-  if (calibration_a == SQL('NULL')) calibration_a <- sensor$calibration_a
-  if (calibration_b == SQL('NULL')) calibration_b <- sensor$calibration_b
-  if (description == SQL('NULL')) description <- sensor$description
+  station <- validInputString(station, sensor$station)
+  param_name <- validInputString(param_name, sensor$param_name)
+  param_full <- validInputString(param_full, sensor$param_full)
+  model <- validInputString(model, sensor$model)
+  serial_nb <- validInputString(serial_nb, sensor$serial_nb)
+  installation_date <- validInputDate(installation_date, sensor$installation_date)
+  calibration_a <- validInputNumber(calibration_a, sensor$calibration_a)
+  calibration_b <- validInputNumber(calibration_b, sensor$calibration_b)
+  description <- validInputString(description, sensor$description)
   
   # Toggle read / unread
   query <- sqlInterpolate(

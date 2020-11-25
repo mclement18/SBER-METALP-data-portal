@@ -317,7 +317,7 @@ grabData <- function(input, output, session, pool) {
     data <- data()
     columns <- colnames(data)
     changes <- jsonlite::fromJSON(input$tableChanges)
-    
+    browser()
     # For each change
     for (i in c(1:nrow(changes))) {
       # Get the change
@@ -341,6 +341,9 @@ grabData <- function(input, output, session, pool) {
         } else if (grepl('^[[:digit:]]{2}/[[:digit:]]{2}/[[:digit:]]{4}$', value)) {
           value %<>% str_split(value, '/') %>%
             unlist() %>% rev() %>% paste(collapse = '-')
+        } else if (value == '') {
+          # Skip empty string
+          next
         }
       }
       

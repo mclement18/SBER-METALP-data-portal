@@ -3,6 +3,7 @@
     <p>Add a new row with the 'New Row' button. All fields are mandatory and the displayed format needs to be respected.</p>
     <p>Delete rows by selecting them and pressing the 'Delete' button.</p>
     <p>Edit the values by double clicking a cell. Once edited, the cell is greyed and the text color turns to orange. If the value has an invalid format, the cell background turns red.</p>
+    <p>Since empty cells are ignored during update to avoid unforseen mistakes, the <code>NULL</code> keyword must be entered to explicitly delete a non-mandatory value. Note that the cell will signal an invalid value to notify that the value will be deleted.</p>
     <p>Send the updates made in the table to the SQL DB by pressing the 'Update' button. After the update is performed, the table is refreshed. If a value is invalid, the corresponding row won't be updated and all its values will be restored to their original state due to the table refresh.</p>
     <p>The table can be refreshed by pressing the 'Refresh' button.</p>
     <p>Download the selected dataset by pressing the 'Download' button. Data is generated from the server, hence unsaved changes won't be downloaded.</p>
