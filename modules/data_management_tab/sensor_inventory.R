@@ -75,12 +75,6 @@ sensorInventory <- function(input, output, session, pool) {
              tableLoading = expression({
                # Use the reactive expression passed to the '...' as additional argument
                # To access the input$categoryFilter from the current module
-               if (siteFilter() == 'All') {
-                 sites <- getRows(pool, 'stations', columns = 'name') %>% pull()
-               } else {
-                 sites <- siteFilter()
-               }
-               
                if (paramFilter() == 'All') {
                  params <- getRows(pool, 'sensor_inventory', columns = 'param_name') %>% pull()
                } else {
@@ -88,23 +82,29 @@ sensorInventory <- function(input, output, session, pool) {
                }
                
                # Get rows
-               getRows(pool, 'sensor_inventory', param_name %in% params, station %in% sites) %>%
-                 # Cast data types
-                 mutate(
-                   installation_date = ymd(installation_date),
-                   across(ends_with('_at'), ymd_hms)
-                 )
+               if (siteFilter() == 'All') {
+                 rows <- getRows(pool, 'sensor_inventory', param_name %in% params)
+               } else {
+                 rows <- getRows(pool, 'sensor_inventory', param_name %in% params, station %in% local(siteFilter()))
+               }
+               
+               # Cast data types
+               rows %>% mutate(
+                 installation_date = ymd(installation_date),
+                 in_field = as.logical(in_field),
+                 across(ends_with('_at'), ymd_hms)
+               )
              }),
              templateInputsCreate = expression(
                inputsTemplate %>% select(
                  station, param_name, param_full, model, serial_nb,
-                 installation_date, calibration_a, calibration_b, description
+                 installation_date, in_field, calibration_a, calibration_b, description
                )
              ),
              templateInputsEdit = expression(
                selectedRow %>% select(
                  id, station, param_name, param_full, model, serial_nb,
-                 installation_date, calibration_a, calibration_b, description
+                 installation_date, in_field, calibration_a, calibration_b, description
                )
              ),
              creationExpr = expression(
@@ -116,6 +116,7 @@ sensorInventory <- function(input, output, session, pool) {
                  model = input$model,
                  serial_nb = input$serial_nb,
                  installation_date = input$installation_date,
+                 in_field = input$in_field,
                  calibration_a = input$calibration_a,
                  calibration_b = input$calibration_b,
                  description = input$description
@@ -131,6 +132,7 @@ sensorInventory <- function(input, output, session, pool) {
                  model = input$model,
                  serial_nb = input$serial_nb,
                  installation_date = input$installation_date,
+                 in_field = input$in_field,
                  calibration_a = input$calibration_a,
                  calibration_b = input$calibration_b,
                  description = input$description

@@ -75,9 +75,22 @@ validInputNumber <- validInputDecorator(
   function(input, int = FALSE) {
     if (!is.numeric(input)) input <- as.numeric(input)
     
-    if (any(is.na(input)) |length(input) != 1) return(SQL('NULL'))
+    if (any(is.na(input)) | length(input) != 1) return(SQL('NULL'))
     
     if (int & !is.integer(input)) return(as.integer(input))
+    
+    return(input)
+  }
+)
+
+
+
+# Decorate function
+validInputBool <- validInputDecorator(
+  function(input) {
+    if (!is.logical(input)) input <- as.numeric(input)
+    
+    if (any(is.na(input)) | length(input) != 1) return(SQL('NULL'))
     
     return(input)
   }
@@ -258,6 +271,7 @@ createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
   username <- validInputString(username)
   password <- validInputString(password)
   role <- validInputString(role)
+  active <- validInputBool(active)
   
   # Hash password before saving
   if (password != SQL('NULL')) {
@@ -284,9 +298,7 @@ updateUser <- function(pool, user, username = '', password = '', role = '', acti
   username <- validInputString(username, user$name)
   password <- validInputString(password)
   role <- validInputString(role, user$role)
-  
-  # Use previous values if not defined
-  if (!is.logical(active) | is.na(active)) active <- user$active
+  active <- validInputBool(active, user$active)
   
   # UPdate password only if a new one is provided
   if (password == SQL('NULL')) {
@@ -664,7 +676,7 @@ updateRequest <- function(pool, request) {
 ## Sensor inventory queries ###################################################################
 
 createSensor <- function(pool, station = '', param_name, param_full, model, serial_nb = '',
-                         installation_date = '', calibration_a = '', calibration_b = '', description = '') {
+                         installation_date = '', in_field = TRUE, calibration_a = '', calibration_b = '', description = '') {
   # Check for valid input string
   station <- validInputString(station)
   param_name <- validInputString(param_name)
@@ -672,6 +684,7 @@ createSensor <- function(pool, station = '', param_name, param_full, model, seri
   model <- validInputString(model)
   serial_nb <- validInputString(serial_nb)
   installation_date <- validInputDate(installation_date)
+  in_field <- validInputBool(in_field)
   calibration_a <- validInputNumber(calibration_a)
   calibration_b <- validInputNumber(calibration_b)
   description <- validInputString(description)
@@ -681,11 +694,11 @@ createSensor <- function(pool, station = '', param_name, param_full, model, seri
     pool,
     'INSERT INTO sensor_inventory
     (station, param_name, param_full, model, serial_nb,
-    installation_date, calibration_a, calibration_b, description)
+    installation_date, in_field, calibration_a, calibration_b, description)
     values(?station, ?param_name, ?param_full, ?model, ?serial_nb,
-    ?installation_date, ?calibration_a, ?calibration_b, ?description);',
+    ?installation_date, ?in_field, ?calibration_a, ?calibration_b, ?description);',
     station = station, param_name = param_name, param_full = param_full,
-    model = model, serial_nb = serial_nb, installation_date = installation_date,
+    model = model, serial_nb = serial_nb, installation_date = installation_date, in_field = in_field,
     calibration_a = calibration_a, calibration_b = calibration_b, description = description
   )
   
@@ -696,7 +709,7 @@ createSensor <- function(pool, station = '', param_name, param_full, model, seri
 
 
 updateSensor <- function(pool, sensor, station = '', param_name = '', param_full = '', model = '', serial_nb = '',
-                         installation_date = '', calibration_a = '', calibration_b = '', description = '') {
+                         installation_date = '', in_field = TRUE, calibration_a = '', calibration_b = '', description = '') {
   # Check for valid input string
   station <- validInputString(station, sensor$station)
   param_name <- validInputString(param_name, sensor$param_name)
@@ -704,6 +717,7 @@ updateSensor <- function(pool, sensor, station = '', param_name = '', param_full
   model <- validInputString(model, sensor$model)
   serial_nb <- validInputString(serial_nb, sensor$serial_nb)
   installation_date <- validInputDate(installation_date, sensor$installation_date)
+  in_field <- validInputBool(in_field, sensor$in_field)
   calibration_a <- validInputNumber(calibration_a, sensor$calibration_a)
   calibration_b <- validInputNumber(calibration_b, sensor$calibration_b)
   description <- validInputString(description, sensor$description)
@@ -713,11 +727,11 @@ updateSensor <- function(pool, sensor, station = '', param_name = '', param_full
     pool,
     'UPDATE sensor_inventory
     SET station = ?station, param_name = ?param_name, param_full = ?param_full,
-    model = ?model, serial_nb = ?serial_nb, installation_date = ?installation_date,
+    model = ?model, serial_nb = ?serial_nb, installation_date = ?installation_date, in_field = ?in_field,
     calibration_a = ?calibration_a, calibration_b = ?calibration_b, description = ?description
     WHERE id = ?id;',
     id = sensor$id, station = station, param_name = param_name, param_full = param_full,
-    model = model, serial_nb = serial_nb, installation_date = installation_date,
+    model = model, serial_nb = serial_nb, installation_date = installation_date, in_field = in_field,
     calibration_a = calibration_a, calibration_b = calibration_b, description = description
   )
   
