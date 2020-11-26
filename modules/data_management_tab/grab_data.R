@@ -336,6 +336,9 @@ grabData <- function(input, output, session, pool) {
       # If it is a date with the 'DD/MM/YYYY' format
       # Convert it to a 'YYYY-MM-DD' format
       if (is.character(value)) {
+        # Trim leading and trailing white spaces
+        value <- str_trim(value)
+        
         if (grepl('^[[:digit:].]+$', value)) {
           value <- as.numeric(value)
         } else if (grepl('^[[:digit:]]{2}/[[:digit:]]{2}/[[:digit:]]{4}$', value)) {
