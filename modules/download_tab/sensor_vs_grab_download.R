@@ -15,19 +15,46 @@ sensorVSGrabDownloadUI <- function(id, pool) {
   
   # Create the tagList containing the UI elements
   tagList(
-    # Grab parameter selection
+    # Public or global grab param selection
+    radioButtons(
+      inputId = ns('grabSelection'),
+      label = 'Grab selection',
+      choices = list(
+        'Grab table columns' = 'global',
+        'Public grab selection' = 'public'
+      )
+    ),
+    # Global grab parameter selection
     selectizeInput(
-      inputId =  ns('grabParam'),
+      inputId =  ns('globalGrabParam'),
       # Create a label with an icon button
       label = 'Grab parameters',
       choices = parseOptionsWithSections(
-        getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
-        'param_name'
+        getRows(pool, 'grab_param_categories', columns = c('category', 'param_name')),
+        valueColumn = 'param_name', sectionColumn = 'category', optionColumn = 'param_name'
       ),
       multiple = TRUE,
       options = list(
         'placeholder' = 'Select some parameters...',
         'plugins' = list('remove_button')
+      )
+    ),
+    # Hidden by default
+    hidden(
+      # Public grab parameter selection
+      selectizeInput(
+        inputId =  ns('grabParam'),
+        # Create a label with an icon button
+        label = 'Grab parameters',
+        choices = parseOptionsWithSections(
+          getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+          'param_name'
+        ),
+        multiple = TRUE,
+        options = list(
+          'placeholder' = 'Select some parameters...',
+          'plugins' = list('remove_button')
+        )
       )
     ),
     # High frequency data specific inputs
@@ -77,6 +104,8 @@ sensorVSGrabDownload <- function(input, output, session, pool, user, hfDf, selec
   # Debounce Grab parameters selection
   grabParamReactive <- reactive(input$grabParam)
   grabParamReactive_d <- debounce(grabParamReactive, 1000)
+  globalGrabParamReactive <- reactive(input$globalGrabParam)
+  globalGrabParamReactive_d <- debounce(globalGrabParamReactive, 1000)
   
   
   
@@ -84,36 +113,53 @@ sensorVSGrabDownload <- function(input, output, session, pool, user, hfDf, selec
   
   ## Parameters selection logic ###################################################
   
+  # Create an observeEvent that react to the grabSelection radio buttons
+  observeEvent(input$grabSelection, ignoreInit = TRUE, {
+    # Toggle grab parameters selection visibility depending on the grab selection
+    selection <- input$grabSelection
+    toggleElement('globalGrabParam', condition = selection == 'global')
+    toggleElement('grabParam', condition = selection == 'public')
+  })
+  
+  
+  
+  
   # Create a reactive expression that return the selected grab parameters
   grabParams <- reactive({
-    # Get parameters info
-    parametersInfo <- getRows(
-      pool, 'grab_params_plotting',
-      param_name %in% local(grabParamReactive_d()),
-      columns = c('data', 'sd', 'min_max')
-    )
-    
-    # Get parameters
-    raw_params <- na.exclude(c(parametersInfo$data, parametersInfo$sd, parametersInfo$min_max))
-    
-    # Create an empty vector
-    params <- c()
-    # For each parameter unlist them and concatenate to params vector
-    for (param in raw_params) {
-      params <- c(params, unlist(str_split(param, ',')))
+    # Use correct logic
+    if (input$grabSelection == 'global') {
+      # Returns column names
+      globalGrabParamReactive_d()
+    } else if (input$grabSelection == 'public') {
+      # Get parameters info
+      parametersInfo <- getRows(
+        pool, 'grab_params_plotting',
+        param_name %in% local(grabParamReactive_d()),
+        columns = c('data', 'sd', 'min_max')
+      )
+      
+      # Get parameters
+      raw_params <- na.exclude(c(parametersInfo$data, parametersInfo$sd, parametersInfo$min_max))
+      
+      # Create an empty vector
+      params <- c()
+      # For each parameter unlist them and concatenate to params vector
+      for (param in raw_params) {
+        params <- c(params, unlist(str_split(param, ',')))
+      }
+      
+      # Return parameters
+      params
     }
-    
-    # Return parameters
-    params
   })
   
   # Create a reactive expression that return the selected sensor parameters
   hfParams <- reactive({
-      getRows(
-        pool, 'sensor_params_plotting',
-        param_name %in% local(hfParamReactive_d()),
-        columns = 'data'
-      ) %>% pull()
+    getRows(
+      pool, 'sensor_params_plotting',
+      param_name %in% local(hfParamReactive_d()),
+      columns = 'data'
+    ) %>% pull()
   })
   
   
@@ -262,6 +308,7 @@ sensorVSGrabDownload <- function(input, output, session, pool, user, hfDf, selec
     
     # Clear parameters selection
     updateSelectizeInput(session, 'grabParam', selected = '')
+    updateSelectizeInput(session, 'globalGrabParam', selected = '')
   })
   
   
