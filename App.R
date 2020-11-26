@@ -214,7 +214,7 @@ server <- function(input, output, session) {
   
   ## Set maximum request size big enough for sensor data upload ###################
   # Set it to 100MB
-  options(shiny.maxRequestSize=100*1024^2)
+  options(shiny.maxRequestSize=200*1024^2)
   
   
   
