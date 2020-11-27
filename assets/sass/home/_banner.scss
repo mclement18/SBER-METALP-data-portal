@@ -58,7 +58,7 @@
         }
     }
 
-    @include tallscreens {
-        height: 100vh;
+    @include tall-and-wide {
+        height: calc(100vh - 154px);
     }
 }
