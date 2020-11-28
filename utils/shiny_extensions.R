@@ -370,6 +370,7 @@ pointHoverWidgetServer <- function(session, plotId, df, input,
         messageJSON <- toJSON(list(
           'pointInfo' = unbox(pointInfo),
           'mapping' = mapping,
+          'coords_css' = input()$coords_css,
           'coords_img' = input()$coords_img,
           'range' = input()$range,
           'x_y_labels' = x_y_labels,
