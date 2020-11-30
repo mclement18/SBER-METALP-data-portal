@@ -21,11 +21,11 @@ dataManagementTabUI <- function(id, pool, userRole) {
   # Create namespace
   ns <- NS(id)
   
-  # If the user is at least a sber member
-  if (userRole %in% c('sber', 'admin')) {
-    # Create a tabsetPanel to create sub navigation
-    tabsetPanel(
-      id = ns('dataTabs'),
+  # Create a tabsetPanel to create sub navigation
+  tabsetPanelWithNULL(
+    id = ns('dataTabs'),
+    # If the user is at least a sber member
+    if (userRole %in% c('sber', 'admin')) {
       # Add the grab samples data management tab
       tabPanel(
         # Tab title
@@ -33,7 +33,10 @@ dataManagementTabUI <- function(id, pool, userRole) {
         # Tab content
         grabDataUI(ns('grabData'), pool),
         value = ns('grabDataTab')
-      ),
+      )
+    } else NULL,
+    # If the user is at least a sber member
+    if (userRole %in% c('sber', 'admin')) {
       # And the sensor inventory tab
       tabPanel(
         # Tab title
@@ -41,42 +44,23 @@ dataManagementTabUI <- function(id, pool, userRole) {
         # Tab content
         sensorInventoryUI(ns('sensorsTab'), pool),
         value = ns('sensorsTab')
+      )
+    } else NULL,
+    # And the tools tab
+    navbarMenu(
+      # Menu title
+      'Tools',
+      tabPanel(
+        # Tab title
+        'Tools',
+        # Tab content
+        value = ns('toolsTab')
       ),
-      # And the tools tab
-      navbarMenu(
-        # Menu title
-        'Tools',
-        tabPanel(
-          # Tab title
-          'Tools',
-          # Tab content
-          value = ns('toolsTab')
-        ),
-        # Menu reference
-        menuName = 'toolsTabs',
-        icon = icon('tools')
-      )
+      # Menu reference
+      menuName = 'toolsTabs',
+      icon = icon('tools')
     )
-  } else {
-    # Create a tabsetPanel to create sub navigation
-    tabsetPanel(
-      id = ns('dataTabs'),
-      # With only the tools
-      navbarMenu(
-        # Menu title
-        'Tools',
-        tabPanel(
-          # Tab title
-          'Tools',
-          # Tab content
-          value = ns('toolsTab')
-        ),
-        # Menu reference
-        menuName = 'toolsTabs',
-        icon = icon('tools')
-      )
-    )
-  }
+  )
 }
 
 

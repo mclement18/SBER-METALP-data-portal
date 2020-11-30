@@ -39,6 +39,32 @@ navbarPageWithWrapper <- function(navbarPageOutput, wrapperClass = 'content-wrap
 
 
 
+
+tabsetPanelWithNULL <- function(..., id = NULL, selected = NULL, type = "tabs", position = NULL) {
+# Create a shiny tabsetPanel that accept NULL tabs
+# Parameters:
+# - ...: shiny tabPanels or NULL
+# - id, selected, type, position: shiny tabsetPanel arguments
+#
+# Returns an shiny tabsetPanel
+  browser()
+  # Get tabs and remove NULL values
+  args <- list(...)
+  args[sapply(args, is.null)] <- NULL
+  
+  # Add named parameters
+  args[['id']] <- id
+  args[['selected']] <- selected
+  args[['type']] <- type
+  args[['position']] <- position
+  
+  # Call tabsetPanel function
+  do.call(tabsetPanel, args)
+}
+
+
+
+
 withLoginAction <- function(navbarPageOutput, loginUI) {
 # Return a Shiny navbarPage with a login UI on the right of the nav bar
 # Parameters:
