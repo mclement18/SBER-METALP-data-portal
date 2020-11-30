@@ -30,7 +30,7 @@ grabSamplesTimeSeriesUI <- function(id, pool) {
       ),
       # Create an empty checkbox group input for station selection
       # Will update dynamically in function of the catchment
-      checkboxGroupInput(ns('sites'), 'Stations'),
+      checkboxGroupInput(ns('sites'), 'Station'),
       # Create a select input for parameter selection
       selectInput(
         ns('param'),

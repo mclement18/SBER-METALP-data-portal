@@ -43,7 +43,7 @@ downloadLayoutUI <- function(id, pool, minDate, maxDate, innerModuleUI) {
         # Site selection
         selectizeInput(
           inputId =  ns('sites'),
-          label = 'Stations',
+          label = 'Station',
           choices = parseOptionsWithSections(
             getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
             valueColumn = 'name',
@@ -216,10 +216,10 @@ downloadLayout <- function(input, output, session, pool, user, hfDf, innerModule
     cat('## Date info', '\n\n')
     print(dateSummary)
     cat('\n')
-    cat('## Stations info', '\n\n')
+    cat('## Station info', '\n\n')
     print(sitesSummary)
     cat('\n')
-    cat('## Parameters info', '\n\n')
+    cat('## Parameter info', '\n\n')
     # If user as the right to see it
     if (user$role != 'visitor') {
       print(parametersSummary, scientific = FALSE, drop0trailing = TRUE)

@@ -29,7 +29,7 @@ highFreqTimeSeriesUI <- function(id, pool) {
       checkboxGroupInputWithClass(
         checkboxGroupInput(
           ns('sites'),
-          'Stations',
+          'Station',
           choices = siteOptions,
           selected = siteOptions[[1]]
         ),

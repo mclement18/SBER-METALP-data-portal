@@ -92,7 +92,7 @@ downloadTab <- function(input, output, session, pool, user, hfDf) {
       appendTab(
         'downloadTabs',
         tabPanel(
-          title = 'Sensor VS Grab download',
+          title = 'Sensor vs Grab download',
           downloadLayoutUI(
             session$ns('sensorVSGrabDl'),
             pool = pool,

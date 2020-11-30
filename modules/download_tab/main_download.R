@@ -21,8 +21,8 @@ mainDownloadUI <- function(id, pool) {
       'Data',
       choices = list(
         'Choose data...' = '',
-        'Sensors data' = 'hfDf',
-        'Grab samples data' = 'grabDf'
+        'Sensor data' = 'hfDf',
+        'Grab sample data' = 'grabDf'
       )
     ),
     # Hide by default high frequency data inputs

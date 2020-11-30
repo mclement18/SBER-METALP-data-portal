@@ -45,7 +45,7 @@ portalActionsUI <- function(id) {
     div(
       class = 'action',
       h2('Upload and download sensor data'),
-      p('The four needed files',
+      p('The four requiered files',
         tags$code('10min_data.csv'), ', ',
         tags$code('6H_data.csv'), ', ',
         tags$code('12H_data.csv'), ' and ',
