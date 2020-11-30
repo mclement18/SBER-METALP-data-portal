@@ -104,15 +104,15 @@ portalActions <- function(input, output, session) {
     tryCatch(
       {
         # Create a new restart.txt in the app root directory
-        system2('touch', args = c('./restart.txt'))
+        system2('touch', args = c('./restart.txt'), stdout = TRUE, stderr = TRUE)
         
         # Refresh the page
         session$reload()
       },
-      error = function(e) showNotification(
+      warning = function(w) showNotification(
         paste(
           'Could not restart the app... ',
-          e$message,
+          w$message,
           sep = '\n'
         ),
         type = 'error'
@@ -145,31 +145,32 @@ portalActions <- function(input, output, session) {
     # host=<host>
     # port=<port>
     
-    tryCatch(
-      {
-        # Create file name
-        backupFile <- paste0('./db_backups/', gsub('[ :-]', '', Sys.time()), '_', MY_DB_NAME, '_dump.sql')
-        
-        # Create command
-        command <- 'mysqldump'
-        if (Sys.info()["sysname"] == 'Darwin') command <- paste0('/usr/local/mysql/bin/', command)
-        
-        # Create The backup
-        system2(command, args = c('--databases', MY_DB_NAME, '--add-drop-database', '-y'),
-                stdout = backupFile)
-        
-        # Show success
-        showNotification('DB backup successfully created!', type = 'message')
-      },
-      error = function(e) showNotification(
+    # Create file name
+    backupFile <- paste0('./db_backups/', gsub('[ :-]', '', Sys.time()), '_', MY_DB_NAME, '_dump.sql')
+    errorFile <- tempfile()
+    
+    # Create command
+    command <- 'mysqldump'
+    if (Sys.info()["sysname"] == 'Darwin') command <- paste0('/usr/local/mysql/bin/', command)
+    
+    # Create The backup
+    system2(command, args = c('--databases', MY_DB_NAME, '--add-drop-database', '-y'),
+            stdout = backupFile, stderr = errorFile)
+    
+    # If error
+    if (file.size(errorFile) > 0) {
+      showNotification(
         paste(
           'Could not backup the DB... ',
-          e$message,
+          readr::read_file(errorFile),
           sep = '\n'
         ),
         type = 'error'
       )
-    )
+    } else {
+      # Show success
+      showNotification('DB backup successfully created!', type = 'message')
+    }
   }
   
   
@@ -341,9 +342,9 @@ portalActions <- function(input, output, session) {
     # Get zip content
     content <- tryCatch(
       {
-        system2('unzip', args = c('-l', uploadedFile$datapath), stdout = TRUE)
+        system2('unzip', args = c('-l', uploadedFile$datapath), stdout = TRUE, stderr = TRUE)
       },
-      error = function(e) return(e$message)
+      warning = function(w) return(w$message)
     )
     
     # Check for error
@@ -398,13 +399,13 @@ portalActions <- function(input, output, session) {
     # Unzip
     tryCatch(
       {
-        system2('unzip', args = c('-o', './data/HF_data.zip', '-d', './data'))
+        system2('unzip', args = c('-o', './data/HF_data.zip', '-d', './data'), stdout = TRUE, stderr = TRUE)
         showNotification('Successfully uploaded and unzipped new sensor data.', type = 'message')
       },
-      error = function(e) showNotification(
+      warning = function(w) showNotification(
         paste(
           'Could not unzip file...',
-          e$message,
+          w$message,
           sep = '\n'
         ),
         type = 'error'
