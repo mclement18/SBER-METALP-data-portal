@@ -308,7 +308,6 @@ editableDT <- function(input, output, session, pool, tableName, element,
         scrollX = TRUE,
         columnDefs = list(list(targets = 0, visible = FALSE))
       )) %>%
-      formatDate(c('created_at', 'updated_at'), method = 'toUTCString') %>%
-      htmlwidgets::onRender('(el, x, data) => console.log([el, x, data])')
+      formatDate(c('created_at', 'updated_at'), method = 'toUTCString')
   })
 }

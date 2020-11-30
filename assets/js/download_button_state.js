@@ -10,7 +10,7 @@ DownloadButtonState.getButton = function(id) {
 // Enable download button (link) by removing 'onclick' attribute if present
 DownloadButtonState.enable = function(id) {
     const button = this.getButton(id);
-    if (button.hasAttribute('onclick')) {
+    if (button && button.hasAttribute('onclick')) {
         button.removeAttribute('onclick');
     }
 };
@@ -18,7 +18,7 @@ DownloadButtonState.enable = function(id) {
 // Disable download button (link) by adding 'onclick="return false;"' attribute if not present
 DownloadButtonState.disable = function(id) {
     const button = this.getButton(id);
-    if (!button.hasAttribute('onclick')) {
+    if (button && !button.hasAttribute('onclick')) {
         button.setAttribute('onclick', 'return false;');
     }
 };
