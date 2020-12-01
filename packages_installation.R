@@ -20,7 +20,8 @@ install.packages(
            "pool",
            "sodium",
            "DT",
-           "rhandsontable"
+           "rhandsontable",
+           "bigleaf"
   ),
   repos = 'https://cran.rstudio.com/'
 )
