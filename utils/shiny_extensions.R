@@ -47,7 +47,7 @@ tabsetPanelWithNULL <- function(..., id = NULL, selected = NULL, type = "tabs", 
 # - id, selected, type, position: shiny tabsetPanel arguments
 #
 # Returns an shiny tabsetPanel
-  browser()
+  
   # Get tabs and remove NULL values
   args <- list(...)
   args[sapply(args, is.null)] <- NULL
