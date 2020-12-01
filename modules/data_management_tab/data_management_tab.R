@@ -4,6 +4,7 @@
 
 source('./modules/data_management_tab/grab_data.R')
 source('./modules/data_management_tab/sensor_inventory.R')
+source('./modules/data_management_tab/parameter_calculations.R')
 
 
 
@@ -46,6 +47,17 @@ dataManagementTabUI <- function(id, pool, userRole) {
         value = ns('sensorsTab')
       )
     } else NULL,
+    # If the user is at least a sber member
+    if (userRole %in% c('sber', 'admin')) {
+      # And the sensor inventory tab
+      tabPanel(
+        # Tab title
+        'Parameter calculations',
+        # Tab content
+        parameterCalculationsUI(ns('calculationsTab'), pool),
+        value = ns('calculationsTab')
+      )
+    } else NULL,
     # And the tools tab
     navbarMenu(
       # Menu title
@@ -82,8 +94,10 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   if (userRole %in% c('sber', 'admin')) {
     # Call the grab data module
     callModule(grabData, 'grabData', pool)
-    # Call the grab data module
+    # Call the sensor inventory module
     callModule(sensorInventory, 'sensorsTab', pool)
+    # Call the parameter calculations module
+    callModule(parameterCalculations, 'calculationsTab', pool)
   }
 }
 

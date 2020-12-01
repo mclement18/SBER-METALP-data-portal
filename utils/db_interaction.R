@@ -740,3 +740,55 @@ updateSensor <- function(pool, sensor, station = '', param_name = '', param_full
 }
 
 
+
+
+
+
+## Parameter calculations queries ###################################################################
+
+createCalculation <- function(pool, param_category = '', column_calculated = '', calcul_func = '', columns_used = '') {
+  # Check for valid input string
+  param_category <- validInputString(param_category)
+  column_calculated <- validInputString(column_calculated)
+  calcul_func <- validInputString(calcul_func)
+  columns_used <- validInputString(columns_used)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO parameter_calculations
+    (param_category, column_calculated, calcul_func, columns_used)
+    values(?param_category, ?column_calculated, ?calcul_func, ?columns_used);',
+    param_category = param_category, column_calculated = column_calculated,
+    calcul_func = calcul_func, columns_used = columns_used
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
+updateCalculation <- function(pool, calculation, param_category = '', column_calculated = '', calcul_func = '', columns_used = '') {
+  # Check for valid input string
+  param_category <- validInputString(param_category, calculation$param_category)
+  column_calculated <- validInputString(column_calculated, calculation$column_calculated)
+  calcul_func <- validInputString(calcul_func, calculation$calcul_func)
+  columns_used <- validInputString(columns_used, calculation$columns_used)
+  
+  # Toggle read / unread
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE parameter_calculations
+    SET param_category = ?param_category, column_calculated = ?column_calculated,
+    calcul_func = ?calcul_func, columns_used = ?columns_used
+    WHERE id = ?id;',
+    id = calculation$id, param_category = param_category, column_calculated = column_calculated,
+    calcul_func = calcul_func, columns_used = columns_used
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)  
+}
+
+
