@@ -317,7 +317,7 @@ grabData <- function(input, output, session, pool) {
     data <- data()
     columns <- colnames(data)
     changes <- jsonlite::fromJSON(input$tableChanges)
-    browser()
+    
     # For each change
     for (i in c(1:nrow(changes))) {
       # Get the change
@@ -365,6 +365,9 @@ grabData <- function(input, output, session, pool) {
   # Update when update button is pressed
   observeEvent(input$update_top | input$update_bottom, ignoreInit = TRUE, {
     req(input$update_top != 0 | input$update_bottom != 0, length(updates) > 0)
+    # Show spinner
+    show_modal_spinner(spin = 'cube-grid', color = '#e24727',
+                       text = 'Updating DB...')
     
     # Get the updates as list
     updatesAsList <- reactiveValuesToList(updates)
@@ -396,6 +399,9 @@ grabData <- function(input, output, session, pool) {
     
     # Refresh table
     reloadData(reloadData() + 1)
+    
+    # Remove spinner
+    remove_modal_spinner()
   })
   
   

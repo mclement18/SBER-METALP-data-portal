@@ -35,7 +35,7 @@ calcMean <- function(df, ...) {
   # Check that df has only one row
   if (nrow(df) == 1) {
     # Calculate and return mean
-    avg <- df %>% pivot_longer(everything()) %>% pull(value) %>% mean(na.rm = TRUE)
+    avg <- df %>% tidyr::pivot_longer(everything()) %>% pull(value) %>% mean(na.rm = TRUE)
     if (is.nan(avg)) avg <- as.numeric(NA)
     return(avg)
   }
@@ -50,7 +50,7 @@ calcSd <- function(df, ...) {
   # Check that df has only one row
   if (nrow(df) == 1) {
     # Calculate and return stdev
-    stdev <- df %>% pivot_longer(everything()) %>% pull(value) %>% sd(na.rm = TRUE)
+    stdev <- df %>% tidyr::pivot_longer(everything()) %>% pull(value) %>% sd(na.rm = TRUE)
     if (is.nan(stdev)) stdev <- as.numeric(NA)
     return(stdev)
   }
@@ -213,14 +213,17 @@ runGlobalCalculations <- function(df, pool) {
   # Get the calculations info
   calcInfo <- getRows(
     pool, 'parameter_calculations',
-    columns = c('column_calculated', 'calc_func', 'columns_used')
+    columns = c('column_calculated', 'calcul_func', 'columns_used')
   )
   
   # Get df columns
   dfColumns <- colnames(df)
   
-  # Track errors
-  errors <- c()
+  # Track errors and warnings
+  errors <- list(
+    errors = c(),
+    warnings = list()
+  )
   
   # For each row of the df
   for (i in 1:nrow(df)) {
@@ -237,24 +240,49 @@ runGlobalCalculations <- function(df, pool) {
       
       # Check that requiered columns are in the df
       targetCol <- calculation %>% pull('column_calculated')
-      paramCols <- calculation %>% pull('columns_used')
+      paramCols <- calculation %>% pull('columns_used') %>%
+        str_split(',') %>% unlist()
       # If not go for the next calculation
-      if (!all(c(targetCol, paramCols) %in% dfColumns)) next
+      if (!all(c(targetCol, paramCols) %in% dfColumns)) {
+        if (is.null(errors$warnings[[targetCol]])) {
+          errors$warnings[[targetCol]] <- paste(
+            'Warning: Some of the indicated columns could not by found in the data.frame.',
+            paste('  Target column:', targetCol),
+            paste('  Used columns: ', paste(paramCols, collapse = ', ')),
+            sep = '\n'
+          )
+        }
+        next
+      }
       
       # Check that needed function exists
+      funcName <- pull(calculation, 'calcul_func')
       func <- tryCatch(
-        match.fun(pull(calculation, 'calc_func')),
+        match.fun(funcName),
         error = function(e) e
       )
       # If not go for the next calculation
-      if (inherits(func, 'error')) next
+      if (inherits(func, 'error')) {
+        if (is.null(errors$warnings[[funcName]])) {
+          errors$warnings[[funcName]] <- paste(
+            'Warning: The calculation function does not exists.',
+            paste('  Function:', funcName),
+            sep = '\n'
+          )
+        }
+        next
+      }
       
-      # Perform calculation and save update
+      # Perform calculation
       result <- func(
         df = select(row, all_of(paramCols)),
         pool = pool
       )
       
+      # Update row value for further calculations
+      row[targetCol] <- result
+      
+      # Save result to update the DB
       if (is.na(result)) {
         updates[[targetCol]] <- 'NULL'
       } else {
@@ -273,8 +301,8 @@ runGlobalCalculations <- function(df, pool) {
     
     # Parse error
     if (error != '') {
-      errors <- c(
-        errors,
+      errors$errors <- c(
+        errors$errors,
         paste0(row$station, ' ', row$DATE_reading, ' could not update... \n', error)
       )
     }

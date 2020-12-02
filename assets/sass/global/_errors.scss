@@ -7,3 +7,26 @@
     color: $red;
     margin: 0 0 1.5em;
 }
+
+.error-with-log {
+    .summary {
+        color: $red;
+
+        .show-hide {
+            margin: 0 0 0 1.5em;
+            font-size: .7em;
+        }
+    }
+
+    .error-log pre {
+        margin: 0;
+        font-weight: bold;
+        color: $red;
+
+        border: 1px solid $primary-color;
+        border-radius: 10px;
+        background: lighten($red, 48);
+
+        max-height: 500px;
+    }
+}

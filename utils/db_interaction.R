@@ -356,7 +356,6 @@ createData <- function(pool, station, DATE_reading, TIME_reading, Convert_to_GMT
 
 
 updateData <- function(pool, id, columns, values) {
-  browser()
   # Check for NA in inputs
   if (any(is.na(id)) | any(is.na(columns)) | any(is.na(values))) return('Inputs cannot contain NA.')
   # Validate id

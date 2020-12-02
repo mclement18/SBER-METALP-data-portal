@@ -5,6 +5,7 @@
 source('./modules/data_management_tab/grab_data.R')
 source('./modules/data_management_tab/sensor_inventory.R')
 source('./modules/data_management_tab/parameter_calculations.R')
+source('./utils/calculation_functions.R')
 
 
 

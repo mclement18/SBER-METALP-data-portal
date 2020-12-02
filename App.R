@@ -55,6 +55,8 @@ library(pool)
 library(dbplyr)
 library(DT)
 library(rhandsontable)
+library(promises)
+library(future)
 
 
 
@@ -78,6 +80,14 @@ if (ENV == 'development') {
   
   # Compile and minify JavaScript
   js_parser()
+  
+  # Plan future strategy
+  # Use multisession because the development version will run mainly within Rstudio
+  plan(multisession)
+} else {
+  # Plan future strategy
+  # Use multicore on the production server
+  plan(multicore)
 }
 
 

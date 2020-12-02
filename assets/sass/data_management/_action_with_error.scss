@@ -1,0 +1,16 @@
+// ####################################
+// Action with error
+// ####################################
+
+.action-with-error {
+    display: flex;
+    
+    .errors-and-warnings {
+        margin: 0;
+        max-width: 70%;
+    }
+
+    .action {
+        margin: 0 0 0 auto;
+    }
+}

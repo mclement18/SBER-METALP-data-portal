@@ -20,6 +20,17 @@ parameterCalculationsUI <- function(id, pool) {
       htmlTemplate('./html_components/parameter_calculations_info.html'),
       initStateHidden = TRUE
     ),
+    div(
+      class = 'action-with-error',
+      div(
+        class = 'errors-and-warnings',
+        uiOutput(ns('caculationError'))
+      ),
+      div(
+        class = 'action',
+        actionButton(ns('calculate'), 'Make Global Calculation', class = 'custom-style custom-style--primary')
+      )
+    ),
     h3('Filter by:'),
     div(
       class = 'data-filter',
@@ -51,11 +62,110 @@ parameterCalculations <- function(input, output, session, pool) {
 # 
 # Returns NULL
   
-  # Call instruction panel module
+  ## Calculation logic ############################################################
+  
+  # Create an observeEvent that react to the calculate button
+  observeEvent(input$calculate, ignoreInit = TRUE, {
+    # Show spinner
+    show_modal_spinner(spin = 'cube-grid', color = '#e24727',
+                       text = 'Running calculations...')
+    
+    # Run calculations asynchronously
+    future(
+      {
+        # Source the needed files
+        source('./secrets.R')
+        source('./utils/calculation_functions.R')
+        
+        # Open pool connection for the new session
+        pool <- connectToDB()
+        
+        # Get data
+        df <- getRows(pool, 'data')
+        
+        # Make calculations
+        result <- runGlobalCalculations(df, pool)
+        
+        # Close opened pool
+        poolClose(pool)
+        
+        # Return result from calculations
+        result
+      },
+      # Bind needed packages to the new session
+      packages = c('DBI', 'pool', 'RMySQL', 'dplyr', 'dbplyr', 'magrittr')
+      # Once completed
+    ) %...>% (function(result) {
+      # Get errors and warnings
+      errors <- result$errors
+      warnings <- result$warnings
+      
+      # Parse errors and warnings
+      if (length(errors) == 0 & length(warnings) == 0) {
+        # If all went good show notif and remove error log
+        showNotification('All calculations successfully completed.', type = 'message')
+        output$caculationError <- renderUI({})
+      } else {
+        # Else show notif and error log
+        showNotification('Calculations completed with errors and/or warnings.', type = 'error')
+        output$caculationError <- renderUI(
+          htmlTemplate(
+            './html_components/error_with_log.html',
+            errorNb = length(errors),
+            warningNb = length(warnings),
+            showHideButton = actionLink(session$ns('showLog'), 'show log', class = 'custom-links'),
+            errors = hidden(
+              pre(
+                id = session$ns('log'),
+                paste(
+                  'Errors:',
+                  '-----------\n',
+                  paste(errors, collapse = '\n\n'),
+                  '',
+                  'Warnings:',
+                  '-----------\n',
+                  paste(warnings, collapse = '\n\n')
+                ),
+                sep = '\n'
+              )
+            )
+          )
+        )
+      }
+      # Remove spinner
+    }) %>% finally(remove_modal_spinner)
+  })
+  
+  # Track log visibility
+  showErrorLog <- reactiveVal(FALSE)
+  
+  # Show or hide log
+  observeEvent(input$showLog, ignoreInit = TRUE, {
+    # Toggle showErrorLog
+    showErrorLog(!showErrorLog())
+    
+    # Toggle error log visibility
+    toggleElement('log', anim = TRUE, condition = showErrorLog())
+    
+    # Update link name
+    if (showErrorLog()) label <- 'hide log' else label <- 'show log'
+    updateActionLink(session, 'showLog', label = label)
+  })
+  
+  
+  
+  
+  
+  
+  ## Call instruction panel module ################################################
+  
   callModule(instructionsPanel, 'info', initStateHidden = TRUE)
   
   
-  # Call editableDT module
+  
+  
+  ## Call editableDT module #######################################################
+  
   callModule(editableDT, 'calculations', pool = pool, tableName = 'parameter_calculations', element = 'calculation',
              tableLoading = expression({
                # Use the reactive expression passed to the '...' as additional argument
