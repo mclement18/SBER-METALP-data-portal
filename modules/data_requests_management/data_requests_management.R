@@ -179,7 +179,7 @@ requestsManagement <- function(input, output, session, pool, navbarSession, navb
     requests <- loadRequests()[input$table_rows_selected,]
     
     # Update each request
-    for (i in nrow(requests)) {
+    for (i in 1:nrow(requests)) {
       # Get request
       request <- slice(requests, i)
       
