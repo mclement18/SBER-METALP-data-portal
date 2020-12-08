@@ -89,7 +89,7 @@ calcAlt2BP <- function(df, pool, ...) {
     station <- df %>% pull('station')
     temp <- df %>% pull('WTW_Temp_degC_1')
     # Get elevation
-    elev <- getRows(pool, 'stations', name == station, columns = 'elevation')
+    elev <- getRows(pool, 'stations', name == station, columns = 'elevation') %>% pull()
     
     # If there is an elevation and a temp, calculate the pressure
     if (!any(is.na(c(elev, temp)))) {
@@ -108,7 +108,7 @@ calcAlt2BP <- function(df, pool, ...) {
 
 calcCO2corr <- function(df, ...) {
   # Check for the presence of the correct columns
-  if (nrow(df) == 1 & ncol(df) == 3 & all(c('WTW_Temp_degC_1', 'Field_BP', 'Field_BP_altitude') %in% colnames(df))) {
+  if (nrow(df) == 1 & ncol(df) == 4 & all(c('WTW_Temp_degC_1', 'Field_BP', 'Field_BP_altitude') %in% colnames(df))) {
     rawCO2 <- df %>% pull(1)
     temp <- df %>% pull('WTW_Temp_degC_1')
     fieldPressure <- df %>% pull('Field_BP')
