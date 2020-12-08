@@ -208,3 +208,51 @@ isValidEmail <- function(x) {
   grepl("\\<[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\>", as.character(x), ignore.case=TRUE)
 }
 
+
+
+coalesce_join <- function(x, y,
+                          by = NULL, suffix = c(".x", ".y"),
+                          join = dplyr::full_join, ...) {
+# Perform a coalescing join
+# Data from x will always be prioritized over the data from y
+# Parameters:
+#  - x, y: Data.frames, df to join
+#  - by: Character vector, columns names to join by
+#  - suffix: Character vector, suffix to add when joining, default: c('.x', '.y')
+#  - join: Function, joining function, default: dplyr::full_join()
+#  - ...: Other parameters to pass to the joining function
+# 
+# Return a data.frame
+  
+  # Perform the join
+  joined <- join(x, y, by = by, suffix = suffix, ...)
+  # names of desired output (e.i. names of the two df columns)
+  cols <- union(names(x), names(y))
+  
+  # Get the names of the duplicated columns
+  to_coalesce <- names(joined)[!names(joined) %in% cols]
+  # Index which suffix is used for each name
+  suffix_used <- suffix[ifelse(endsWith(to_coalesce, suffix[1]), 1, 2)]
+  # remove suffixes and deduplicate
+  to_coalesce <- unique(substr(
+    to_coalesce,
+    1,
+    nchar(to_coalesce) - nchar(suffix_used)
+  ))
+  
+  # Coalesce the duplicated columns
+  suppressMessages(
+    coalesced <- purrr::map_dfc(to_coalesce, ~coalesce(
+      joined[[paste0(.x, suffix[1])]],
+      joined[[paste0(.x, suffix[2])]]
+    ))
+  )
+  # Rename columns
+  names(coalesced) <- to_coalesce
+  
+  # Merge the joined df and the coalesced columns
+  bind_cols(joined, coalesced) %>%
+    # Remove duplicated columns by only selecting the wanted columns
+    select(all_of(cols))
+}
+
