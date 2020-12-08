@@ -32,6 +32,16 @@ CustomHandsontable.numericRenderer = function (hotInstance, td, row, column, pro
     }
 };
 
+// Create the tool table renderer that use the numeric renderer and set reaonly values
+CustomHandsontable.toolTableRenderer = function (hotInstance, td, row, column, prop, value, cellProperties) {
+    CustomHandsontable.numericRenderer.apply(this, arguments);
+
+    const cellMeta = hotInstance.getCellMeta(row, column);
+    if (cellMeta.className && cellMeta.className.includes('prefilled')) {
+        cellProperties.readOnly = true;
+    }
+};
+
 // Set table input
 CustomHandsontable.setInputId = function (tableDOM, attrName, inputId) {
     tableDOM.dataset[attrName] = inputId;
@@ -123,4 +133,50 @@ CustomHandsontable.grabDataOnRenderCallback = function (el, x, data) {
     const hot = this.hot;
     CustomHandsontable.onChange(el, hot, data.onChangeId);
     CustomHandsontable.afterSelection(el, hot, data.afterSelectionId);
+};
+
+CustomHandsontable.readOnlyPrefilledValues = function (hot) {
+    const data = hot.getData();
+
+    for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        for (let j = 0; j < row.length; j++) {
+            const value = row[j];
+            if (j !== 0 && value !== '' && value !== null) {
+                hot.setCellMeta(i, j, 'className', 'prefilled');
+            }
+        }
+    }
+
+    // Rerender table to apply changes
+    // Need to call twice so that all rows are re-rendered... '-__-
+    hot.render();
+    hot.render();
+};
+
+CustomHandsontable.onChangeToolTableCallback = function (changes) {
+    if (changes) {
+        changes.forEach(([row, col, oldValue, newValue]) => {
+            if (oldValue !== newValue && !(oldValue === null && newValue === '')) {
+                this.setCellMeta(row, col, 'className', 'changed');
+                this.render();
+            }
+        });
+    }
+};
+
+CustomHandsontable.onChangeToolTable = function (hot) {
+    // Remove hook in case of multiple rendering from shiny
+    hot.removeHook('afterChange', CustomHandsontable.onChangeToolTableCallback);
+    // Add hook
+    hot.addHook('afterChange', CustomHandsontable.onChangeToolTableCallback);
+};
+
+// Create onRender callback for the grab data table
+CustomHandsontable.toolTableOnRenderCallback = function (el, x, data) {
+    const hot = this.hot;
+    CustomHandsontable.onChangeToolTable(hot);
+    if (!data.canUpdate) {
+        CustomHandsontable.readOnlyPrefilledValues(hot);
+    }
 };

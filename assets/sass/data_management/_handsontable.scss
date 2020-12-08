@@ -12,11 +12,6 @@
 
     .handsontable {
         margin: 0 0 1.5em;
-    
-        .changed:not(.htInvalid) {
-            color: $primary-color;
-            background: $grey5;
-        }
     }
 
     .RH-table-actions {
@@ -24,5 +19,12 @@
         justify-content: space-between;
     
         margin: 0 0 1.5em;
+    }
+}
+
+.handsontable {
+    .changed:not(.htInvalid) {
+        color: $primary-color;
+        background: $grey5;
     }
 }
