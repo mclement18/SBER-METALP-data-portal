@@ -54,7 +54,7 @@ downloadLayoutUI <- function(id, pool, minDate, maxDate, innerModuleUI) {
           options = list(
             'placeholder' = 'Select some stations...',
             'plugins' = list('remove_button')
-          ),
+          )
         )
       ),
       # Create download data specific inputs
