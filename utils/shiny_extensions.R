@@ -567,16 +567,60 @@ confirmationModal <- function(text = '', session = getDefaultReactiveDomain(), n
 }
 
 
-clearReactiveValues <- function(rv) {
+
+clearReactiveValues <- function(rv, fromInput = FALSE, id = NULL) {
 # Clear the values from a list of reactive values created by reactiveValues()
+# Or from the global input given a module id
 # Parameters:
-#  - rv: ReactiveValues, the list of reactive values to clear
+#  - rv: ReactiveValues, the list of reactive values to clear or the input variable
+#  -fromInput: Boolean, indicates whether the passed reactive values is the input or not, default: FALSE
+#  - id: String, the id used to select the inputs to delete. To use with fromInput = TRUE.
+#        If NULL, the entire inputs will be cleared. Default NULL.
 # 
 # Returns NULL
+  
+  # Get the rv names
+  if (fromInput) {
+    if (is.null(id)) {
+      # If is input and no id, take all names
+      rvNames <- .subset2(rv, "impl")$names()
+    } else {
+      # If input and id, take the matching names
+      rvNames <- grep(id, .subset2(rv, "impl")$names(), value = TRUE)
+    }
+  } else {
+    # If reactiveValues, take the names
+    rvNames <- names(rv)
+  }
 
+  # Remove the selected values
   invisible(
-    lapply(names(rv), function(i) {
+    lapply(rvNames, function(i) {
       .subset2(rv, "impl")$.values$remove(i)
+    })
+  )
+}
+
+
+
+destroyObservers <- function(observers) {
+# Destroy all observers stored in a list
+# And do it recursively if any list value contains a list
+# Parameters:
+#  - observers: List, the list of reactive values containing observers to destroy
+# 
+# Returns NULL
+  
+  # Destroy observers
+  invisible(
+    lapply(names(observers), function(name) {
+      # If it is an observer, destroy it
+      if ('Observer' %in% class(observers[[name]])) {
+        observers[[name]]$destroy()
+        # If it is a reactive values, destroy the observers recursively
+      } else if (is.list(observers[[name]])) {
+        destroyObservers(observers[[name]])
+      }
     })
   )
 }
