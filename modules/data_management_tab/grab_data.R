@@ -227,11 +227,6 @@ grabData <- function(input, output, session, pool) {
   observeEvent(input$new_top | input$new_bottom, ignoreInit = TRUE, {
     req(input$new_top != 0 | input$new_bottom != 0)
     
-    # Create template for inputs
-    inputsTemplate <- data() %>%
-      select(station, DATE_reading, TIME_reading, Convert_to_GMT, TIME_reading_GMT) %>%
-      head(0)
-    
     # Create and show modal with inputs
     showModal(modalDialog(
       title = 'New Data Entry', size = 's',
