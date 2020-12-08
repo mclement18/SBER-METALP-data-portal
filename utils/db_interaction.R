@@ -407,6 +407,25 @@ updateData <- function(pool, id, columns, values) {
 
 
 
+getDates <- function(pool, ...) {
+  # Get data table and filter it
+  pool %>% tbl('data') %>% filter(...) %>%
+    # Select the DATE and TIME
+    select(DATE_reading, TIME_reading_GMT) %>%
+    # Perform query
+    collect() %>% 
+    # Create the DATETIME
+    mutate(
+      Date = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT')
+    ) %>%
+    # Order dates in an ascending order
+    arrange(Date) %>%
+    # Return a vector of dates
+    pull('Date')
+}
+
+
+
 
 
 
