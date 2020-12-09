@@ -9,6 +9,7 @@
 # Some function will need to get passed the connection to the db get further info
 # Otherwise unused parameters will be ignored
 # All the functions will return a single calculated numerical value
+# Or the string 'KEEP OLD' if the value must not be updated
 
 calcMinus <- function(df, ...) {
   # Check that the df has only 2 columns 1 row
@@ -36,7 +37,7 @@ calcMean <- function(df, ...) {
   if (nrow(df) == 1) {
     # Calculate and return mean
     avg <- df %>% tidyr::pivot_longer(everything()) %>% pull(value) %>% mean(na.rm = TRUE)
-    if (is.nan(avg)) avg <- as.numeric(NA)
+    if (is.nan(avg)) avg <- 'KEEP OLD'
     return(avg)
   }
   
@@ -51,7 +52,7 @@ calcSd <- function(df, ...) {
   if (nrow(df) == 1) {
     # Calculate and return stdev
     stdev <- df %>% tidyr::pivot_longer(everything()) %>% pull(value) %>% sd(na.rm = TRUE)
-    if (is.nan(stdev)) stdev <- as.numeric(NA)
+    if (is.nan(stdev)) stdev <- 'KEEP OLD'
     return(stdev)
   }
   
@@ -279,14 +280,17 @@ runGlobalCalculations <- function(df, pool) {
         pool = pool
       )
       
-      # Update row value for further calculations
-      row[targetCol] <- result
-      
-      # Save result to update the DB
-      if (is.na(result)) {
-        updates[[targetCol]] <- 'NULL'
-      } else {
-        updates[[targetCol]] <- result
+      # Check if update
+      if (result != 'KEEP OLD') {
+        # Save result to update the DB
+        # And update row value for further calculations
+        if (is.na(result)) {
+          row[targetCol] <- as.numeric(NA)
+          updates[[targetCol]] <- 'NULL'
+        } else {
+          row[targetCol] <- result
+          updates[[targetCol]] <- result
+        }
       }
     }
     
