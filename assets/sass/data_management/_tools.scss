@@ -1,0 +1,17 @@
+// ####################################
+// Tools layout
+// ####################################
+
+.tool-layout {
+    .calculation-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin: 0 0 1.5em;
+
+        h4 {
+            margin: 0;
+        }
+    }
+}

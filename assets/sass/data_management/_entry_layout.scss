@@ -1,0 +1,115 @@
+// ####################################
+// Tool entry layout
+// ####################################
+
+.entry-layout{
+    margin: 0;
+    padding: 1em;
+    border: 1px solid $grey2;
+    border-radius: 10px;
+    
+    .header {
+        position: relative;
+        padding: 0 25px 0 0;
+
+        .show-hide {
+            position: absolute;
+            top: 5px;
+            right: 0;
+        }
+    }
+}
+
+.entry-actions {
+    .btn {
+        margin: 0 0 10px;
+    }
+
+    .form-group {
+        margin: 0;
+        
+        .selectize-control {
+            margin: 0;
+        }
+    }
+
+    @include tablet {
+        display: flex;
+        justify-content: space-between;
+
+        .btn,
+        .form-group {
+            margin:  0 10px 0 0;
+        }
+    }
+}
+
+.entry-content {
+    margin: 1.5em 0 0;
+
+    .dates {
+        margin: 0 0 1.5em;
+
+        .date {
+            margin: 0 0 1em;
+
+            &:last-child {
+                margin: 0;
+            }
+        }
+    }
+
+    .date {
+        color: $black;
+
+        .shiny-text-output {
+            color: $grey4;
+        }
+    }
+
+    .tool-layout {
+        margin: 0 0 1.5em;
+    }
+
+    @include tablet {
+        .dates {
+            display: flex;
+            
+            .date {
+                margin: 0 1em 0 0;
+            }
+        }
+    }
+}
+
+.entry-errors {
+    .success,
+    .error,
+    .warning {
+        margin: 0 0 1em;
+        padding: 10px;
+        border-radius: 5px;
+
+        &:last-child {
+            margin: 0;
+        }
+    }
+
+    .success {
+        border: 1px solid $green;
+        background: lighten($green, 47);
+        color: $green;
+    }
+
+    .error {
+        border: 1px solid $red;
+        background: lighten($red, 47);
+        color: $red;
+    }
+
+    .warning {
+        border: 1px solid $orange;
+        background: lighten($orange, 45);
+        color: $orange;
+    }
+}
