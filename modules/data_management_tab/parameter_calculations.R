@@ -66,6 +66,15 @@ parameterCalculations <- function(input, output, session, pool) {
   
   # Create an observeEvent that react to the calculate button
   observeEvent(input$calculate, ignoreInit = TRUE, {
+    # Show confirmation modal
+    confirmationModal('By clicking YES all the listed columns for the entire grab data table will be recalculated based on the actual state of the table.')
+  })
+  
+  # Create an observeEvent that react to the YES button from the confirmation modal
+  observeEvent(input$YES, ignoreInit = TRUE, {
+    # Remove confirmation modal
+    removeModal()
+    
     # Show spinner
     show_modal_spinner(spin = 'cube-grid', color = '#e24727',
                        text = 'Running calculations...')
