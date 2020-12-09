@@ -175,8 +175,11 @@ CustomHandsontable.onChangeToolTable = function (hot) {
 // Create onRender callback for the grab data table
 CustomHandsontable.toolTableOnRenderCallback = function (el, x, data) {
     const hot = this.hot;
-    CustomHandsontable.onChangeToolTable(hot);
-    if (!data.canUpdate) {
-        CustomHandsontable.readOnlyPrefilledValues(hot);
+    // Customize table
+    if (!data.readOnly) {
+        CustomHandsontable.onChangeToolTable(hot);
+        if (!data.canUpdate) {
+            CustomHandsontable.readOnlyPrefilledValues(hot);
+        }
     }
 };

@@ -57,7 +57,7 @@ toolTable <- function(input, output, session, df, replicates = FALSE, canUpdate 
     }
     
     # Create handsontable
-    hot <- rhandsontable(
+    rhandsontable(
       df,
       readOnly = readOnly,
       rowHeaders = NULL,
@@ -66,21 +66,15 @@ toolTable <- function(input, output, session, df, replicates = FALSE, canUpdate 
       # Set the custom renderer globally
       hot_cols(renderer = toolTableRenderer) %>%
       # Hide and mark as read only the id
-      hot_col('Parameter', readOnly = TRUE, type = 'text')
-    
-    # If not red only set more options
-    if (!readOnly) {
+      hot_col('Parameter', readOnly = TRUE, type = 'text') %>%
       # Add hooks callback to the table
-      hot %<>% htmlwidgets::onRender(
+      htmlwidgets::onRender(
         onTableRender,
         data = list(
-          canUpdate = canUpdate
+          canUpdate = canUpdate,
+          readOnly = readOnly
         )
       )
-    }
-    
-    # Return table
-    hot
   })
   
   
