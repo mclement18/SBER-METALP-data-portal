@@ -95,7 +95,7 @@ calcAlt2BP <- function(df, pool, ...) {
     # If there is an elevation and a temp, calculate the pressure
     if (!any(is.na(c(elev, temp)))) {
       return(
-        bigleaf::pressure.from.elevation(elev, temp)
+        round(bigleaf::pressure.from.elevation(elev, temp))
       )
     }
   }
