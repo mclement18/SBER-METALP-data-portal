@@ -5,6 +5,10 @@
 source('./modules/data_management_tab/grab_data.R')
 source('./modules/data_management_tab/sensor_inventory.R')
 source('./modules/data_management_tab/parameter_calculations.R')
+source('./modules/data_management_tab/tools/tool_layout.R')
+source('./modules/data_management_tab/tools/entry_layout.R')
+source('./modules/data_management_tab/tools/tool_table.R')
+source('./modules/data_management_tab/tools/field_data_tool.R')
 source('./utils/calculation_functions.R')
 
 
@@ -49,7 +53,7 @@ dataManagementTabUI <- function(id, pool, userRole) {
       )
     } else NULL,
     # If the user is at least a sber member
-    if (userRole %in% c('sber', 'admin')) {
+    if (userRole == 'admin') {
       # And the sensor inventory tab
       tabPanel(
         # Tab title
@@ -65,9 +69,10 @@ dataManagementTabUI <- function(id, pool, userRole) {
       'Tools',
       tabPanel(
         # Tab title
-        'Tools',
+        'Field data',
         # Tab content
-        value = ns('toolsTab')
+        toolsLayoutUI(ns('fieldDataTool'), 'Field data'),
+        value = ns('fieldDataTool')
       ),
       # Menu reference
       menuName = 'toolsTabs',
@@ -89,6 +94,15 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
 # 
 # Returns NULL
   
+  ## Call tools modules ###########################################################
+  
+  # Call the grab data module
+  callModule(toolsLayout, 'fieldDataTool', fieldDataTool, fieldDataToolUI, pool,
+             createNew = TRUE, canUpdate = userRole %in% c('sber', 'admin'))
+  
+  
+  
+  
   ## Check authorizations #########################################################
   
   # If the user is at least a sber member
@@ -97,6 +111,10 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
     callModule(grabData, 'grabData', pool)
     # Call the sensor inventory module
     callModule(sensorInventory, 'sensorsTab', pool)
+  }
+  
+  # If the user is an admin
+  if (userRole == 'admin') {
     # Call the parameter calculations module
     callModule(parameterCalculations, 'calculationsTab', pool)
   }

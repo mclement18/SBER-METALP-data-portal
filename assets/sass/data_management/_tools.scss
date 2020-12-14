@@ -1,8 +1,23 @@
 // ####################################
-// Tools layout
+// Tools general layout
 // ####################################
 
-.tool-layout {
+.tools-layout {
+    .raw-data,
+    .calculated {
+       & > div {
+           margin: 0 auto .5em;
+
+           &:last-child {
+               margin-bottom: 0;
+           }
+       }
+    }
+
+    .raw-data {
+        margin: 0 0 1em;
+    }
+
     .calculation-header {
         display: flex;
         align-items: center;
@@ -12,6 +27,34 @@
 
         h4 {
             margin: 0;
+        }
+    }
+
+    @include tablet {
+        .raw-data,
+        .calculated {
+            display: flex;
+
+            & > div {
+                margin: 0 .5em 0 0;
+
+                &:last-child {
+                    margin: 0;
+                }
+            }
+        }
+    }
+
+    @include laptop {
+        display: flex;
+
+        .raw-data {
+            margin: 0 1em 0 0;
+        }
+
+        .calculation,
+        .raw-data {
+            flex: 1 1 auto;
         }
     }
 }
