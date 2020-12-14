@@ -44,6 +44,7 @@ sensorPlotOptions <- function(input, output, session, pool) {
                getRows(pool, 'sensor_params_plotting') %>%
                  # Cast data types
                  mutate(
+                   active = as.logical(active),
                    across(ends_with('_at'), ymd_hms)
                  )
              ),
@@ -55,7 +56,8 @@ sensorPlotOptions <- function(input, output, session, pool) {
                  units,
                  data,
                  grab_param_name,
-                 description
+                 description,
+                 active
                )
              ),
              templateInputsEdit = expression(
@@ -67,7 +69,8 @@ sensorPlotOptions <- function(input, output, session, pool) {
                  units,
                  data,
                  grab_param_name,
-                 description
+                 description,
+                 active
                )
              ),
              creationExpr = expression(
@@ -79,7 +82,8 @@ sensorPlotOptions <- function(input, output, session, pool) {
                  units = input$units,
                  data = input$data,
                  grab_param_name = input$grab_param_name,
-                 description = input$description
+                 description = input$description,
+                 active = input$active
                )
              ),
              updateExpr = expression(
@@ -92,7 +96,8 @@ sensorPlotOptions <- function(input, output, session, pool) {
                  units = input$units,
                  data = input$data,
                  grab_param_name = input$grab_param_name,
-                 description = input$description
+                 description = input$description,
+                 active = input$active
                )
              ),
              deleteExpr = expression(

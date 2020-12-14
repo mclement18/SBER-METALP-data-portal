@@ -485,7 +485,7 @@ updateStation <- function(pool, station, name = '', full_name = '', catchment = 
 ## Grab sample plotting options queries ###################################################################
 
 createGbPlotOption <- function(pool, section_name, option_name, param_name, units, data,
-                               sd = '', min_max = '', plot_func, description = '') {
+                               sd = '', min_max = '', plot_func, description = '', active = TRUE) {
   # Check for valid input string
   section_name <- validInputString(section_name)
   option_name <- validInputString(option_name)
@@ -496,15 +496,16 @@ createGbPlotOption <- function(pool, section_name, option_name, param_name, unit
   min_max <- validInputString(min_max)
   plot_func <- validInputString(plot_func)
   description <- validInputString(description)
+  active <- validInputBool(active)
   
   # Create SQL query
   query <- sqlInterpolate(
     pool,
     'INSERT INTO grab_params_plotting
-    (section_name, option_name, param_name, units, data, sd, min_max, plot_func, description)
-    values(?section_name, ?option_name, ?param_name, ?units, ?data, ?sd, ?min_max, ?plot_func, ?description);',
+    (section_name, option_name, param_name, units, data, sd, min_max, plot_func, description, active)
+    values(?section_name, ?option_name, ?param_name, ?units, ?data, ?sd, ?min_max, ?plot_func, ?description, ?active);',
     section_name = section_name, option_name = option_name, param_name = param_name, units = units,
-    data = data, sd = sd, min_max = min_max, plot_func = plot_func, description = description
+    data = data, sd = sd, min_max = min_max, plot_func = plot_func, description = description, active = active
   )
   
   # Send Query and catch errors
@@ -515,7 +516,7 @@ createGbPlotOption <- function(pool, section_name, option_name, param_name, unit
 
 
 updateGbPlotOption <- function(pool, gbPlotOption, section_name = '', option_name = '', param_name = '', units = '', data = '',
-                               sd = '', min_max = '', plot_func = '', description = '') {
+                               sd = '', min_max = '', plot_func = '', description = '', active = TRUE) {
   # Check for valid input string
   section_name <- validInputString(section_name, gbPlotOption$section_name)
   option_name <- validInputString(option_name, gbPlotOption$option_name)
@@ -526,17 +527,18 @@ updateGbPlotOption <- function(pool, gbPlotOption, section_name = '', option_nam
   min_max <- validInputString(min_max, gbPlotOption$min_max)
   plot_func <- validInputString(plot_func, gbPlotOption$plot_func)
   description <- validInputString(description, gbPlotOption$description)
+  active <- validInputBool(active, gbPlotOption$active)
   
   # Create SQL query
   query <- sqlInterpolate(
     pool,
     'UPDATE grab_params_plotting SET
     section_name = ?section_name, option_name = ?option_name, param_name = ?param_name, units = ?units,
-    data = ?data, sd = ?sd, min_max = ?min_max, plot_func = ?plot_func, description = ?description
+    data = ?data, sd = ?sd, min_max = ?min_max, plot_func = ?plot_func, description = ?description, active = ?active
     WHERE id = ?id;',
     id = gbPlotOption$id,
     section_name = section_name, option_name = option_name, param_name = param_name, units = units,
-    data = data, sd = sd, min_max = min_max, plot_func = plot_func, description = description
+    data = data, sd = sd, min_max = min_max, plot_func = plot_func, description = description, active = active
   )
   
   # Send Query and catch errors
@@ -549,7 +551,7 @@ updateGbPlotOption <- function(pool, gbPlotOption, section_name = '', option_nam
 ## Sensor plotting options queries ###################################################################
 
 createSensorPlotOption <- function(pool, section_name, option_name, param_name, units, data,
-                                   grab_param_name = '', description = '') {
+                                   grab_param_name = '', description = '', active = TRUE) {
   # Check for valid input string
   section_name <- validInputString(section_name)
   option_name <- validInputString(option_name)
@@ -558,15 +560,16 @@ createSensorPlotOption <- function(pool, section_name, option_name, param_name, 
   data <- validInputString(data)
   grab_param_name <- validInputString(grab_param_name)
   description <- validInputString(description)
+  active <- validInputBool(active)
   
   # Create SQL query
   query <- sqlInterpolate(
     pool,
     'INSERT INTO sensor_params_plotting
-    (section_name, option_name, param_name, units, data, grab_param_name, description)
-    values(?section_name, ?option_name, ?param_name, ?units, ?data, ?grab_param_name, ?description);',
+    (section_name, option_name, param_name, units, data, grab_param_name, description, active)
+    values(?section_name, ?option_name, ?param_name, ?units, ?data, ?grab_param_name, ?description, ?active);',
     section_name = section_name, option_name = option_name, param_name = param_name, units = units,
-    data = data, grab_param_name = grab_param_name, description = description
+    data = data, grab_param_name = grab_param_name, description = description, active = active
   )
   
   # Send Query and catch errors
@@ -577,7 +580,7 @@ createSensorPlotOption <- function(pool, section_name, option_name, param_name, 
 
 
 updateSensorPlotOption <- function(pool, sensorPlotOption, section_name = '', option_name = '', param_name = '', units = '', data = '',
-                                   grab_param_name = '', description = '') {
+                                   grab_param_name = '', description = '', active = TRUE) {
   # Check for valid input string
   section_name <- validInputString(section_name, sensorPlotOption$section_name)
   option_name <- validInputString(option_name, sensorPlotOption$option_name)
@@ -586,17 +589,18 @@ updateSensorPlotOption <- function(pool, sensorPlotOption, section_name = '', op
   data <- validInputString(data, sensorPlotOption$data)
   grab_param_name <- validInputString(grab_param_name, sensorPlotOption$grab_param_name)
   description <- validInputString(description, sensorPlotOption$description)
+  active <- validInputBool(active, sensorPlotOption$active)
   
   # Create SQL query
   query <- sqlInterpolate(
     pool,
     'UPDATE sensor_params_plotting SET
     section_name = ?section_name, option_name = ?option_name, param_name = ?param_name, units = ?units,
-    data = ?data, grab_param_name = ?grab_param_name, description = ?description
+    data = ?data, grab_param_name = ?grab_param_name, description = ?description, active = ?active
     WHERE id = ?id;',
     id = sensorPlotOption$id,
     section_name = section_name, option_name = option_name, param_name = param_name, units = units,
-    data = data, grab_param_name = grab_param_name, description = description
+    data = data, grab_param_name = grab_param_name, description = description, active = active
   )
   
   # Send Query and catch errors

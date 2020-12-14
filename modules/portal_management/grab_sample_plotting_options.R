@@ -64,6 +64,7 @@ gbPlotOptions <- function(input, output, session, pool) {
                # Cast data types
                table %>% mutate(
                  plot_func = as.factor(plot_func),
+                 active = as.logical(active),
                  across(ends_with('_at'), ymd_hms)
                )
              }),
@@ -77,7 +78,8 @@ gbPlotOptions <- function(input, output, session, pool) {
                  sd,
                  min_max,
                  plot_func,
-                 description
+                 description,
+                 active
                )
              ),
              templateInputsEdit = expression(
@@ -91,7 +93,8 @@ gbPlotOptions <- function(input, output, session, pool) {
                  sd,
                  min_max,
                  plot_func,
-                 description
+                 description,
+                 active
                )
              ),
              creationExpr = expression(
@@ -105,7 +108,8 @@ gbPlotOptions <- function(input, output, session, pool) {
                  sd = input$sd,
                  min_max = input$min_max,
                  plot_func = input$plot_func,
-                 description = input$description
+                 description = input$description,
+                 active = input$active
                )
              ),
              updateExpr = expression(
@@ -120,7 +124,8 @@ gbPlotOptions <- function(input, output, session, pool) {
                  sd = input$sd,
                  min_max = input$min_max,
                  plot_func = input$plot_func,
-                 description = input$description
+                 description = input$description,
+                 active = input$active
                )
              ),
              deleteExpr = expression(

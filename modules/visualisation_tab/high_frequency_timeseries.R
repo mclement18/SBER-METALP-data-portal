@@ -44,7 +44,7 @@ highFreqTimeSeriesUI <- function(id, pool) {
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
         parseOptionsWithSections(
-          getRows(pool, 'sensor_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+          getRows(pool, 'sensor_params_plotting', active == TRUE, columns = c('section_name', 'option_name', 'param_name')),
           'param_name'
         )
       ),
@@ -135,6 +135,7 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
   # Create a reactive expression that returns the filtered parameters df
   param <- reactive(getRows(
     pool, 'sensor_params_plotting',
+    active == TRUE,
     param_name == local(input$param),
     columns = c('param_name', 'units', 'data', 'description')
   ))

@@ -63,7 +63,7 @@ mainDownloadUI <- function(id, pool) {
             actionButton(ns('hfParamHelper'), icon('question-circle'), class = 'icon-btn')
           ),
           choices = parseOptionsWithSections(
-            getRows(pool, 'sensor_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+            getRows(pool, 'sensor_params_plotting', active == TRUE, columns = c('section_name', 'option_name', 'param_name')),
             'param_name'
           ),
           multiple = TRUE,
@@ -91,7 +91,7 @@ mainDownloadUI <- function(id, pool) {
             actionButton(ns('grabParamHelper'), icon('question-circle'), class = 'icon-btn')
           ),
           choices = parseOptionsWithSections(
-            getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+            getRows(pool, 'grab_params_plotting', active == TRUE, columns = c('section_name', 'option_name', 'param_name')),
             'param_name'
           ),
           multiple = TRUE,
@@ -227,6 +227,7 @@ mainDownload <- function(input, output, session, pool, user, hfDf, selectedSites
     if (inputDf == 'hfDf') {
       getRows(
         pool, 'sensor_params_plotting',
+        active == TRUE,
         param_name %in% local(hfParamReactive_d()),
         columns = 'data'
       ) %>% pull()
@@ -234,6 +235,7 @@ mainDownload <- function(input, output, session, pool, user, hfDf, selectedSites
       # Get parameters info
       parametersInfo <- getRows(
         pool, 'grab_params_plotting',
+        active == TRUE,
         param_name %in% local(grabParamReactive_d()),
         columns = c('data', 'sd', 'min_max')
       )
@@ -357,9 +359,9 @@ mainDownload <- function(input, output, session, pool, user, hfDf, selectedSites
   observeEvent(input$hfParamHelper | input$grabParamHelper, ignoreInit = TRUE, {
     # Select the correct parameters df
     if (input$data == 'hfDf') {
-      parameters <- getRows(pool, 'sensor_params_plotting', columns = c('option_name', 'description'))
+      parameters <- getRows(pool, 'sensor_params_plotting', active == TRUE, columns = c('option_name', 'description'))
     } else if (input$data == 'grabDf') {
-      parameters <- getRows(pool, 'grab_params_plotting', columns = c('option_name', 'description'))
+      parameters <- getRows(pool, 'grab_params_plotting', active == TRUE, columns = c('option_name', 'description'))
     }
     
     # Render the descriptions UI in the modal

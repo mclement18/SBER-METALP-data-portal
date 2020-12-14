@@ -41,7 +41,7 @@ grabSamplesTimeSeriesUI <- function(id, pool) {
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
         parseOptionsWithSections(
-          getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+          getRows(pool, 'grab_params_plotting', active == TRUE, columns = c('section_name', 'option_name', 'param_name')),
           'param_name'
         )
       ),
@@ -142,6 +142,7 @@ grabSamplesTimeSeries <- function(input, output, session, dateRange, pool) {
   # Create a reactive expression that return the parameter infos
   currentParam <- reactive(getRows(
     pool, 'grab_params_plotting',
+    active == TRUE,
     param_name == local(input$param),
     columns = c('param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
   ))
