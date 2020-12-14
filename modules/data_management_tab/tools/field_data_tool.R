@@ -98,7 +98,7 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
   rawData <- reactive({
     row() %>% select(-c(
       id, station, starts_with('DATE'), starts_with('TIME'), ends_with('GMT'),
-      ends_with('_at'), starts_with('Reach_depth'), Vaisala_CO2_time, Field_BP_altitude, ends_with('_corr')
+      ends_with('_at'), starts_with('Reach_depth'), Field_BP_altitude, ends_with('_corr')
     ))
   })
   

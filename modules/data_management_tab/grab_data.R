@@ -490,7 +490,6 @@ grabData <- function(input, output, session, pool) {
       hot_col(c('created_at', 'updated_at'), readOnly = TRUE)
     
     # If the two following time columns are present, add a validator to them
-    if ('Vaisala_CO2_time' %in% colNames) hot %<>% hot_col('Vaisala_CO2_time', validator = timeValidator)
     if ('unused_WTW_DO_2_time' %in% colNames) hot %<>% hot_col('unused_WTW_DO_2_time', validator = timeValidator)
     
     # Add hooks callback to the table
