@@ -8,6 +8,14 @@
     margin: 0 0 1.5em;
 }
 
+.success {
+    color: $green;
+}
+
+.warning {
+    color: $orange;
+}
+
 .error-with-log {
     .summary {
         color: $red;
@@ -28,5 +36,42 @@
         background: lighten($red, 48);
 
         max-height: 500px;
+    }
+}
+
+.error-summary {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        margin: 0 0 .5em;
+    }
+
+    .type {
+        margin: 0 10px 0 0;
+    }
+
+    .error {
+        margin: 0;
+    }
+
+    @include tablet {
+        display: flex;
+        flex-wrap: wrap;
+
+        li {
+            margin: 0;
+    
+            &::after {
+                content: '';
+                margin: 0 .5em;
+                border-right: 1px solid $secondary-color;
+            }
+    
+            &:last-child::after {
+                border: none;
+            }
+        }
     }
 }

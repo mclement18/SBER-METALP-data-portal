@@ -1,0 +1,24 @@
+// ####################################
+// Tool page layout
+// ####################################
+
+.tool-layout {
+    .action-with-error,
+    .entries {
+        margin: 0 0 1.5em;
+    }
+
+    .action-with-error {
+        align-items: center;
+    }
+
+    .entries {
+        .entry {
+            margin: 0 0 1em;
+
+            &:last-child {
+                margin: 0;
+            }
+        }
+    }
+}
