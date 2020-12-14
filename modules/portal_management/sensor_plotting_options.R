@@ -44,7 +44,6 @@ sensorPlotOptions <- function(input, output, session, pool) {
                getRows(pool, 'sensor_params_plotting') %>%
                  # Cast data types
                  mutate(
-                   section_name = as.factor(section_name),
                    across(ends_with('_at'), ymd_hms)
                  )
              ),

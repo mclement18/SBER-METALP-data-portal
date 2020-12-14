@@ -25,7 +25,9 @@ gbPlotOptionsUI <- function(id, pool) {
       'Filter by section_name',
       choices = c(
         'All',
-        getEnumValues(pool, 'grab_params_plotting', 'section_name')
+        getRows(pool, 'grab_params_plotting', columns = 'section_name') %>%
+          pull() %>%
+          unique()
       )
     ),
     editableDTUI(ns('gbPlotOptions'))
@@ -61,7 +63,6 @@ gbPlotOptions <- function(input, output, session, pool) {
                }
                # Cast data types
                table %>% mutate(
-                 section_name = as.factor(section_name),
                  plot_func = as.factor(plot_func),
                  across(ends_with('_at'), ymd_hms)
                )
