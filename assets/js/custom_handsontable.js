@@ -12,9 +12,10 @@ CustomHandsontable.dateRenderer = function (hotInstance, td, row, column, prop, 
     Handsontable.renderers.BaseRenderer.apply(this, arguments);
 
     // Time renderer
-    // If time format is 'DD/MM/YYYY' convert to 'YYYY-MM-DD'
+    // If time format is 'MM/DD/YYYY' convert to 'YYYY-MM-DD'
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
-        value = value.split('/').reverse().join('-');
+        const [month, day, year] = value.split('/');
+        value = [year, month, day].join('-');
     }
     // Set value
     td.textContent = value;

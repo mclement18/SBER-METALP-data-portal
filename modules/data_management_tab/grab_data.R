@@ -328,7 +328,7 @@ grabData <- function(input, output, session, pool) {
       
       # If the value is a character and has only digits and '.'
       # Convert it to numeric data type
-      # If it is a date with the 'DD/MM/YYYY' format
+      # If it is a date with the 'MM/DD/YYYY' format
       # Convert it to a 'YYYY-MM-DD' format
       if (is.character(value)) {
         # Trim leading and trailing white spaces
@@ -337,8 +337,8 @@ grabData <- function(input, output, session, pool) {
         if (grepl('^[[:digit:].]+$', value)) {
           value <- as.numeric(value)
         } else if (grepl('^[[:digit:]]{2}/[[:digit:]]{2}/[[:digit:]]{4}$', value)) {
-          value %<>% str_split(value, '/') %>%
-            unlist() %>% rev() %>% paste(collapse = '-')
+          monthDayYear <- value %>% str_split(value, '/') %>% unlist()
+          value <- paste(monthDayYear[3], monthDayYear[1], monthDayYear[2], sep = '-')
         } else if (value == '') {
           # Skip empty string
           next
