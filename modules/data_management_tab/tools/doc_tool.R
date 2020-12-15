@@ -11,6 +11,8 @@ docToolUI <- function(id, ...) {
   
   # Create namespace
   ns <- NS(id)
+  
+  # Create layout
   div(
     class = 'doc-tool tools-layout',
     div(

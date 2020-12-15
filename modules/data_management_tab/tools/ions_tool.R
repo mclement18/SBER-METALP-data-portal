@@ -1,9 +1,9 @@
-## This module contains the UI and server code for the DOC tool
+## This module contains the UI and server code for the Ion tool
 
 ## Create module UI function ######################################################
 
-alkalinityToolUI <- function(id, ...) {
-# Create the UI for the alkalinityTool module
+ionsToolUI <- function(id, ...) {
+# Create the UI for the ionsTool module
 # Parameters:
 #  - id: String, the module id
 # 
@@ -14,22 +14,10 @@ alkalinityToolUI <- function(id, ...) {
   
   # Create layout
   div(
-    class = 'alkalinity-tool tools-layout',
+    class = 'ions-tool tools-layout',
     div(
       class ='raw-data',
-      toolTableUI(ns('rawData'))
-    ),
-    div(
-      class = 'calculation',
-      div(
-        class = 'calculation-header',
-        h4('Set missing WTW_pH_1 based on Alk_init_pH:'),
-        actionButton(ns('calculate'), 'Set', class = 'custom-style custom-style--primary')
-      ),
-      div(
-        class = 'calculated',
-        toolTableUI(ns('ph'))
-      )
+      toolTableUI(ns('ions'))
     )
   )
 }
@@ -38,8 +26,8 @@ alkalinityToolUI <- function(id, ...) {
 
 ## Create module server function ##################################################
 
-alkalinityTool <- function(input, output, session, pool, site, datetime, ...) {
-# Create the logic for the alkalinityTool module
+ionsTool <- function(input, output, session, pool, site, datetime, ...) {
+# Create the logic for the ionsTool module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - pool: The pool connection to the database
@@ -66,15 +54,12 @@ alkalinityTool <- function(input, output, session, pool, site, datetime, ...) {
     # Get columns
     columns <- c(
       'id', 'station', 'DATE_reading', 'TIME_reading', 'Convert_to_GMT', 'TIME_reading_GMT',
-      # Alkalinity columns
       getRows(
         pool,
         'grab_param_categories',
-        category == 'Alkalinity',
+        category == 'Ions',
         columns = 'param_name'
       ) %>% pull(),
-      # Add field data column to update
-      'WTW_pH_1',
       'created_at', 'updated_at'
     )
     
@@ -97,73 +82,17 @@ alkalinityTool <- function(input, output, session, pool, site, datetime, ...) {
   ## Render raw data ####################################################################
   
   # Row filtering
-  rawData <- reactive({
-    row() %>% select(starts_with('Alk_'))
+  ions <- reactive({
+    row() %>% select(ends_with('_mgL'))
   })
   
   # Call table module and retrieve updates
-  rawDataUpdated <- callModule(toolTable, 'rawData', rawData, ...)
+  ionsUpdated <- callModule(toolTable, 'ions', ions, ...)
   
   
   
-  
-  
-  
-  
-  ## Render WTW_pH_1 calculation #####################################################
-  
-  # Calculated values
-  ph <- reactive({
-    if (useCalculated()) {
-      calculations$ph
-    } else {
-      row() %>% select(WTW_pH_1)
-    }
-  })
-  
-  # Call table module and retrieve updates
-  phUpdated <- callModule(toolTable, 'ph', ph, readOnly = TRUE)
-  
-  
-  
-  
-  
-  
-  
-  ## Calculation logic ############################################################
-  
-  # Use default or calculated values
-  useCalculated <- reactiveVal(FALSE)
-  
-  # Reset on site or date update
-  observersOutput$resetUseCalculated <- observe({
-    site();datetime()
-    useCalculated(FALSE)
-  })
-  
-  # Store calculation
-  calculations <- reactiveValues()
-  
-  # Calculate upon button click
-  observersOutput$calculationLogic <- observeEvent(input$calculate, ignoreInit = TRUE, {
-    # Calculate WTW_pH_1
-    calculations$ph <- data.frame(
-      'WTW_pH_1' = calcEquals(
-        bind_cols(
-          select(row(), WTW_pH_1),
-          select(rawDataUpdated(), Alk_init_pH)
-        )
-      )
-    )
+
     
-    # Use calculation
-    useCalculated(TRUE)
-  })
-  
-  
-  
-  
-  
   
   ## Return row ####################################################################
   
@@ -180,8 +109,7 @@ alkalinityTool <- function(input, output, session, pool, site, datetime, ...) {
             id, station, starts_with('DATE'), starts_with('TIME'), ends_with('GMT'),
             ends_with('_at')
           ),
-          rawDataUpdated(),
-          phUpdated()
+          ionsUpdated()
         )
       }),
       # Returns errors and warnings

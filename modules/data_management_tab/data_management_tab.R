@@ -12,6 +12,7 @@ source('./modules/data_management_tab/tools/tool_table.R')
 source('./modules/data_management_tab/tools/field_data_tool.R')
 source('./modules/data_management_tab/tools/doc_tool.R')
 source('./modules/data_management_tab/tools/alkalinity_tool.R')
+source('./modules/data_management_tab/tools/ions_tool.R')
 source('./utils/calculation_functions.R')
 
 
@@ -102,6 +103,13 @@ dataManagementTabUI <- function(id, pool, userRole) {
         toolsLayoutUI(ns('alkalinityTool'), 'Alkalinity'),
         value = ns('alkalinityTool')
       ),
+      tabPanel(
+        # Tab title
+        'Ions',
+        # Tab content
+        toolsLayoutUI(ns('ionsTool'), 'Ions'),
+        value = ns('ionsTool')
+      ),
       # Menu reference
       menuName = 'toolsTabs',
       icon = icon('tools')
@@ -136,6 +144,11 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   
   # Call the tools layout module with the Alkalinity tool
   callModule(toolsLayout, 'alkalinityTool', alkalinityTool, alkalinityToolUI, pool,
+             updateVerification = userRole == 'intern',
+             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
+  
+  # Call the tools layout module with the Ions tool
+  callModule(toolsLayout, 'ionsTool', ionsTool, ionsToolUI, pool,
              updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   

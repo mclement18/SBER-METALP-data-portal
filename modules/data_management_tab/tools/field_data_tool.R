@@ -11,6 +11,8 @@ fieldDataToolUI <- function(id, ...) {
   
   # Create namespace
   ns <- NS(id)
+  
+  # Create layout
   div(
     class = 'field-data-tool tools-layout',
     div(
