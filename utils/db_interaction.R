@@ -814,3 +814,56 @@ updateCalculation <- function(pool, calculation, param_category = '', column_cal
 }
 
 
+
+
+
+
+
+## Constants queries ###################################################################
+
+createConstant <- function(pool, name = '', unit = '', value = 0, description = '') {
+  # Check for valid input string
+  name <- validInputString(name)
+  unit <- validInputString(unit)
+  value <- validInputNumber(value)
+  description <- validInputString(description)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO parameter_calculations
+    (name, unit, value, description)
+    values(?name, ?unit, ?value, ?description);',
+    name = name, unit = unit,
+    value = value, description = description
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
+updateConstant <- function(pool, constant, name = '', unit = '', value = 0, description = '') {
+  # Check for valid input string
+  name <- validInputString(name, constant$name)
+  unit <- validInputString(unit, constant$unit)
+  value <- validInputNumber(value, constant$value)
+  description <- validInputString(description, constant$description)
+  
+  # Toggle read / unread
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE parameter_calculations
+    SET name = ?name, unit = ?unit,
+    value = ?value, description = ?description
+    WHERE id = ?id;',
+    id = constant$id, name = name, unit = unit,
+    value = value, description = description
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)  
+}
+
+

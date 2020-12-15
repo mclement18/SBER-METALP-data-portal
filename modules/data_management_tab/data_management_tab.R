@@ -5,6 +5,7 @@
 source('./modules/data_management_tab/grab_data.R')
 source('./modules/data_management_tab/sensor_inventory.R')
 source('./modules/data_management_tab/parameter_calculations.R')
+source('./modules/data_management_tab/constants_management.R')
 source('./modules/data_management_tab/tools/tool_layout.R')
 source('./modules/data_management_tab/tools/entry_layout.R')
 source('./modules/data_management_tab/tools/tool_table.R')
@@ -52,7 +53,7 @@ dataManagementTabUI <- function(id, pool, userRole) {
         value = ns('sensorsTab')
       )
     } else NULL,
-    # If the user is at least a sber member
+    # If the user is an admin
     if (userRole == 'admin') {
       # And the sensor inventory tab
       tabPanel(
@@ -61,6 +62,17 @@ dataManagementTabUI <- function(id, pool, userRole) {
         # Tab content
         parameterCalculationsUI(ns('calculationsTab'), pool),
         value = ns('calculationsTab')
+      )
+    } else NULL,
+    # If the user is an admin
+    if (userRole == 'admin') {
+      # And the constants management tab
+      tabPanel(
+        # Tab title
+        'Constants',
+        # Tab content
+        constantsManagementUI(ns('constantsTab')),
+        value = ns('constantsTab')
       )
     } else NULL,
     # And the tools tab
@@ -117,6 +129,8 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   if (userRole == 'admin') {
     # Call the parameter calculations module
     callModule(parameterCalculations, 'calculationsTab', pool)
+    # Call the parameter calculations module
+    callModule(constantsManagement, 'constantsTab', pool)
   }
 }
 
