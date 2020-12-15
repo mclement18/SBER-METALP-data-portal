@@ -10,6 +10,7 @@ source('./modules/data_management_tab/tools/tool_layout.R')
 source('./modules/data_management_tab/tools/entry_layout.R')
 source('./modules/data_management_tab/tools/tool_table.R')
 source('./modules/data_management_tab/tools/field_data_tool.R')
+source('./modules/data_management_tab/tools/doc_tool.R')
 source('./utils/calculation_functions.R')
 
 
@@ -86,6 +87,13 @@ dataManagementTabUI <- function(id, pool, userRole) {
         toolsLayoutUI(ns('fieldDataTool'), 'Field data'),
         value = ns('fieldDataTool')
       ),
+      tabPanel(
+        # Tab title
+        'DOC',
+        # Tab content
+        toolsLayoutUI(ns('docTool'), 'DOC'),
+        value = ns('docTool')
+      ),
       # Menu reference
       menuName = 'toolsTabs',
       icon = icon('tools')
@@ -108,10 +116,15 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   
   ## Call tools modules ###########################################################
   
-  # Call the grab data module
+  # Call the tools layout module with the field data tool
   callModule(toolsLayout, 'fieldDataTool', fieldDataTool, fieldDataToolUI, pool,
              updateVerification = userRole == 'intern',
              createNew = TRUE, canUpdate = userRole %in% c('sber', 'admin'))
+  
+  # Call the tools layout module with the DOC tool
+  callModule(toolsLayout, 'docTool', docTool, docToolUI, pool,
+             updateVerification = userRole == 'intern',
+             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   
   
