@@ -88,7 +88,7 @@ entryLayout <- function(input, output, session, pool,
 #  - input, output, session: Default needed parameters to create a module
 #  - pool: The pool connection to the database
 #  - toolModule: Function, the tool module server function
-#  - update: Reactive expression, used as trigger for update
+#  - update: Reactive value, used as trigger for update
 #  - createNew: Boolean, create or not the new button
 #  - ...: All other arguments needed by the inner module function
 # 
@@ -284,7 +284,7 @@ entryLayout <- function(input, output, session, pool,
   
   # Update the row when update button is pressed
   observersOutput$updateLogic <- observeEvent(update(), ignoreInit = TRUE, {
-    req(result$df())
+    req(result$df(), update() != 0)
     # Get updated row
     row <- result$df()
     # Check that it is a single row

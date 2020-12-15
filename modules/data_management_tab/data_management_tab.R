@@ -110,6 +110,7 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   
   # Call the grab data module
   callModule(toolsLayout, 'fieldDataTool', fieldDataTool, fieldDataToolUI, pool,
+             updateVerification = userRole == 'intern',
              createNew = TRUE, canUpdate = userRole %in% c('sber', 'admin'))
   
   

@@ -52,14 +52,15 @@ usersTab <- function(input, output, session, pool) {
                  mutate(
                    role = as.factor(role),
                    across(ends_with('_at'), ymd_hms),
-                   active = as.logical(active)
+                   active = as.logical(active),
+                   intern_confirmation = as.logical(intern_confirmation)
                  )
              ),
              templateInputsCreate = expression(
-               inputsTemplate %>% select(name, role, active) %>% mutate(password = character(0))
+               inputsTemplate %>% select(name, role, active, intern_confirmation) %>% mutate(password = character(0))
              ),
              templateInputsEdit = expression(
-               selectedRow %>% select(id, name, role, active) %>% mutate(password = as.character(NA))
+               selectedRow %>% select(id, name, role, active, intern_confirmation) %>% mutate(password = as.character(NA))
              ),
              creationExpr = expression(
                createUser(
@@ -67,7 +68,8 @@ usersTab <- function(input, output, session, pool) {
                  username = input$name,
                  password = input$password,
                  role = input$role,
-                 active = input$active
+                 active = input$active,
+                 intern_confirmation = input$intern_confirmation
                )
              ),
              updateExpr = expression(
@@ -77,7 +79,8 @@ usersTab <- function(input, output, session, pool) {
                  username = input$name,
                  password = input$password,
                  role = input$role,
-                 active = input$active
+                 active = input$active,
+                 intern_confirmation = input$intern_confirmation
                )
              ),
              deleteExpr = expression(

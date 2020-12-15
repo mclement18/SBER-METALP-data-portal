@@ -242,7 +242,7 @@ deleteRows <- function(pool, table, ids) {
 
 # Get user for login
 loginUser <- function(pool, username) {
-  pool %>% tbl('users') %>% filter(name == username, active == 1) %>% select(name, password, role) %>% head(1) %>% collect()
+  pool %>% tbl('users') %>% filter(name == username, active == 1) %>% select(name, password, role, intern_confirmation) %>% head(1) %>% collect()
 }
 
 
@@ -266,12 +266,13 @@ getUsers <- function(pool, columns = NULL) {
 
 
 # Create a new user
-createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
+createUser <- function(pool, username, password, role = 'sber', active = TRUE, intern_confirmation = FALSE) {
   # Check for valid input string
   username <- validInputString(username)
   password <- validInputString(password)
   role <- validInputString(role)
   active <- validInputBool(active)
+  intern_confirmation <- validInputBool(intern_confirmation)
   
   # Hash password before saving
   if (password != SQL('NULL')) {
@@ -283,8 +284,11 @@ createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    'INSERT INTO users (name, password, role, active) values(?username, ?hashedPassword, ?role, ?active);',
-    username = username, hashedPassword = hashedPassword, role = role, active = active
+    'INSERT INTO users
+    (name, password, role, active, intern_confirmation)
+    values(?username, ?hashedPassword, ?role, ?active, ?intern_confirmation);',
+    username = username, hashedPassword = hashedPassword, role = role,
+    active = active, intern_confirmation = intern_confirmation
   )
   
   # Send Query and catch errors
@@ -293,20 +297,23 @@ createUser <- function(pool, username, password, role = 'sber', active = TRUE) {
 
 
 
-updateUser <- function(pool, user, username = '', password = '', role = '', active = TRUE) {
+updateUser <- function(pool, user, username = '', password = '', role = '', active = TRUE, intern_confirmation = FALSE) {
   # Check for valid input string
   username <- validInputString(username, user$name)
   password <- validInputString(password)
   role <- validInputString(role, user$role)
   active <- validInputBool(active, user$active)
+  intern_confirmation <- validInputBool(intern_confirmation, user$intern_confirmation)
   
   # UPdate password only if a new one is provided
   if (password == SQL('NULL')) {
     # Create query without password
     query <- sqlInterpolate(
       pool,
-      "UPDATE users SET name = ?name, role = ?role, active = ?active WHERE id = ?id;",
-      id = user$id, name = username, role = role, active = active
+      "UPDATE users
+      SET name = ?name, role = ?role, active = ?active, intern_confirmation = ?intern_confirmation
+      WHERE id = ?id;",
+      id = user$id, name = username, role = role, active = active, intern_confirmation = intern_confirmation
     )
   } else {
     # Hash the new password
@@ -315,8 +322,10 @@ updateUser <- function(pool, user, username = '', password = '', role = '', acti
     # Create query with password
     query <- sqlInterpolate(
       pool,
-      "UPDATE users SET name = ?name, password = ?password, role = ?role, active = ?active WHERE id = ?id;",
-      id = user$id, name = username, password = hashedPassword, role = role, active = active
+      "UPDATE users
+      SET name = ?name, password = ?password, role = ?role, active = ?active, intern_confirmation = ?intern_confirmation
+      WHERE id = ?id;",
+      id = user$id, name = username, password = hashedPassword, role = role, active = active, intern_confirmation = intern_confirmation
     )
   }
   

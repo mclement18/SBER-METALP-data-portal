@@ -7,7 +7,6 @@ toolsLayoutUI <- function(id, toolName, ...) {
 # Parameters:
 #  - id: String, the module id
 #  - toolName: String, the name of the tool
-#  - toolModuleUI: Function, the tool module UI function
 #  - ...: All other arguments needed by the inner module function
 # 
 # Returns a div containing the layout
@@ -53,20 +52,102 @@ toolsLayoutUI <- function(id, toolName, ...) {
 ## Create module server function ##################################################
 
 toolsLayout <- function(input, output, session,
-                               toolModule, toolModuleUI, pool, ...) {
+                               toolModule, toolModuleUI, pool, updateVerification = FALSE, ...) {
 # Create the logic for the toolsLayout module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - toolModule: Function, the tool module server function
 #  - toolModuleUI: Function, the tool module UI function
 #  - pool: The pool connection to the database
+#  - updateVerification: Boolean, whether to perform verification before update, default: FALSE
 #  - ...: All other arguments needed by the inner module function
 # 
 # Returns NULL
   
-  ## Create update reactive expression ############################################
+  ## Create update reactive value and update verification ############################################
   
-  update <- reactive(input$update)
+  # Create the update reactive value to pass to entry module
+  update <- reactiveVal(0)
+  
+  # Create an observeEvent that react to the update button
+  observeEvent(input$update, ignoreInit = TRUE, {
+    # If a verification is needed, show verification modal
+    if (updateVerification) {
+      showModal(modalDialog(
+        title = 'Update confirmation', size = 's',
+        div(
+          class = 'login-form',
+          # Info
+          p('Enter your credential to confirme update.'),
+          p('You need to have the specific authorization to perform the update.'),
+          # Add an text output to log the errors
+          textOutput(session$ns('authorizationError')),
+          # Username and password inputs
+          textInput(session$ns('username'), 'Username'),
+          passwordInput(session$ns('password'), 'Password'),
+        ),
+        # Action buttons
+        footer = tagList(
+          actionButton(session$ns('authorize'), 'Authorize', class = 'custom-style custom-style--primary'),
+          actionButton(session$ns('cancel'), 'Cancel', class = 'custom-style')
+        )
+      ))
+    } else {
+      # Otherwise increase update value
+      update(update() + 1)
+      
+      # Show notifiaction that the update was sent
+      showNotification('Update sent!\nCheck individual results.', type = 'message')
+    }
+  })
+  
+  # Save authorization errors
+  authorizationError <- reactiveVal('')
+  
+  # Create an observe event that react to the authorize button
+  observeEvent(input$authorize, ignoreInit = TRUE, {
+    # Get user from db
+    userResult <- loginUser(pool, input$username) %>%
+      mutate(intern_confirmation = as.logical(intern_confirmation))
+    
+    # If a user was found and he has the authorization, verify password
+    if (nrow(userResult) == 1 & userResult$intern_confirmation) {
+      # Increase update value if correct password
+      if (sodium::password_verify(userResult$password, input$password)) {
+        update(update() + 1)
+        
+        # Remove authorization modal
+        removeModal()
+        
+        # Show notifiaction that the update was sent
+        showNotification('Update sent!\nCheck individual results.', type = 'message')
+        
+        # Stop here
+        return()
+      }
+      authorizationError('Incorrect username / password combination!')
+    } else {
+      authorizationError('You do not have the right to authorize the update.')
+    }
+  })
+  
+  # Create an observeEvent that react to the cancel button
+  observeEvent(input$cancel, ignoreInit = TRUE, {
+    # Clear user log in error
+    authorizationError('')
+    
+    # Close modal
+    removeModal()
+  })
+  
+  # Render the authorization error
+  output$authorizationError <- renderText(shiny::validate(
+    errorClass = 'form',
+    need(FALSE, message = authorizationError())
+  ))
+  
+  
+  
   
   
   
