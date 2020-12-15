@@ -2,8 +2,8 @@
 
 ## Create module UI function ######################################################
 
-docToolUI <- function(id, ...) {
-# Create the UI for the docTool module
+alkalinityToolUI <- function(id, ...) {
+# Create the UI for the alkalinityTool module
 # Parameters:
 #  - id: String, the module id
 # 
@@ -15,18 +15,18 @@ docToolUI <- function(id, ...) {
     class = 'doc-tool tools-layout',
     div(
       class ='raw-data',
-      toolTableUI(ns('replicates'))
+      toolTableUI(ns('rawData'))
     ),
     div(
       class = 'calculation',
       div(
         class = 'calculation-header',
-        h4('Calulated columns:'),
-        actionButton(ns('calculate'), 'Calculate', class = 'custom-style custom-style--primary')
+        h4('Set missing WTW_pH_1 based on Alk_init_pH:'),
+        actionButton(ns('calculate'), 'Set', class = 'custom-style custom-style--primary')
       ),
       div(
         class = 'calculated',
-        toolTableUI(ns('avgSd'))
+        toolTableUI(ns('ph'))
       )
     )
   )
@@ -36,8 +36,8 @@ docToolUI <- function(id, ...) {
 
 ## Create module server function ##################################################
 
-docTool <- function(input, output, session, pool, site, datetime, ...) {
-# Create the logic for the docTool module
+alkalinityTool <- function(input, output, session, pool, site, datetime, ...) {
+# Create the logic for the alkalinityTool module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - pool: The pool connection to the database
@@ -64,12 +64,15 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
     # Get columns
     columns <- c(
       'id', 'station', 'DATE_reading', 'TIME_reading', 'Convert_to_GMT', 'TIME_reading_GMT',
+      # Alkalinity columns
       getRows(
         pool,
         'grab_param_categories',
-        category == 'DOC',
+        category == 'Alkalinity',
         columns = 'param_name'
       ) %>% pull(),
+      # Add field data column to update
+      'WTW_pH_1',
       'created_at', 'updated_at'
     )
     
@@ -89,15 +92,15 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
   
   
   
-  ## Render replicates ####################################################################
+  ## Render raw data ####################################################################
   
   # Row filtering
-  docRep <- reactive({
-    row() %>% select(starts_with('DOC_rep_'))
+  rawData <- reactive({
+    row() %>% select(starts_with('Alk_'))
   })
   
   # Call table module and retrieve updates
-  docRepUpdated <- callModule(toolTable, 'replicates', docRep, replicates = TRUE, ...)
+  rawDataUpdated <- callModule(toolTable, 'rawData', rawData, ...)
   
   
   
@@ -105,19 +108,19 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
   
   
   
-  ## Render Reach calculation #####################################################
+  ## Render WTW_pH_1 calculation #####################################################
   
   # Calculated values
-  docAvgSd <- reactive({
+  ph <- reactive({
     if (useCalculated()) {
-      calculations$docAvgSd
+      calculations$ph
     } else {
-      row() %>% select(starts_with('DOC_') & ends_with('_ppb'))
+      row() %>% select(WTW_pH_1)
     }
   })
   
   # Call table module and retrieve updates
-  docAvgSdUpdated <- callModule(toolTable, 'avgSd', docAvgSd, readOnly = TRUE)
+  phUpdated <- callModule(toolTable, 'ph', ph, readOnly = TRUE)
   
   
   
@@ -141,21 +144,13 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
   
   # Calculate upon button click
   observersOutput$calculationLogic <- observeEvent(input$calculate, ignoreInit = TRUE, {
-    # Calculate DOC avg and sd
-    newDocMean <- calcMean(docRepUpdated())
-    newDocSd <- calcSd(docRepUpdated())
-    # Set new mean and sd
-    # If KEEP OLD, take it from the row()
-    calculations$docAvgSd <- data.frame(
-      'DOC_avg_ppb' = ifelse(
-        newDocMean != 'KEEP OLD',
-        newDocMean,
-        pull(row(), 'DOC_avg_ppb')
-      ),
-      'DOC_sd_ppb' = ifelse(
-        newDocSd != 'KEEP OLD',
-        newDocSd,
-        pull(row(), 'DOC_sd_ppb')
+    # Calculate WTW_pH_1
+    calculations$ph <- data.frame(
+      'WTW_pH_1' = calcEquals(
+        bind_cols(
+          select(row(), WTW_pH_1),
+          select(rawDataUpdated(), Alk_init_pH)
+        )
       )
     )
     
@@ -183,8 +178,8 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
             id, station, starts_with('DATE'), starts_with('TIME'), ends_with('GMT'),
             ends_with('_at')
           ),
-          docRepUpdated(),
-          docAvgSdUpdated()
+          rawDataUpdated(),
+          phUpdated()
         )
       }),
       # Returns errors and warnings
