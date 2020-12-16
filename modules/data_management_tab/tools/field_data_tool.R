@@ -24,7 +24,7 @@ fieldDataToolUI <- function(id, ...) {
       class = 'calculation',
       div(
         class = 'calculation-header',
-        h4('Calulated columns:'),
+        h4('Calculated columns:'),
         actionButton(ns('calculate'), 'Calculate', class = 'custom-style custom-style--primary')
       ),
       div(
