@@ -187,6 +187,47 @@ calcAFDM <- function(df, ...) {
 
 
 
+calcSUVA <- function(df, ...) {
+  # Check for the presence of the correct columns
+  if (nrow(df) == 1 & all(c('a254', 'DOC_avg_ppb') %in% colnames(df))) {
+    a254 <- df %>% pull('a254')
+    DOC_avg <- df %>% pull('DOC_avg_ppb')
+    
+    # Check for presence of DOC_avg and a254
+    if (!any(is.na(c(a254, DOC_avg)))) {
+      return(
+        a254 * 1000 / DOC_avg
+      )
+    }
+  }
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+calcRatio <- function(df, ...) {
+  # Check for the presence of the correct columns
+  if (nrow(df) == 1 & ncol(df) == 2) {
+    dividend <- df %>% pull(1)
+    divisor <- df %>% pull(2)
+    
+    # Check for presence of both dividend and divisor
+    if (!any(is.na(c(dividend, divisor)))) {
+      return(
+        dividend / divisor
+      )
+    }
+  }
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
 # calcDIC
 # calcd13DIC
 # calcChlaUgL

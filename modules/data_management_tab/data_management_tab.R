@@ -11,6 +11,7 @@ source('./modules/data_management_tab/tools/entry_layout.R')
 source('./modules/data_management_tab/tools/tool_table.R')
 source('./modules/data_management_tab/tools/field_data_tool.R')
 source('./modules/data_management_tab/tools/doc_tool.R')
+source('./modules/data_management_tab/tools/dom_tool.R')
 source('./modules/data_management_tab/tools/alkalinity_tool.R')
 source('./modules/data_management_tab/tools/ions_tool.R')
 source('./modules/data_management_tab/tools/nutrients_tool.R')
@@ -100,6 +101,13 @@ dataManagementTabUI <- function(id, pool, userRole) {
       ),
       tabPanel(
         # Tab title
+        'DOM',
+        # Tab content
+        toolsLayoutUI(ns('domTool'), 'DOM'),
+        value = ns('domTool')
+      ),
+      tabPanel(
+        # Tab title
         'Alkalinity',
         # Tab content
         toolsLayoutUI(ns('alkalinityTool'), 'Alkalinity'),
@@ -155,6 +163,11 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   
   # Call the tools layout module with the DOC tool
   callModule(toolsLayout, 'docTool', docTool, docToolUI, pool,
+             updateVerification = userRole == 'intern',
+             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
+  
+  # Call the tools layout module with the DOC tool
+  callModule(toolsLayout, 'domTool', domTool, domToolUI, pool,
              updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
