@@ -28,6 +28,11 @@
         h4 {
             margin: 0;
         }
+
+        .form-group,
+        .checkbox {
+            margin: 0;
+        }
     }
 
     @include tablet {

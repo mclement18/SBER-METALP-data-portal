@@ -13,6 +13,7 @@ source('./modules/data_management_tab/tools/field_data_tool.R')
 source('./modules/data_management_tab/tools/doc_tool.R')
 source('./modules/data_management_tab/tools/dom_tool.R')
 source('./modules/data_management_tab/tools/alkalinity_tool.R')
+source('./modules/data_management_tab/tools/dic_tool.R')
 source('./modules/data_management_tab/tools/ions_tool.R')
 source('./modules/data_management_tab/tools/nutrients_tool.R')
 source('./modules/data_management_tab/tools/tss_afdm_tool.R')
@@ -115,6 +116,13 @@ dataManagementTabUI <- function(id, pool, userRole) {
       ),
       tabPanel(
         # Tab title
+        'DIC',
+        # Tab content
+        toolsLayoutUI(ns('dicTool'), 'DIC'),
+        value = ns('dicTool')
+      ),
+      tabPanel(
+        # Tab title
         'Ions',
         # Tab content
         toolsLayoutUI(ns('ionsTool'), 'Ions'),
@@ -173,6 +181,11 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   
   # Call the tools layout module with the Alkalinity tool
   callModule(toolsLayout, 'alkalinityTool', alkalinityTool, alkalinityToolUI, pool,
+             updateVerification = userRole == 'intern',
+             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
+  
+  # Call the tools layout module with the DIC tool
+  callModule(toolsLayout, 'dicTool', dicTool, dicToolUI, pool,
              updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
