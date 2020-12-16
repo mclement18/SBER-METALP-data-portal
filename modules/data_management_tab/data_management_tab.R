@@ -14,6 +14,7 @@ source('./modules/data_management_tab/tools/doc_tool.R')
 source('./modules/data_management_tab/tools/alkalinity_tool.R')
 source('./modules/data_management_tab/tools/ions_tool.R')
 source('./modules/data_management_tab/tools/nutrients_tool.R')
+source('./modules/data_management_tab/tools/tss_afdm_tool.R')
 source('./utils/calculation_functions.R')
 
 
@@ -118,6 +119,13 @@ dataManagementTabUI <- function(id, pool, userRole) {
         toolsLayoutUI(ns('nutrientsTool'), 'Nutrients'),
         value = ns('nutrientsTool')
       ),
+      tabPanel(
+        # Tab title
+        'TSS & AFDM',
+        # Tab content
+        toolsLayoutUI(ns('tssAfdmTool'), 'TSS & AFDM'),
+        value = ns('tssAfdmTool')
+      ),
       # Menu reference
       menuName = 'toolsTabs',
       icon = icon('tools')
@@ -162,6 +170,11 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   
   # Call the tools layout module with the nutrients tool
   callModule(toolsLayout, 'nutrientsTool', nutrientsTool, nutrientsToolUI, pool,
+             updateVerification = userRole == 'intern',
+             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
+  
+  # Call the tools layout module with the TSS & AFDM tool
+  callModule(toolsLayout, 'tssAfdmTool', tssAfdmTool, tssAfdmToolUI, pool,
              updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
