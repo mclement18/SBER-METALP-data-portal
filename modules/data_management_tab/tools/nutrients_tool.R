@@ -17,7 +17,8 @@ nutrientsToolUI <- function(id, ...) {
     class = 'nutrients-tool tools-layout',
     div(
       class ='raw-data',
-      toolTableUI(ns('rawData'))
+      toolTableUI(ns('rawData')),
+      toolTableUI(ns('oldNut'))
     ),
     div(
       class = 'calculation',
@@ -29,7 +30,8 @@ nutrientsToolUI <- function(id, ...) {
       div(
         class = 'calculated',
         toolTableUI(ns('no3')),
-        toolTableUI(ns('avgSd'))
+        toolTableUI(ns('avgSd')),
+        toolTableUI(ns('oldNutAvgSd'))
       )
     )
   )
@@ -70,7 +72,7 @@ nutrientsTool <- function(input, output, session, pool, site, datetime, ...) {
       getRows(
         pool,
         'grab_param_categories',
-        category == 'Nutrients',
+        category %in% c('Nutrients', 'Old Nutrients'),
         columns = 'param_name'
       ) %>% pull(),
       'created_at', 'updated_at'
@@ -96,11 +98,25 @@ nutrientsTool <- function(input, output, session, pool, site, datetime, ...) {
   
   # Row filtering
   rawData <- reactive({
-    row() %>% select(matches('_rep_'), -starts_with('NUT_NO3_rep_'))
+    row() %>% select(matches('_rep_') & starts_with('NUT'), -starts_with('NUT_NO3_rep_'))
   })
   
   # Call table module and retrieve updates
   rawDataUpdated <- callModule(toolTable, 'rawData', rawData, replicates = TRUE, ...)
+  
+  
+  
+  
+  
+  ## Render old nutrients data ####################################################################
+  
+  # Row filtering
+  oldNut <- reactive({
+    row() %>% select(matches('_rep_') & (starts_with('NH4_') | starts_with('SRP_')))
+  })
+  
+  # Call table module and retrieve updates
+  oldNutUpdated <- callModule(toolTable, 'oldNut', oldNut, replicates = TRUE, ...)
   
   
   
@@ -139,6 +155,24 @@ nutrientsTool <- function(input, output, session, pool, site, datetime, ...) {
   
   # Call table module and retrieve updates
   avgSdUpdated <- callModule(toolTable, 'avgSd', avgSd, readOnly = TRUE, replicates = TRUE)
+  
+  
+  
+  
+  
+  ## Render old nutrients avg and sd calculation #####################################################
+  
+  # Calculated values
+  oldNutAvgSd <- reactive({
+    if (useCalculated()) {
+      calculations$oldNutAvgSd
+    } else {
+      row() %>% select(matches('_avg_|_sd_'))
+    }
+  })
+  
+  # Call table module and retrieve updates
+  oldNutAvgSdUpdated <- callModule(toolTable, 'oldNutAvgSd', oldNutAvgSd, readOnly = TRUE)
   
   
   
@@ -196,20 +230,32 @@ nutrientsTool <- function(input, output, session, pool, site, datetime, ...) {
     # Calculate nutrients avg and sd
     # Set to NULL in case of second calculation
     calculations$avgSd <- NULL
+    calculations$oldNutAvgSd <- NULL
     
-    for (param in c('NUT_P', 'NUT_NH4', 'NUT_NOx', 'NUT_NO2', 'NUT_NO3', 'NUT_TDP', 'NUT_TDN')) {
+    oldNutrients <- c('NH4', 'SRP')
+    
+    for (param in c('NUT_P', 'NUT_NH4', 'NUT_NOx', 'NUT_NO2', 'NUT_NO3', 'NUT_TDP', 'NUT_TDN', 'NH4', 'SRP')) {
       # Select data
       if (param == 'NUT_NO3') {
         df <- calculations$no3
       } else {
-        df <- rawDataUpdated() %>% select(starts_with(param))
+        if (param %in% oldNutrients) {
+          df <- oldNutUpdated() %>% select(starts_with(param))
+        } else {
+          df <- rawDataUpdated() %>% select(starts_with(param))
+        }
       }
       
       # Calculate mean and sd
       newMean <- calcMean(df)
       newSd <- calcSd(df)
-      meanCol <-  paste0(param, '_avg')
-      sdCol <-  paste0(param, '_sd')
+      if (param %in% oldNutrients) {
+        meanCol <-  paste0(param, '_avg_ugL')
+        sdCol <-  paste0(param, '_sd_ugL')  
+      } else {
+        meanCol <-  paste0(param, '_avg')
+        sdCol <-  paste0(param, '_sd')
+      }
       
       # Set new mean and sd
       # If KEEP OLD, take it from the row()
@@ -229,16 +275,30 @@ nutrientsTool <- function(input, output, session, pool, site, datetime, ...) {
         c(meanCol, sdCol)
       )
       
-      # If calculations$no3 is NULL, create it else update it
-      if (is.null(calculations$avgSd)) {
-        calculations$avgSd <- newCols
+      if (param %in% oldNutrients) {
+        # If calculations is NULL, create it else update it
+        if (is.null(calculations$oldNutAvgSd)) {
+          calculations$oldNutAvgSd <- newCols
+        } else {
+          calculations$oldNutAvgSd <- bind_cols(
+            calculations$oldNutAvgSd,
+            newCols
+          )
+        }  
       } else {
-        calculations$avgSd <- bind_cols(
-          calculations$avgSd,
-          newCols
-        )
+        # If calculations is NULL, create it else update it
+        if (is.null(calculations$avgSd)) {
+          calculations$avgSd <- newCols
+        } else {
+          calculations$avgSd <- bind_cols(
+            calculations$avgSd,
+            newCols
+          )
+        }
       }
     }
+    
+    
     
     # Use calculation
     useCalculated(TRUE)
@@ -266,7 +326,9 @@ nutrientsTool <- function(input, output, session, pool, site, datetime, ...) {
           ),
           rawDataUpdated(),
           no3Updated(),
-          avgSdUpdated()
+          avgSdUpdated(),
+          oldNutUpdated(),
+          oldNutAvgSdUpdated()
         )
       }),
       # Returns errors and warnings
