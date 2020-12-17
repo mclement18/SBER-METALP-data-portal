@@ -396,9 +396,191 @@ calcd13DIC <- function(df, pool, labTemp = 'default', ...) {
 
 
 
-# calcChlaUgL
-# calcChlaUgm2
-# calcAFDMgm2
+
+convertToUnitPerM2 <- function(s, d, vf, vt) {
+  # Convert sample value (s) to a sample unit/m2
+  # Using rock dimensions (d) format: c(length , width, depth)
+  # Sample volume (vt) and volume filtrated (vf)
+  
+  # Calculate area
+  area <- 2 * pi * mean(combn((d / 100)^1.6075, 2, prod))^(1/1.6075)
+  
+  # Convert to unit/m2
+  s * vt / (vf * area)
+}
+
+
+
+calcBenthicAFDM <- function(df, ...) {
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('lab_chla_sizeA_rep',
+          'lab_chla_sizeB_rep',
+          'lab_chla_sizeC_rep',
+          'lab_chla_tot_vol_rep',
+          'lab_chla_vol_filtrated_rep',
+          'afdm_g_filter_rep'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 6
+  
+  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+    # Get values
+    lab_chla_sizeA_rep <- df %>% select(starts_with('lab_chla_sizeA_rep')) %>% pull()
+    lab_chla_sizeB_rep <- df %>% select(starts_with('lab_chla_sizeB_rep')) %>% pull()
+    lab_chla_sizeC_rep <- df %>% select(starts_with('lab_chla_sizeC_rep')) %>% pull()
+    lab_chla_tot_vol_rep <- df %>% select(starts_with('lab_chla_tot_vol_rep')) %>% pull()
+    lab_chla_vol_filtrated_rep <- df %>% select(starts_with('lab_chla_vol_filtrated_rep')) %>% pull()
+    afdm_g_filter_rep <- df %>% select(starts_with('afdm_g_filter_rep')) %>% pull()
+    
+    # If no NAs, calculate AFDM per m2
+    if (!any(is.na(c(lab_chla_sizeA_rep, lab_chla_sizeB_rep, lab_chla_sizeC_rep, lab_chla_tot_vol_rep, lab_chla_vol_filtrated_rep, afdm_g_filter_rep)))) {
+      return(
+        convertToUnitPerM2(
+          afdm_g_filter_rep,
+          c(lab_chla_sizeA_rep, lab_chla_sizeB_rep, lab_chla_sizeC_rep),
+          lab_chla_vol_filtrated_rep,
+          lab_chla_tot_vol_rep
+        )
+      )
+    }
+  }
+  
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+calcChlaPerM2 <- function(df, ...) {
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('lab_chla_sizeA_rep',
+          'lab_chla_sizeB_rep',
+          'lab_chla_sizeC_rep',
+          'lab_chla_tot_vol_rep',
+          'lab_chla_vol_filtrated_rep',
+          'chla_(no)?acid_ugL_rep'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 6
+  
+  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+    # Get values
+    lab_chla_sizeA_rep <- df %>% select(starts_with('lab_chla_sizeA_rep')) %>% pull()
+    lab_chla_sizeB_rep <- df %>% select(starts_with('lab_chla_sizeB_rep')) %>% pull()
+    lab_chla_sizeC_rep <- df %>% select(starts_with('lab_chla_sizeC_rep')) %>% pull()
+    lab_chla_tot_vol_rep <- df %>% select(starts_with('lab_chla_tot_vol_rep')) %>% pull()
+    lab_chla_vol_filtrated_rep <- df %>% select(starts_with('lab_chla_vol_filtrated_rep')) %>% pull()
+    chla_ugl <- df %>% select(matches('chla_(no)?acid_ugL_rep')) %>% pull()
+    
+    # If no NAs, calculate Chla per m2
+    if (!any(is.na(c(lab_chla_sizeA_rep, lab_chla_sizeB_rep, lab_chla_sizeC_rep, lab_chla_tot_vol_rep, lab_chla_vol_filtrated_rep, chla_ugl)))) {
+      return(
+        convertToUnitPerM2(
+          chla_ugl * 0.005,
+          c(lab_chla_sizeA_rep, lab_chla_sizeB_rep, lab_chla_sizeC_rep),
+          lab_chla_vol_filtrated_rep,
+          lab_chla_tot_vol_rep
+        )
+      )
+    }
+  }
+  
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+
+calcChlaAcid <- function(df, pool, ...) {
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('lab_chla_fluor_1_rep',
+          'lab_chla_fluor_2_rep'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 2
+  
+  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+    # Get values
+    lab_chla_fluor_1_rep <- df %>% select(starts_with('lab_chla_fluor_1_rep')) %>% pull()
+    lab_chla_fluor_2_rep <- df %>% select(starts_with('lab_chla_fluor_2_rep')) %>% pull()
+    
+    # Define constants to get
+    cst_to_get <- c('chla_acidified_slope', 'chla_acidified_intercept')
+    
+    # Get constants
+    constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
+    
+    # Constant needed
+    chla_acidified_slope <- constants %>% filter(name == 'chla_acidified_slope') %>% pull('value')
+    chla_acidified_intercept <- constants %>% filter(name == 'chla_acidified_intercept') %>% pull('value')
+    
+    # If no NAs, calculate Chla acidified
+    if (!any(is.na(c(lab_chla_fluor_1_rep, lab_chla_fluor_2_rep, chla_acidified_slope, chla_acidified_intercept)))) {
+      return(
+        (lab_chla_fluor_1_rep - lab_chla_fluor_2_rep) * chla_acidified_slope + chla_acidified_intercept
+      )
+    }
+  }
+  
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+calcChlaNoAcid <- function(df, pool, ...) {
+  # Check for the presence of the correct columns
+  allColumns <- sum(grepl('lab_chla_fluor_1_rep', colnames(df))) == 1
+  
+  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+    # Get values
+    lab_chla_fluor_1_rep <- df %>% select(starts_with('lab_chla_fluor_1_rep')) %>% pull()
+    
+    # Define constants to get
+    cst_to_get <- c('chla_non_acidified_slope', 'chla_non_acidified_intercept')
+    
+    # Get constants
+    constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
+    
+    # Constant needed
+    chla_non_acidified_slope <- constants %>% filter(name == 'chla_non_acidified_slope') %>% pull('value')
+    chla_non_acidified_intercept <- constants %>% filter(name == 'chla_non_acidified_intercept') %>% pull('value')
+    
+    # If no NAs, calculate Chla non acidified
+    if (!any(is.na(c(lab_chla_fluor_1_rep, chla_non_acidified_slope, chla_non_acidified_intercept)))) {
+      return(
+        lab_chla_fluor_1_rep * chla_non_acidified_slope + chla_non_acidified_intercept
+      )
+    }
+  }
+  
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
 # calcCO2HSuM
 # calcCO2HSuatm
 
