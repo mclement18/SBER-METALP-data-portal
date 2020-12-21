@@ -248,7 +248,7 @@ calcDIC <- function(df, pool, labTemp = 'default', ...) {
     )
   ) == 6
   
-  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+  if (nrow(df) == 1 & allColumns) {
     # Define constants to get
     cst_to_get <- c('h_co2_29815k', 'gas_const_r_mol', 'vial_volume', 'h3po4_added', 'lab_temp_avg_degC', 'lab_press_avg_atm')
     
@@ -332,7 +332,7 @@ calcd13DIC <- function(df, pool, labTemp = 'default', ...) {
     )
   ) == 5
   
-  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+  if (nrow(df) == 1 & allColumns) {
     # Define constants to get
     cst_to_get <- c('h_co2_29815k', 'gas_const_r_mol', 'vial_volume', 'h3po4_added', 'lab_temp_avg_degC', 'lab_press_avg_atm')
     
@@ -428,7 +428,7 @@ calcBenthicAFDM <- function(df, ...) {
     )
   ) == 6
   
-  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+  if (nrow(df) == 1 & allColumns) {
     # Get values
     lab_chla_sizeA_rep <- df %>% select(starts_with('lab_chla_sizeA_rep')) %>% pull()
     lab_chla_sizeB_rep <- df %>% select(starts_with('lab_chla_sizeB_rep')) %>% pull()
@@ -475,7 +475,7 @@ calcChlaPerM2 <- function(df, ...) {
     )
   ) == 6
   
-  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+  if (nrow(df) == 1 & allColumns) {
     # Get values
     lab_chla_sizeA_rep <- df %>% select(starts_with('lab_chla_sizeA_rep')) %>% pull()
     lab_chla_sizeB_rep <- df %>% select(starts_with('lab_chla_sizeB_rep')) %>% pull()
@@ -519,7 +519,7 @@ calcChlaAcid <- function(df, pool, ...) {
     )
   ) == 2
   
-  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+  if (nrow(df) == 1 & allColumns) {
     # Get values
     lab_chla_fluor_1_rep <- df %>% select(starts_with('lab_chla_fluor_1_rep')) %>% pull()
     lab_chla_fluor_2_rep <- df %>% select(starts_with('lab_chla_fluor_2_rep')) %>% pull()
@@ -554,7 +554,7 @@ calcChlaNoAcid <- function(df, pool, ...) {
   # Check for the presence of the correct columns
   allColumns <- sum(grepl('lab_chla_fluor_1_rep', colnames(df))) == 1
   
-  if (nrow(df) == 1 & ncol(df) <= 10 & allColumns) {
+  if (nrow(df) == 1 & allColumns) {
     # Get values
     lab_chla_fluor_1_rep <- df %>% select(starts_with('lab_chla_fluor_1_rep')) %>% pull()
     
@@ -572,6 +572,40 @@ calcChlaNoAcid <- function(df, pool, ...) {
     if (!any(is.na(c(lab_chla_fluor_1_rep, chla_non_acidified_slope, chla_non_acidified_intercept)))) {
       return(
         lab_chla_fluor_1_rep * chla_non_acidified_slope + chla_non_acidified_intercept
+      )
+    }
+  }
+  
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+calcCH4dry <- function(df, ...) {
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('lab_co2(air)?_h2o',
+          'lab_co2(air)?_ch4'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 2
+  
+  if (nrow(df) == 1 & allColumns) {
+    # Get values
+    lab_co2_h2o <- df %>% select(matches('lab_co2(air)?_h2o')) %>% pull()
+    lab_co2_ch4 <- df %>% select(matches('lab_co2(air)?_ch4')) %>% pull()
+    
+    # If no NAs, calculate Chla acidified
+    if (!any(is.na(c(lab_co2_h2o, lab_co2_ch4)))) {
+      return(
+        (lab_co2_h2o * 1.2347 - 0.0016) * lab_co2_ch4 / 100 + lab_co2_ch4
       )
     }
   }
