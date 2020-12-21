@@ -21,7 +21,13 @@
 }
 
 @mixin tall-and-wide {
-    @media screen and (min-height: 1041px) and (min-width: 1000px) {
+    @media screen and (min-height: 911px) and (min-width: 1000px) {
+        @content;
+    }
+}
+
+@mixin tall-tablet {
+    @media screen and (min-height: 953px) and (max-width: 999px) and (min-width: 768px) {
         @content;
     }
 }

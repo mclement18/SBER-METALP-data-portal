@@ -58,6 +58,10 @@
         }
     }
 
+    @include tall-tablet {
+        height: calc(100vh - 222px);
+    }
+
     @include tall-and-wide {
         height: calc(100vh - 154px);
     }
