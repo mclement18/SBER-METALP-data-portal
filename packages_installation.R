@@ -21,7 +21,9 @@ install.packages(
            "sodium",
            "DT",
            "rhandsontable",
-           "bigleaf"
+           "bigleaf",
+           "promises",
+           "future"
   ),
   repos = 'https://cran.rstudio.com/'
 )
