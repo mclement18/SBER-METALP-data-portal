@@ -92,10 +92,10 @@ calcAlt2BP <- function(df, pool, ...) {
     # Get elevation
     elev <- getRows(pool, 'stations', name == station, columns = 'elevation') %>% pull()
     
-    # If there is an elevation and a temp, calculate the pressure
+    # If there is an elevation and a temp, calculate the pressure in hPa
     if (!any(is.na(c(elev, temp)))) {
       return(
-        round(bigleaf::pressure.from.elevation(elev, temp))
+        round(bigleaf::pressure.from.elevation(elev, temp) * 10)
       )
     }
   }
