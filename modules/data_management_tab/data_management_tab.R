@@ -14,6 +14,7 @@ source('./modules/data_management_tab/tools/doc_tool.R')
 source('./modules/data_management_tab/tools/dom_tool.R')
 source('./modules/data_management_tab/tools/alkalinity_tool.R')
 source('./modules/data_management_tab/tools/co2_air_tool.R')
+source('./modules/data_management_tab/tools/pco2_tool.R')
 source('./modules/data_management_tab/tools/dic_tool.R')
 source('./modules/data_management_tab/tools/ions_tool.R')
 source('./modules/data_management_tab/tools/nutrients_tool.R')
@@ -125,6 +126,13 @@ dataManagementTabUI <- function(id, pool, userRole) {
       ),
       tabPanel(
         # Tab title
+        'pCO2',
+        # Tab content
+        toolsLayoutUI(ns('pCO2Tool'), 'pCO2'),
+        value = ns('pCO2Tool')
+      ),
+      tabPanel(
+        # Tab title
         'DIC',
         # Tab content
         toolsLayoutUI(ns('dicTool'), 'DIC'),
@@ -202,6 +210,11 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   
   # Call the tools layout module with the CO2 air tool
   callModule(toolsLayout, 'co2AirTool', co2AirTool, co2AirToolUI, pool,
+             updateVerification = userRole == 'intern',
+             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
+  
+  # Call the tools layout module with the CO2 air tool
+  callModule(toolsLayout, 'pCO2Tool', pCO2Tool, pCO2ToolUI, pool,
              updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   

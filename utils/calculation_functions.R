@@ -615,8 +615,373 @@ calcCH4dry <- function(df, ...) {
   as.numeric(NA)
 }
 
-# calcCO2HSuM
-# calcCO2HSuatm
+
+
+
+calcCH4 <- function(df, pool, labTemp = 'default', labPa = 'default', ...) {
+  # labTemp and labPa values c('default', 'cst', 'db')
+  labParams <- list(
+    labTemp = labTemp,
+    labPa = labPa
+  )
+  
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('WTW_Temp_degC_1',
+          'Field_BP$',
+          'Field_BP_altitude$',
+          'lab_co2_lab_temp',
+          'lab_co2_lab_press',
+          'lab_co2_ch4_dry'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 6
+  
+  if (nrow(df) == 1 & allColumns) {
+    # Define constants to get
+    cst_to_get <- c('lab_press_avg_atm', 'lab_temp_avg_degC', 'ch4_in_sa', 'gas_const_r_mol', 'h_ch4_29815k')
+    
+    # Get constants
+    constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
+    
+    # Determine which constant to use, from data entry (db) or constant table (cst)
+    # The default argument will prevail the 'db' and then fallback to the 'cst'
+    for (param in names(labParams)) {
+      if (param == 'labTemp') {
+        cstName <- 'lab_temp_avg_degC'
+        dbName <- 'lab_co2_lab_temp'
+      } else {
+        cstName <- 'lab_press_avg_atm'
+        dbName <- 'lab_co2_lab_press'
+      }
+      # Get lab temp from data
+      if (labParams[[param]] == 'db') {
+        labParams[[param]] <- df %>% pull(dbName)
+        # Get lab temp from constant
+      } else if (labParams[[param]] == 'cst') {
+        labParams[[param]] <- constants %>%
+          filter(name == cstName) %>%
+          pull('value')
+      } else if (labParams[[param]] == 'default') {
+        # Get db temp
+        labParams[[param]] <- df %>% pull(dbName)
+        # If its value is NA, use constant
+        if (is.na(labParams[[param]])) labParams[[param]] <- constants %>%
+            filter(name == cstName) %>%
+            pull('value')
+      }
+    }
+    
+    # Calculate temp in Kelvin
+    labParams$labTemp <- labParams$labTemp + 273.15
+    
+    # values needed
+    ch4_dry <- df %>% select(starts_with('lab_co2_ch4_dry')) %>% pull()
+    water_temp_k <- 273.15 + df %>% pull('WTW_Temp_degC_1')
+    fieldPressure <- df %>% pull('Field_BP')
+    altPressure <- df %>% pull('Field_BP_altitude')
+    # If the fieldPressure is present and within the range
+    if (!is.na(fieldPressure) & fieldPressure <= 1050 & fieldPressure >= 700) {
+      # Use filed pressure
+     bp <- fieldPressure
+    } else {
+      # Else use altPressure
+      bp <- altPressure
+    }
+    
+    # Constant needed
+    ch4_in_sa <- constants %>% filter(name == 'ch4_in_sa') %>% pull('value')
+    gas_const_r_mol <- constants %>% filter(name == 'gas_const_r_mol') %>% pull('value')
+    h_ch4_29815k <- constants %>% filter(name == 'h_ch4_29815k') %>% pull('value')
+    
+    if (!any(is.na(c(ch4_dry, water_temp_k, bp, ch4_in_sa, gas_const_r_mol, h_ch4_29815k, labParams$labTemp, labParams$labPa)))) {
+      # Calculate intermediate variables
+      h_ch4_t_eq <- h_ch4_29815k * exp(1750 * (1/labParams$labTemp - 1/298.15))
+      A <- ch4_dry * labParams$labPa * 101.325 * water_temp_k - bp * (ch4_in_sa * labParams$labTemp * 10^3)
+      B <- h_ch4_t_eq * gas_const_r_mol * 10 * water_temp_k + bp
+      
+      dividend <- A * B
+      divisor <- labParams$labTemp * bp * gas_const_r_mol * water_temp_k
+      
+      # Check for presence of both dividend and divisor
+      if (divisor != 0) {
+        return(
+          # Calculate CH4
+          dividend / divisor
+        )
+      }
+    }
+  }
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+calcCO2 <- function(df, pool, labTemp = 'default', labPa = 'default', ...) {
+  # labTemp and labPa values c('default', 'cst', 'db')
+  labParams <- list(
+    labTemp = labTemp,
+    labPa = labPa
+  )
+  
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('lab_co2_lab_temp',
+          'lab_co2_lab_press',
+          'lab_co2_co2ppm'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 3
+  
+  if (nrow(df) == 1 & allColumns) {
+    # Define constants to get
+    cst_to_get <- c('lab_press_avg_atm', 'lab_temp_avg_degC', 'vol_sa', 'vol_water', 'c_const', 'gas_const_r_atm')
+    
+    # Get constants
+    constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
+    
+    # Determine which constant to use, from data entry (db) or constant table (cst)
+    # The default argument will prevail the 'db' and then fallback to the 'cst'
+    for (param in names(labParams)) {
+      if (param == 'labTemp') {
+        cstName <- 'lab_temp_avg_degC'
+        dbName <- 'lab_co2_lab_temp'
+      } else {
+        cstName <- 'lab_press_avg_atm'
+        dbName <- 'lab_co2_lab_press'
+      }
+      # Get lab temp from data
+      if (labParams[[param]] == 'db') {
+        labParams[[param]] <- df %>% pull(dbName)
+        # Get lab temp from constant
+      } else if (labParams[[param]] == 'cst') {
+        labParams[[param]] <- constants %>%
+          filter(name == cstName) %>%
+          pull('value')
+      } else if (labParams[[param]] == 'default') {
+        # Get db temp
+        labParams[[param]] <- df %>% pull(dbName)
+        # If its value is NA, use constant
+        if (is.na(labParams[[param]])) labParams[[param]] <- constants %>%
+            filter(name == cstName) %>%
+            pull('value')
+      }
+    }
+    
+    # Calculate temp in Kelvin
+    labParams$labTemp <- labParams$labTemp + 273.15
+    
+    # values needed
+    co2 <- df %>% select(starts_with('lab_co2_co2ppm')) %>% pull()
+    
+    # Constant needed
+    vol_sa <- constants %>% filter(name == 'vol_sa') %>% pull('value')
+    vol_water <- constants %>% filter(name == 'vol_water') %>% pull('value')
+    c_const <- constants %>% filter(name == 'c_const') %>% pull('value')
+    gas_const_r_atm <- constants %>% filter(name == 'gas_const_r_atm') %>% pull('value')
+    
+    if (!any(is.na(c(co2, vol_sa, vol_water, c_const, gas_const_r_atm, labParams$labTemp, labParams$labPa)))) {
+      # Calculate intermediate variables
+      exponent <- exp(c_const * (1/labParams$labTemp - 1/298.15))
+      dividend <- co2 * labParams$labPa * (vol_sa + 0.034 * exponent * vol_water * gas_const_r_atm * labParams$labTemp)
+      divisor <- gas_const_r_atm * vol_water * labParams$labTemp
+      
+      # Check for presence of both dividend and divisor
+      if (divisor != 0) {
+        return(
+          # Calculate CH4
+          dividend / divisor
+        )
+      }
+    }
+  }
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+calcpCO2 <- function(df, pool, ...) {
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('WTW_Temp_degC_1',
+          'CO2_HS_Um'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 2
+  
+  if (nrow(df) == 1 & allColumns) {
+    # Define constants to get
+    cst_to_get <- c('c_const')
+    
+    # Get constants
+    constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
+    
+    # values needed
+    co2 <- df %>% select(starts_with('CO2_HS_Um')) %>% pull()
+    water_temp_k <- 273.15 + df %>% pull('WTW_Temp_degC_1')
+    
+    # Constant needed
+    c_const <- constants %>% filter(name == 'c_const') %>% pull('value')
+    
+    if (!any(is.na(c(co2, water_temp_k, c_const)))) {
+      # Calculate intermediate variables
+      dividend <- co2
+      divisor <- 0.034 * exp(c_const * (1/water_temp_k - 1/298.15))
+      
+      # Check for presence of both dividend and divisor
+      if (divisor != 0) {
+        return(
+          # Calculate CH4
+          dividend / divisor
+        )
+      }
+    }
+  }
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+calcpCO2P1 <- function(df, pool, ...) {
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('WTW_Temp_degC_1',
+          'Field_BP$',
+          'Field_BP_altitude$',
+          'CO2_HS_Um'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 4
+  
+  if (nrow(df) == 1 & allColumns) {
+    # Define constants to get
+    cst_to_get <- c('c_const')
+    
+    # Get constants
+    constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
+    
+    # values needed
+    co2 <- df %>% select(starts_with('CO2_HS_Um')) %>% pull()
+    water_temp_k <- 273.15 + df %>% pull('WTW_Temp_degC_1')
+    fieldPressure <- df %>% pull('Field_BP')
+    altPressure <- df %>% pull('Field_BP_altitude')
+    # If the fieldPressure is present and within the range
+    if (!is.na(fieldPressure) & fieldPressure <= 1050 & fieldPressure >= 700) {
+      # Use filed pressure
+      bp <- fieldPressure
+    } else {
+      # Else use altPressure
+      bp <- altPressure
+    }
+    
+    # Constant needed
+    c_const <- constants %>% filter(name == 'c_const') %>% pull('value')
+    
+    if (!any(is.na(c(co2, water_temp_k, bp, c_const)))) {
+      # Calculate intermediate variables
+      dividend <- co2 * bp
+      divisor <- 0.034 * exp(c_const * (1/water_temp_k - 1/298.15)) * 1013.25
+      
+      # Check for presence of both dividend and divisor
+      if (divisor != 0) {
+        return(
+          # Calculate CH4
+          dividend / divisor
+        )
+      }
+    }
+  }
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
+
+
+
+
+
+calcpCO2P2 <- function(df, pool, ...) {
+  # Check for the presence of the correct columns
+  allColumns <- sum(
+    grepl(
+      paste(
+        c('WTW_Temp_degC_1',
+          'Field_BP$',
+          'Field_BP_altitude$',
+          'CO2_HS_Um'),
+        collapse = '|'
+      ),
+      colnames(df)
+    )
+  ) == 4
+  
+  if (nrow(df) == 1 & allColumns) {
+    # Define constants to get
+    cst_to_get <- c('c_const')
+    
+    # Get constants
+    constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
+    
+    # values needed
+    co2 <- df %>% select(starts_with('CO2_HS_Um')) %>% pull()
+    water_temp_k <- 273.15 + df %>% pull('WTW_Temp_degC_1')
+    fieldPressure <- df %>% pull('Field_BP')
+    altPressure <- df %>% pull('Field_BP_altitude')
+    # If the fieldPressure is present and within the range
+    if (!is.na(fieldPressure) & fieldPressure <= 1050 & fieldPressure >= 700) {
+      # Use filed pressure
+      bp <- fieldPressure
+    } else {
+      # Else use altPressure
+      bp <- altPressure
+    }
+    
+    # Constant needed
+    c_const <- constants %>% filter(name == 'c_const') %>% pull('value')
+    
+    if (!any(is.na(c(co2, water_temp_k, bp, c_const)))) {
+      # Calculate intermediate variables
+      dividend <- co2 * 1013.25
+      divisor <- 0.034 * exp(c_const * (1/water_temp_k - 1/298.15)) * bp
+      
+      # Check for presence of both dividend and divisor
+      if (divisor != 0) {
+        return(
+          # Calculate CH4
+          dividend / divisor
+        )
+      }
+    }
+  }
+  
+  # If nothing is returned, return NA
+  as.numeric(NA)
+}
 
 
 
