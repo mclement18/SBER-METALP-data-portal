@@ -2,12 +2,13 @@
 
 ## Create module UI ###############################################################
 
-editableDTUI<- function(id) {
-  # Create the UI for the login module
-  # Parameters:
-  #  - id: String, the module id
-  # 
-  # Returns a div containing the layout
+editableDTUI<- function(id, canReorder = FALSE) {
+# Create the UI for the login module
+# Parameters:
+#  - id: String, the module id
+#  - canReorder:  Boolean, indicates whether to display the Update order button
+# 
+# Returns a div containing the layout
   
   # Create namespace
   ns <- NS(id)
@@ -23,7 +24,11 @@ editableDTUI<- function(id) {
         actionButton(ns('edit_top'), 'Edit', icon = icon('edit'), class = 'custom-style'),
         actionButton(ns('delete_top'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
       ),
-      actionButton(ns('refresh_top'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+      div(
+        class = 'btn-group',
+        if (canReorder) actionButton(ns('reorder_top'), 'Update Order', icon = icon('sort-amount-down-alt'), class = 'custom-style custom-style--primary'),
+        actionButton(ns('refresh_top'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+      )
     ),
     # Create a table of users
     DTOutput(ns('table')),
@@ -35,7 +40,11 @@ editableDTUI<- function(id) {
         actionButton(ns('edit_bottom'), 'Edit', icon = icon('edit'), class = 'custom-style'),
         actionButton(ns('delete_bottom'), 'Delete', icon = icon('trash-alt'), class = 'custom-style custom-style--primary')
       ),
-      actionButton(ns('refresh_bottom'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+      div(
+        class = 'btn-group',
+        if (canReorder) actionButton(ns('reorder_bottom'), 'Update Order', icon = icon('sort-amount-down-alt'), class = 'custom-style custom-style--primary'),
+        actionButton(ns('refresh_bottom'), 'Refresh', icon = icon('refresh'), class = 'custom-style')
+      )
     )
   )
 }
@@ -46,7 +55,8 @@ editableDTUI<- function(id) {
 
 editableDT <- function(input, output, session, pool, tableName, element,
                        tableLoading, templateInputsCreate, templateInputsEdit,
-                       creationExpr, updateExpr, deleteExpr, outputTableExpr = NULL, ...) {
+                       creationExpr, updateExpr, deleteExpr, outputTableExpr = NULL,
+                       canReorder = FALSE, ...) {
 # Create the logic for the editableDT module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -70,6 +80,7 @@ editableDT <- function(input, output, session, pool, tableName, element,
 #                You can use the 'selectedRowIds' symbol in your expression which is the a numeric vector of the selected row ids.
 #  - outputTableExpr: Expression, the expression to run in order to apply modification to the df before create the datatable
 #                     You can use the 'loadedTable' symbol in your expression which is the loaded df.
+#  - canReorder:  Boolean, indicates whether the rows can be reordered. If yes the table must contain a column named order that contains unique integers from 1 to n.
 #  - ...: Other variables to use in the passed expressions, usually reactive expression giving access to inputs from the outer module
 # 
 # Returns NULL
@@ -291,6 +302,44 @@ editableDT <- function(input, output, session, pool, tableName, element,
     
     
     
+    
+    
+    ## Order update #################################################################
+    
+    # Create observe event that react to the reorder buttons
+    observeEvent(input$reorder_top | input$reorder_bottom, ignoreInit = TRUE, {
+      req(input$reorder_top != 0 | input$reorder_bottom != 0, input$table_rows_all)
+      
+      # Get table and create empty reorderedTable
+      table <- loadTable()
+      reorderedTable <- data.frame()
+      
+      # Rearrange table by the new ascending order
+      for (rowIndex in input$table_rows_all) {
+        reorderedTable <- bind_rows(
+          reorderedTable,
+          table %>% slice(rowIndex)
+        )
+      }
+      
+      # Update table order
+      error <- updateOrder(pool, tableName, reorderedTable$id, 1:nrow(reorderedTable))
+      
+      # Display error
+      if (error == '') {
+        showNotification("Successfully reordered table!", type = 'message')
+      } else {
+        showNotification(
+          paste("The following errors occured:", error),
+          type = 'error'
+        )
+      }
+    })
+    
+    
+    
+    
+    
     ## Table rendering ##############################################################
     
     # Render the DataTable
@@ -299,14 +348,23 @@ editableDT <- function(input, output, session, pool, tableName, element,
       
       if (!is.null(outputTableExpr)) loadedTable <- eval(outputTableExpr)
       
+      if (canReorder) loadedTable %<>% select(-order)
+      
       loadedTable %>%
-        datatable(rownames = FALSE, options = list(
-          dom = 't',
-          paging = FALSE,
-          scrollX = TRUE,
-          columnDefs = list(list(targets = 0, visible = FALSE))
-        )) %>%
+        datatable(
+          rownames = canReorder,
+          colnames = if (canReorder) c('order' = 1) else c('id' = 1),
+          extensions = 'RowReorder',
+          options = list(
+            dom = 't',
+            paging = FALSE,
+            scrollX = TRUE,
+            columnDefs = if (canReorder) list(list(targets = 1, visible = FALSE)) else list(list(targets = 0, visible = FALSE)),
+            rowReorder = canReorder,
+            order = if (canReorder) list(c(0 , 'asc'))
+          )
+        ) %>%
         formatDate(c('created_at', 'updated_at'), method = 'toUTCString')
-    })
+    }, server = FALSE)
   })
 }

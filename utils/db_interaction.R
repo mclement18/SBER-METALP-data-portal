@@ -238,6 +238,47 @@ deleteRows <- function(pool, table, ids) {
 
 
 
+updateOrder <- function(pool, table, ids, order) {
+  # Perform update only if ids and order are not NULL, numeric, not empty and does not contain NA
+  if (is.null(ids) | is.null(order)) {
+    error <- 'Error: ID and order vectors cannot be NULL.'
+  } else if (!is.numeric(ids) | !is.numeric(order)) {
+    error <- 'Error: ID and order vectors should be numeric vectors.'
+  } else if (length(ids) == 0 | length(order) == 0) {
+    error <- 'Error: ID and order vectors cannot be empty.'
+  } else if (any(is.na(ids)) | any(is.na(order))) {
+    error <- 'Error: ID and order vectors cannot be NA.'
+  } else if (length(ids) != length(order)) {
+    error <- 'Error: ID and order vectors must be of the same length.'
+  } else {
+    error <- ''
+    # Update all rows
+    for (i in 1:length(ids)) {
+      # Get row id and new position
+      id <- ids[i]
+      place <- order[i]
+      # Create query
+      query <- sqlInterpolate(
+        pool,
+        "UPDATE ?table SET `order` = ?order WHERE id = ?id;",
+        table = dbQuoteIdentifier(pool, table), order = place, id = id
+      )
+      # Send Query and catch errors
+      error <- paste(
+        error,
+        sendQueryWithError(pool, query),
+        sep = '\n'
+      )
+    }
+  }
+  
+  # Return error
+  return(str_trim(error))
+}
+
+
+
+
 ## User queries ###################################################################
 
 # Get user for login
@@ -390,9 +431,7 @@ updateData <- function(pool, id, columns, values) {
   sql <- 'UPDATE data SET ?values WHERE id = ?id;'
   
   # Build complete query to interpolate
-  for (i in c(1:length(columns))) {
-    sql <- sub("\\?values", paste("?column", 1:length(columns), " = ?value", 1:length(values), sep="", collapse=","), sql)
-  }
+  sql <- sub("\\?values", paste("?column", 1:length(columns), " = ?value", 1:length(values), sep="", collapse=","), sql)
   
   # Quote column names
   columns <- lapply(columns, function(column) {
