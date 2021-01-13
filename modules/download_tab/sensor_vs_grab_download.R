@@ -64,7 +64,8 @@ sensorVSGrabDownloadUI <- function(id, pool) {
       # Create a label with an icon button
       label = 'Sensor parameters',
       choices = parseOptionsWithSections(
-        getRows(pool, 'sensor_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+        getRows(pool, 'sensor_params_plotting', columns = c('order', 'section_name', 'option_name', 'param_name')) %>%
+          arrange(order) %>% select(-order),
         'param_name'
       ),
       multiple = TRUE,
@@ -158,8 +159,8 @@ sensorVSGrabDownload <- function(input, output, session, pool, user, hfDf, selec
     getRows(
       pool, 'sensor_params_plotting',
       param_name %in% local(hfParamReactive_d()),
-      columns = 'data'
-    ) %>% pull()
+      columns = c('order', 'data')
+    ) %>% arrange(order) %>% pull(data)
   })
   
   

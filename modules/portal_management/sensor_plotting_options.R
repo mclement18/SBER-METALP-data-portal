@@ -19,7 +19,7 @@ sensorPlotOptionsUI <- function(id) {
       htmlTemplate('./html_components/sensor_params_info.html'),
       initStateHidden = TRUE
     ),
-    editableDTUI(ns('sensorPlotOptions'))
+    editableDTUI(ns('sensorPlotOptions'), canReorder = TRUE)
   )
 }
 
@@ -40,13 +40,16 @@ sensorPlotOptions <- function(input, output, session, pool) {
   
   # Call editableDT module
   callModule(editableDT, 'sensorPlotOptions', pool = pool, tableName = 'sensor_params_plotting', element = 'plotted sensor parameter',
+             canReorder = TRUE,
              tableLoading = expression(
                getRows(pool, 'sensor_params_plotting') %>%
                  # Cast data types
                  mutate(
                    active = as.logical(active),
                    across(ends_with('_at'), ymd_hms)
-                 )
+                 ) %>% 
+                 # Arrange in ascending order
+                 arrange(order)
              ),
              templateInputsCreate = expression(
                inputsTemplate %>% select(

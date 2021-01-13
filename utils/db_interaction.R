@@ -610,13 +610,16 @@ createSensorPlotOption <- function(pool, section_name, option_name, param_name, 
   description <- validInputString(description)
   active <- validInputBool(active)
   
+  # Set the order to the last position
+  order <- countRows(pool, 'sensor_params_plotting') + 1
+  
   # Create SQL query
   query <- sqlInterpolate(
     pool,
     'INSERT INTO sensor_params_plotting
-    (section_name, option_name, param_name, units, data, grab_param_name, description, active)
-    values(?section_name, ?option_name, ?param_name, ?units, ?data, ?grab_param_name, ?description, ?active);',
-    section_name = section_name, option_name = option_name, param_name = param_name, units = units,
+    (`order`, section_name, option_name, param_name, units, data, grab_param_name, description, active)
+    values(?order, ?section_name, ?option_name, ?param_name, ?units, ?data, ?grab_param_name, ?description, ?active);',
+    order = order, section_name = section_name, option_name = option_name, param_name = param_name, units = units,
     data = data, grab_param_name = grab_param_name, description = description, active = active
   )
   

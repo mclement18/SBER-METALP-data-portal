@@ -43,9 +43,11 @@ sensorGrabComparisonUI <- function(id, pool) {
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
         parseOptionsWithSections(
-          getRows(pool, 'sensor_params_plotting',
-                  !is.na(grab_param_name),
-                  columns = c('section_name', 'option_name', 'param_name')),
+          getRows(
+            pool, 'sensor_params_plotting',
+            !is.na(grab_param_name),
+            columns = c('order', 'section_name', 'option_name', 'param_name')
+          ) %>% arrange(order) %>% select(-order),
           'param_name'
         )
       ),
@@ -140,8 +142,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
     getRows(
       pool, 'sensor_params_plotting',
       param_name == local(input$paramHf),
-      columns = c('param_name', 'units', 'data', 'grab_param_name', 'description')
-    )
+      columns = c('order', 'param_name', 'units', 'data', 'grab_param_name', 'description')
+    ) %>% arrange(order) %>% select(-order)
   })
   
   # Create an observeEvent that react to the paramHf reactive expression

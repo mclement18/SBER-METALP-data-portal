@@ -63,7 +63,8 @@ mainDownloadUI <- function(id, pool) {
             actionButton(ns('hfParamHelper'), icon('question-circle'), class = 'icon-btn')
           ),
           choices = parseOptionsWithSections(
-            getRows(pool, 'sensor_params_plotting', active == TRUE, columns = c('section_name', 'option_name', 'param_name')),
+            getRows(pool, 'sensor_params_plotting', active == TRUE, columns = c('order', 'section_name', 'option_name', 'param_name')) %>%
+              arrange(order) %>% select(-order),
             'param_name'
           ),
           multiple = TRUE,
@@ -229,8 +230,8 @@ mainDownload <- function(input, output, session, pool, user, hfDf, selectedSites
         pool, 'sensor_params_plotting',
         active == TRUE,
         param_name %in% local(hfParamReactive_d()),
-        columns = 'data'
-      ) %>% pull()
+        columns = c('order', 'data')
+      ) %>% arrange(order) %>% pull(data)
     } else if (inputDf == 'grabDf') {
       # Get parameters info
       parametersInfo <- getRows(
@@ -359,7 +360,8 @@ mainDownload <- function(input, output, session, pool, user, hfDf, selectedSites
   observeEvent(input$hfParamHelper | input$grabParamHelper, ignoreInit = TRUE, {
     # Select the correct parameters df
     if (input$data == 'hfDf') {
-      parameters <- getRows(pool, 'sensor_params_plotting', active == TRUE, columns = c('option_name', 'description'))
+      parameters <- getRows(pool, 'sensor_params_plotting', active == TRUE, columns = c('order', 'option_name', 'description')) %>%
+        arrange(order) %>% select(-order)
     } else if (input$data == 'grabDf') {
       parameters <- getRows(pool, 'grab_params_plotting', active == TRUE, columns = c('option_name', 'description'))
     }
