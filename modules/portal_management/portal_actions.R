@@ -154,7 +154,7 @@ portalActions <- function(input, output, session) {
     if (Sys.info()["sysname"] == 'Darwin') command <- paste0('/usr/local/mysql/bin/', command)
     
     # Create The backup
-    system2(command, args = c('--databases', MY_DB_NAME, '--add-drop-database', '-y'),
+    system2(command, args = c('--databases', MY_DB_NAME, '--add-drop-database', '-y', '--set-gtid-purged=OFF'),
             stdout = backupFile, stderr = errorFile)
     
     # If error
