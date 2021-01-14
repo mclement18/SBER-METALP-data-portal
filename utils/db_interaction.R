@@ -826,13 +826,16 @@ createCalculation <- function(pool, param_category = '', column_calculated = '',
   calcul_func <- validInputString(calcul_func)
   columns_used <- validInputString(columns_used)
   
+  # Put at last position
+  order <- countRows(pool, 'parameter_calculations') + 1
+  
   # Create SQL query
   query <- sqlInterpolate(
     pool,
     'INSERT INTO parameter_calculations
-    (param_category, column_calculated, calcul_func, columns_used)
-    values(?param_category, ?column_calculated, ?calcul_func, ?columns_used);',
-    param_category = param_category, column_calculated = column_calculated,
+    (`order`, param_category, column_calculated, calcul_func, columns_used)
+    values(?order, ?param_category, ?column_calculated, ?calcul_func, ?columns_used);',
+    order = order, param_category = param_category, column_calculated = column_calculated,
     calcul_func = calcul_func, columns_used = columns_used
   )
   
@@ -882,7 +885,7 @@ createConstant <- function(pool, name = '', unit = '', value = 0, description = 
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    'INSERT INTO parameter_calculations
+    'INSERT INTO constants
     (name, unit, value, description)
     values(?name, ?unit, ?value, ?description);',
     name = name, unit = unit,
@@ -905,7 +908,7 @@ updateConstant <- function(pool, constant, name = '', unit = '', value = 0, desc
   # Toggle read / unread
   query <- sqlInterpolate(
     pool,
-    'UPDATE parameter_calculations
+    'UPDATE constants
     SET name = ?name, unit = ?unit,
     value = ?value, description = ?description
     WHERE id = ?id;',

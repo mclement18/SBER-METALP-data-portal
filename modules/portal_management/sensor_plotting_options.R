@@ -47,9 +47,7 @@ sensorPlotOptions <- function(input, output, session, pool) {
                  mutate(
                    active = as.logical(active),
                    across(ends_with('_at'), ymd_hms)
-                 ) %>% 
-                 # Arrange in ascending order
-                 arrange(order)
+                 )
              ),
              templateInputsCreate = expression(
                inputsTemplate %>% select(

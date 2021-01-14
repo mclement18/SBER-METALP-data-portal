@@ -1002,8 +1002,8 @@ runGlobalCalculations <- function(df, pool) {
   # Get the calculations info
   calcInfo <- getRows(
     pool, 'parameter_calculations',
-    columns = c('column_calculated', 'calcul_func', 'columns_used')
-  )
+    columns = c('order', 'column_calculated', 'calcul_func', 'columns_used')
+  ) %>% arrange(order) %>% select(-order)
   
   # Get df columns
   dfColumns <- colnames(df)

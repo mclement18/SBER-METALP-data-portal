@@ -102,7 +102,13 @@ editableDT <- function(input, output, session, pool, tableName, element,
       reloadTable()
       
       # Retrieve table
-      eval(tableLoading)
+      table <- eval(tableLoading)
+      
+      # Arrange in ascending order
+      if (canReorder) table %<>% arrange(order)
+      
+      # Return table
+      table
     })
     
     # Create an observe event that react to both refresh buttons

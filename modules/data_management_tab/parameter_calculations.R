@@ -46,7 +46,7 @@ parameterCalculationsUI <- function(id, pool) {
         )
       )
     ),
-    editableDTUI(ns('calculations'))
+    editableDTUI(ns('calculations'), canReorder = TRUE)
   )
 }
 
@@ -176,6 +176,7 @@ parameterCalculations <- function(input, output, session, pool) {
   ## Call editableDT module #######################################################
   
   callModule(editableDT, 'calculations', pool = pool, tableName = 'parameter_calculations', element = 'calculation',
+             canReorder = TRUE,
              tableLoading = expression({
                # Use the reactive expression passed to the '...' as additional argument
                # To access the input$categoryFilter from the current module
