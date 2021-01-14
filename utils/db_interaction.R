@@ -546,13 +546,16 @@ createGbPlotOption <- function(pool, section_name, option_name, param_name, unit
   description <- validInputString(description)
   active <- validInputBool(active)
   
+  # Set the order to the last position
+  order <- countRows(pool, 'grab_params_plotting') + 1
+  
   # Create SQL query
   query <- sqlInterpolate(
     pool,
     'INSERT INTO grab_params_plotting
-    (section_name, option_name, param_name, units, data, sd, min_max, plot_func, description, active)
-    values(?section_name, ?option_name, ?param_name, ?units, ?data, ?sd, ?min_max, ?plot_func, ?description, ?active);',
-    section_name = section_name, option_name = option_name, param_name = param_name, units = units,
+    (`order`, section_name, option_name, param_name, units, data, sd, min_max, plot_func, description, active)
+    values(?order, ?section_name, ?option_name, ?param_name, ?units, ?data, ?sd, ?min_max, ?plot_func, ?description, ?active);',
+    order = order, section_name = section_name, option_name = option_name, param_name = param_name, units = units,
     data = data, sd = sd, min_max = min_max, plot_func = plot_func, description = description, active = active
   )
   
@@ -675,7 +678,7 @@ createGrabParamCat <- function(pool, category, param_name, description = '') {
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    'INSERT INTO grab_param_categories (`order`, category, param_name, description) values(?category, ?param_name, ?description);',
+    'INSERT INTO grab_param_categories (`order`, category, param_name, description) values(?order, ?category, ?param_name, ?description);',
     order = order, category = category, param_name = param_name, description = description
   )
   

@@ -25,12 +25,12 @@ gbPlotOptionsUI <- function(id, pool) {
       'Filter by section_name',
       choices = c(
         'All',
-        getRows(pool, 'grab_params_plotting', columns = 'section_name') %>%
-          pull() %>%
+        getRows(pool, 'grab_params_plotting', columns = c('order', 'section_name')) %>%
+          pull('section_name') %>%
           unique()
       )
     ),
-    editableDTUI(ns('gbPlotOptions'))
+    editableDTUI(ns('gbPlotOptions'), canReorder = TRUE)
   )
 }
 
@@ -51,6 +51,7 @@ gbPlotOptions <- function(input, output, session, pool) {
   
   # Call editableDT module
   callModule(editableDT, 'gbPlotOptions', pool = pool, tableName = 'grab_params_plotting', element = 'plotted grab parameter',
+             canReorder = TRUE,
              tableLoading = expression({
                # Get rows
                # Use the reactive expression passed to the '...' as additional argument

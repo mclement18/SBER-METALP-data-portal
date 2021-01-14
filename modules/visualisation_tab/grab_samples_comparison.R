@@ -17,7 +17,8 @@ grabSamplesComparisonUI <- function(id, pool) {
   
   # Get parameter select options
   parameterOptions <- parseOptionsWithSections(
-    getRows(pool, 'grab_params_plotting', columns = c('section_name', 'option_name', 'param_name')),
+    getRows(pool, 'grab_params_plotting', columns = c('order', 'section_name', 'option_name', 'param_name')) %>%
+      arrange(order) %>% select(-order),
     'param_name'
   )
   
@@ -132,14 +133,14 @@ grabSamplesComparison <- function(input, output, session, dateRange, pool) {
   currentParamX <- reactive(getRows(
     pool, 'grab_params_plotting',
     param_name == local(input$paramX),
-    columns = c('param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
-  ))
+    columns = c('order', 'param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
+  ) %>% arrange(order) %>% select(-order))
   
   currentParamY <- reactive(getRows(
     pool, 'grab_params_plotting',
     param_name == local(input$paramY),
-    columns = c('param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
-  ))
+    columns = c('order', 'param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
+  ) %>% arrange(order) %>% select(-order))
   
   
   

@@ -41,7 +41,8 @@ grabSamplesTimeSeriesUI <- function(id, pool) {
           actionButton(ns('paramHelper'), icon('question-circle'), class = 'icon-btn')
         ),
         parseOptionsWithSections(
-          getRows(pool, 'grab_params_plotting', active == TRUE, columns = c('section_name', 'option_name', 'param_name')),
+          getRows(pool, 'grab_params_plotting', active == TRUE, columns = c('order', 'section_name', 'option_name', 'param_name')) %>%
+            arrange(order) %>% select(-order),
           'param_name'
         )
       ),
@@ -144,8 +145,8 @@ grabSamplesTimeSeries <- function(input, output, session, dateRange, pool) {
     pool, 'grab_params_plotting',
     active == TRUE,
     param_name == local(input$param),
-    columns = c('param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
-  ))
+    columns = c('order', 'param_name', 'units', 'data', 'sd', 'min_max', 'plot_func', 'description')
+  ) %>% arrange(order) %>% select(-order))
   
   
   

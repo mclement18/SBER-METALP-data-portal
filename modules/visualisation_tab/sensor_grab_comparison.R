@@ -161,8 +161,8 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
   paramGrab <- reactive(getRows(
     pool, 'grab_params_plotting',
     param_name == local(input$paramGrab),
-    columns = c('param_name', 'units', 'data')
-  ))
+    columns = c('order', 'param_name', 'units', 'data')
+  ) %>% arrange(order) %>% select(-order))
   
   
   
@@ -415,7 +415,7 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
 
   # Activate the hover widget for the regular timeserie plot
   pointHoverWidgetServer(session, 'sensorGrabTimeserie', hfDf, reactive(input$sensorGrabTimeserie_hover),
-                         x_label = 'Date', y_label = 'Parameter',
+                         y_label = 'Parameter',
                          secondDf = grabDf, secondX = 'DATETIME_GMT', secondY = 'value')
   # Activate the hover widget for the vs plot
   pointHoverWidgetServer(session, 'sensorVsGrab', vsDf, reactive(input$sensorVsGrab_hover),
