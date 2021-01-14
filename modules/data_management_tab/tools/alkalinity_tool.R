@@ -71,8 +71,8 @@ alkalinityTool <- function(input, output, session, pool, site, datetime, ...) {
         pool,
         'grab_param_categories',
         category == 'Alkalinity',
-        columns = 'param_name'
-      ) %>% pull(),
+        columns = c('order', 'param_name')
+      ) %>% pull('param_name'),
       # Add field data column to update
       'WTW_pH_1',
       'created_at', 'updated_at'

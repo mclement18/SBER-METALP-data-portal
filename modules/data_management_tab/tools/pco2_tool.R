@@ -75,8 +75,8 @@ pCO2Tool <- function(input, output, session, pool, site, datetime, ...) {
         pool,
         'grab_param_categories',
         category == 'pCO2',
-        columns = 'param_name'
-      ) %>% pull(),
+        columns = c('order', 'param_name')
+      ) %>% pull('param_name'),
       # Get field data used in calculation
       'WTW_Temp_degC_1', 'Field_BP', 'Field_BP_altitude',
       'created_at', 'updated_at'

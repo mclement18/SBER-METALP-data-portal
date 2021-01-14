@@ -26,12 +26,13 @@ grabParamCategoriesUI <- function(id, pool) {
       choices = c(
         'All',
         parseOptions(
-          getRows(pool, 'grab_param_categories', columns = 'category'),
+          getRows(pool, 'grab_param_categories', columns = c('order', 'category')) %>%
+            arrange(order) %>% select(-order),
           'category'
         )
       )
     ),
-    editableDTUI(ns('gPCat'))
+    editableDTUI(ns('gPCat'), canReorder = TRUE)
   )
 }
 
@@ -53,6 +54,7 @@ grabParamCategories <- function(input, output, session, pool) {
   
   # Call editableDT module
   callModule(editableDT, 'gPCat', pool = pool, tableName = 'grab_param_categories', element = 'grab param category',
+             canReorder = TRUE,
              tableLoading = expression({
                # Get rows
                # Use the reactive expression passed to the '...' as additional argument

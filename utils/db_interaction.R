@@ -669,11 +669,14 @@ createGrabParamCat <- function(pool, category, param_name, description = '') {
   param_name <- validInputString(param_name)
   description <- validInputString(description)
   
+  # Put at last position
+  order <- countRows(pool, 'grab_param_categories') + 1
+  
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    'INSERT INTO grab_param_categories (category, param_name, description) values(?category, ?param_name, ?description);',
-    category = category, param_name = param_name, description = description
+    'INSERT INTO grab_param_categories (`order`, category, param_name, description) values(?category, ?param_name, ?description);',
+    order = order, category = category, param_name = param_name, description = description
   )
   
   # Send Query and catch errors

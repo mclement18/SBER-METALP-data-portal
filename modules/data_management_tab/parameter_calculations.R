@@ -40,7 +40,8 @@ parameterCalculationsUI <- function(id, pool) {
         choices = c(
           'All',
           parseOptions(
-            getRows(pool, 'grab_param_categories', columns = 'category'),
+            getRows(pool, 'grab_param_categories', columns = c('order', 'category')) %>%
+              arrange(order) %>% select(-order),
             'category'
           )
         )

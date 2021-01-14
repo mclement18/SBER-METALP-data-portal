@@ -17,7 +17,8 @@ globalGrabSamplesComparisonUI <- function(id, pool) {
   
   # Get parameter select options
   parameterOptions <- parseOptionsWithSections(
-    getRows(pool, 'grab_param_categories', columns = c('category', 'param_name')),
+    getRows(pool, 'grab_param_categories', columns = c('order', 'category', 'param_name')) %>%
+      arrange(order) %>% select(-order),
     valueColumn = 'param_name', sectionColumn = 'category', optionColumn = 'param_name'
   )
   
@@ -112,14 +113,14 @@ globalGrabSamplesComparison <- function(input, output, session, dateRange, pool)
   currentParamX <- reactive(getRows(
     pool, 'grab_param_categories',
     param_name == local(input$paramX),
-    columns = c('param_name', 'description')
-  ))
+    columns = c('order', 'param_name', 'description')
+  ) %>% arrange(order) %>% select(-order))
   
   currentParamY <- reactive(getRows(
     pool, 'grab_param_categories',
     param_name == local(input$paramY),
-    columns = c('param_name', 'description')
-  ))
+    columns = c('order', 'param_name', 'description')
+  ) %>% arrange(order) %>% select(-order))
   
   
   

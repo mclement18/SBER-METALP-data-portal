@@ -30,7 +30,8 @@ sensorVSGrabDownloadUI <- function(id, pool) {
       # Create a label with an icon button
       label = 'Grab parameters',
       choices = parseOptionsWithSections(
-        getRows(pool, 'grab_param_categories', columns = c('category', 'param_name')),
+        getRows(pool, 'grab_param_categories', columns = c('order', 'category', 'param_name')) %>%
+          arrange(order) %>% select(-order),
         valueColumn = 'param_name', sectionColumn = 'category', optionColumn = 'param_name'
       ),
       multiple = TRUE,

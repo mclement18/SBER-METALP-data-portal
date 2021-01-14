@@ -70,8 +70,8 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
         pool,
         'grab_param_categories',
         category == 'DOC',
-        columns = 'param_name'
-      ) %>% pull(),
+        columns = c('order', 'param_name')
+      ) %>% pull('param_name'),
       'created_at', 'updated_at'
     )
     

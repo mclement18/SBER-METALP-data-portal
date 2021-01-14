@@ -70,8 +70,8 @@ co2AirTool <- function(input, output, session, pool, site, datetime, ...) {
         pool,
         'grab_param_categories',
         category == 'CO2_air',
-        columns = 'param_name'
-      ) %>% pull(),
+        columns = c('order', 'param_name')
+      ) %>% pull('param_name'),
       'created_at', 'updated_at'
     )
     

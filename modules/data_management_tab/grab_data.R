@@ -50,7 +50,8 @@ grabDataUI <- function(id, pool) {
         choices = c(
          'All',
           parseOptions(
-            getRows(pool, 'grab_param_categories', columns = 'category'),
+            getRows(pool, 'grab_param_categories', columns = c('order', 'category')) %>%
+              arrange(order) %>% select(-order),
             'category'
           )
         )
@@ -167,7 +168,7 @@ grabData <- function(input, output, session, pool) {
       columns <- getRows(
         pool,
         'grab_param_categories',
-        columns = 'param_name'
+        columns = c('order', 'param_name')
       ) %>% 
         pull(param_name)
     } else {
@@ -176,7 +177,7 @@ grabData <- function(input, output, session, pool) {
         pool,
         'grab_param_categories',
         category == paramCat,
-        columns = 'param_name'
+        columns = c('order', 'param_name')
       ) %>% 
         pull(param_name)
     }

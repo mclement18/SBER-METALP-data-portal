@@ -71,8 +71,8 @@ domTool <- function(input, output, session, pool, site, datetime, ...) {
         pool,
         'grab_param_categories',
         category == 'DOM',
-        columns = 'param_name'
-      ) %>% pull(),
+        columns = c('order', 'param_name')
+      ) %>% pull('param_name'),
       # Add DOC_avg_ppb
       'DOC_avg_ppb',
       'created_at', 'updated_at'
