@@ -30,7 +30,8 @@ entryLayoutUI <- function(id, pool, toolModuleUI, createNew = FALSE, ...) {
           choices = c(
             'Choose a station ...' = '',
             parseOptions(
-              getRows(pool, 'stations', columns = c('name')),
+              getRows(pool, 'stations', columns = c('order', 'name')) %>%
+              arrange(order) %>% select(-order),
               'name'
             )
           )
@@ -161,7 +162,12 @@ entryLayout <- function(input, output, session, pool,
         div(
           class = 'table-edit-form',
           textOutput(session$ns('form_error')),
-          selectInput(session$ns('station'), label = 'station', choices = getRows(pool, 'stations', columns = 'name') %>% pull(name)),
+          selectInput(
+            session$ns('station'),
+            label = 'station',
+            choices = getRows(pool, 'stations', columns = c('order', 'name')) %>%
+              arrange(order) %>% pull(name)
+          ),
           textInput(session$ns('DATE_reading'), 'DATE_reading', placeholder = 'YYYY-MM-DD'),
           textInput(session$ns('TIME_reading'), 'TIME_reading', placeholder = 'HH:MM:SS'),
           textInput(session$ns('Convert_to_GMT'), 'Convert_to_GMT', placeholder = 'HH:MM:SS'),

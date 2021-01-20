@@ -34,7 +34,11 @@ globalGrabSamplesComparisonUI <- function(id, pool) {
         checkboxGroupInput(
           ns('sites'),
           'Station',
-          choices = parseOptions(getRows(pool, 'stations', columns = 'name'), 'name')
+          choices = parseOptions(
+            getRows(pool, 'stations', columns = c('order', 'name')) %>%
+              arrange(order) %>% select(-order),
+            'name'
+          )
         ),
         class = 'checkbox-grid'        
       ),

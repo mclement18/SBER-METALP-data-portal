@@ -19,7 +19,7 @@ stationsManagementUI <- function(id) {
       htmlTemplate('./html_components/stations_tab_info.html'),
       initStateHidden = TRUE
     ),  
-    editableDTUI(ns('stations'))
+    editableDTUI(ns('stations'),  canReorder = TRUE)
   )
 }
 
@@ -40,6 +40,7 @@ stationsManagement <- function(input, output, session, pool) {
   
   # Call editableDT module
   callModule(editableDT, 'stations', pool = pool, tableName = 'stations', element = 'station',
+             canReorder = TRUE,
              tableLoading = expression(
                getRows(pool, 'stations') %>%
                  # Cast data types

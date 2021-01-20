@@ -33,7 +33,8 @@ sensorInventoryUI <- function(id, pool) {
             )
           ),
           parseOptionsWithSections(
-            getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
+            getRows(pool, 'stations', columns = c('order', 'name', 'full_name', 'catchment')) %>%
+              arrange(order) %>% select(-order),
             valueColumn = 'name', sectionColumn = 'catchment', optionColumn = 'full_name'
           )
         )

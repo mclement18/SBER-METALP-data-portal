@@ -16,7 +16,11 @@ highFreqTimeSeriesUI <- function(id, pool) {
   ns <- NS(id)
   
   # Get site options
-  siteOptions <- parseOptions(getRows(pool, 'stations', columns = 'name'), 'name')
+  siteOptions <- parseOptions(
+    getRows(pool, 'stations', columns = c('order', 'name')) %>%
+      arrange(order) %>% select(-order),
+    'name'
+  )
   
   # Create the UI list to be returned
   list(
@@ -121,7 +125,8 @@ highFreqTimeSeries <- function(input, output, session, df, dateRange, pool) {
   ## Stations update logic ########################################################
   
   # Get the sites
-  sites <- getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment', 'color'))
+  sites <- getRows(pool, 'stations', columns = c('order', 'name', 'full_name', 'catchment', 'color')) %>%
+    arrange(order) %>% select(-order)
   
   # Create a reactive expression returning the selected sites
   selectedSites <- reactive({input$sites})

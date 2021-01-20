@@ -34,7 +34,8 @@ grabDataUI <- function(id, pool) {
             )
           ),
           parseOptionsWithSections(
-            getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
+            getRows(pool, 'stations', columns = c('order', 'name', 'full_name', 'catchment')) %>%
+              arrange(order) %>% select(-order),
             valueColumn = 'name',
             sectionColumn = 'catchment',
             optionColumn = 'full_name'
@@ -156,7 +157,8 @@ grabData <- function(input, output, session, pool) {
     # Get selected site
     sites <- input$site
     # Get all available sites
-    allSites <- getRows(pool, 'stations', columns = 'name') %>% pull(name)
+    allSites <- getRows(pool, 'stations', columns = c('order', 'name')) %>%
+      arrange(order) %>% pull(name)
     # If all sites are selected, sites to allSites
     if (sites == 'All') sites <- allSites
     
@@ -234,7 +236,11 @@ grabData <- function(input, output, session, pool) {
       div(
         class = 'table-edit-form',
         textOutput(session$ns('form_error')),
-        selectInput(session$ns('station'), label = 'station', choices = getRows(pool, 'stations', columns = 'name') %>% pull(name)),
+        selectInput(
+          session$ns('station'),
+          label = 'station',
+          choices = getRows(pool, 'stations', columns = c('order', 'name')) %>% arrange(order) %>% pull(name)
+        ),
         textInput(session$ns('DATE_reading'), 'DATE_reading', placeholder = 'YYYY-MM-DD'),
         textInput(session$ns('TIME_reading'), 'TIME_reading', placeholder = 'HH:MM:SS'),
         textInput(session$ns('Convert_to_GMT'), 'Convert_to_GMT', placeholder = 'HH:MM:SS'),

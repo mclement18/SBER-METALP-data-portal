@@ -34,7 +34,8 @@ grabSamplesComparisonUI <- function(id, pool) {
         ns('site'),
         'Station',
         parseOptionsWithSections(
-          getRows(pool, 'stations', columns = c('name', 'full_name', 'catchment')),
+          getRows(pool, 'stations', columns = c('order', 'name', 'full_name', 'catchment')) %>%
+            arrange(order) %>% select(-order),
           valueColumn = 'name',
           sectionColumn = 'catchment',
           optionColumn = 'full_name'
@@ -121,8 +122,8 @@ grabSamplesComparison <- function(input, output, session, dateRange, pool) {
     pool,
     'stations',
     name == local(input$site),
-    columns = c('full_name', 'color')
-  ))
+    columns = c('order', 'full_name', 'color')
+  ) %>% arrange(order) %>% select(-order))
   
   
   

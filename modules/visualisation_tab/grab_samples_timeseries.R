@@ -26,7 +26,11 @@ grabSamplesTimeSeriesUI <- function(id, pool) {
       selectInput(
         ns('catchment'),
         'Catchment',
-        parseOptions(getRows(pool, 'stations', columns = 'catchment'), 'catchment')
+        parseOptions(
+          getRows(pool, 'stations', columns = c('order', 'catchment')) %>%
+            arrange(order) %>% select(-order),
+          'catchment'
+        )
       ),
       # Create an empty checkbox group input for station selection
       # Will update dynamically in function of the catchment
@@ -107,8 +111,8 @@ grabSamplesTimeSeries <- function(input, output, session, dateRange, pool) {
       pool,
       'stations',
       catchment == local(input$catchment),
-      columns = c('name', 'full_name')
-    )
+      columns = c('order', 'name', 'full_name')
+    ) %>% arrange(order) %>% select(-order)
     
     # Update sites checkbox group input with current sites info
     updateCheckboxGroupInput(session, 'sites',
@@ -128,8 +132,8 @@ grabSamplesTimeSeries <- function(input, output, session, dateRange, pool) {
     pool,
     'stations',
     name %in% local(selectedSites_d()),
-    columns = c('name', 'full_name', 'catchment', 'color')
-  ))
+    columns = c('order', 'name', 'full_name', 'catchment', 'color')
+  ) %>% arrange(order) %>% select(-order))
   
   # Create a currentCatchment reactive expression
   currentCatchment <- reactive(currentSites() %>% pull(catchment) %>% unique())

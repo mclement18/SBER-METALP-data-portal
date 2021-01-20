@@ -487,12 +487,15 @@ createStation <- function(pool, name, full_name, catchment, color, elevation = '
   color <- validInputString(color)
   elevation <- validInputNumber(elevation, int = TRUE)
   
+  # Set the order to the last position
+  order <- countRows(pool, 'stations') + 1
+  
   # Create SQL query
   query <- sqlInterpolate(
     pool,
-    'INSERT INTO stations (name, full_name, catchment, color, elevation)
-    values(?name, ?full_name, ?catchment, ?color, ?elevation);',
-    name = name, full_name = full_name, catchment = catchment,
+    'INSERT INTO stations (`order`, name, full_name, catchment, color, elevation)
+    values(?order, ?name, ?full_name, ?catchment, ?color, ?elevation);',
+    order = order, name = name, full_name = full_name, catchment = catchment,
     color = color, elevation = elevation
   )
   
