@@ -39,77 +39,154 @@ toolsTabUI <- function(id) {
       # Tab title
       'Field data',
       # Tab content
-      toolsLayoutUI(ns('fieldDataTool'), 'Field data'),
+      toolsLayoutUI(
+        ns('fieldDataTool'),
+        'Field data',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_field_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('fieldDataTool')
     ),
     tabPanel(
       # Tab title
       'DOC',
       # Tab content
-      toolsLayoutUI(ns('docTool'), 'DOC'),
+      toolsLayoutUI(
+        ns('docTool'),
+        'DOC',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_doc_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('docTool')
     ),
     tabPanel(
       # Tab title
       'DOM',
       # Tab content
-      toolsLayoutUI(ns('domTool'), 'DOM'),
+      toolsLayoutUI(
+        ns('domTool'),
+        'DOM',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_dom_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('domTool')
     ),
     tabPanel(
       # Tab title
       'Alkalinity',
       # Tab content
-      toolsLayoutUI(ns('alkalinityTool'), 'Alkalinity'),
+      toolsLayoutUI(
+        ns('alkalinityTool'),
+        'Alkalinity',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_alkalinity_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('alkalinityTool')
     ),
     tabPanel(
       # Tab title
       'CO2 air',
       # Tab content
-      toolsLayoutUI(ns('co2AirTool'), 'CO2 air'),
+      toolsLayoutUI(
+        ns('co2AirTool'),
+        'CO2 air',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_co2air_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('co2AirTool')
     ),
     tabPanel(
       # Tab title
       'pCO2',
       # Tab content
-      toolsLayoutUI(ns('pCO2Tool'), 'pCO2'),
+      toolsLayoutUI(
+        ns('pCO2Tool'),
+        'pCO2',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_pco2_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('pCO2Tool')
     ),
     tabPanel(
       # Tab title
       'DIC',
       # Tab content
-      toolsLayoutUI(ns('dicTool'), 'DIC'),
+      toolsLayoutUI(
+        ns('dicTool'),
+        'DIC',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_dic_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('dicTool')
     ),
     tabPanel(
       # Tab title
       'Ions',
       # Tab content
-      toolsLayoutUI(ns('ionsTool'), 'Ions'),
+      toolsLayoutUI(
+        ns('ionsTool'),
+        'Ions',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_ions_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('ionsTool')
     ),
     tabPanel(
       # Tab title
       'Nutrients',
       # Tab content
-      toolsLayoutUI(ns('nutrientsTool'), 'Nutrients'),
+      toolsLayoutUI(
+        ns('nutrientsTool'),
+        'Nutrients',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_nut_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('nutrientsTool')
     ),
     tabPanel(
       # Tab title
       'TSS & AFDM',
       # Tab content
-      toolsLayoutUI(ns('tssAfdmTool'), 'TSS & AFDM'),
+      toolsLayoutUI(
+        ns('tssAfdmTool'),
+        'TSS & AFDM',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_tss_afdm_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('tssAfdmTool')
     ),
     tabPanel(
       # Tab title
       'Chl a',
       # Tab content
-      toolsLayoutUI(ns('chlaTool'), 'Chl a'),
+      toolsLayoutUI(
+        ns('chlaTool'),
+        'Chl a',
+        instructionsPanelUIArgs = list(
+          instructionsUI = htmlTemplate('./html_components/tool_chla_info.html'),
+          initStateHidden = TRUE
+        )
+      ),
       value = ns('chlaTool')
     )
   )
@@ -132,57 +209,57 @@ toolsTab <- function(input, output, session, pool, userRole) {
   
   # Call the tools layout module with the field data tool
   callModule(toolsLayout, 'fieldDataTool', fieldDataTool, fieldDataToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = TRUE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the DOC tool
   callModule(toolsLayout, 'docTool', docTool, docToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the DOC tool
   callModule(toolsLayout, 'domTool', domTool, domToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the Alkalinity tool
   callModule(toolsLayout, 'alkalinityTool', alkalinityTool, alkalinityToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the CO2 air tool
   callModule(toolsLayout, 'co2AirTool', co2AirTool, co2AirToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the CO2 air tool
   callModule(toolsLayout, 'pCO2Tool', pCO2Tool, pCO2ToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the DIC tool
   callModule(toolsLayout, 'dicTool', dicTool, dicToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the Ions tool
   callModule(toolsLayout, 'ionsTool', ionsTool, ionsToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the nutrients tool
   callModule(toolsLayout, 'nutrientsTool', nutrientsTool, nutrientsToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the TSS & AFDM tool
   callModule(toolsLayout, 'tssAfdmTool', tssAfdmTool, tssAfdmToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
   
   # Call the tools layout module with the TSS & AFDM tool
   callModule(toolsLayout, 'chlaTool', chlaTool, chlaToolUI, pool,
-             updateVerification = userRole == 'intern',
+             instructionPanel = TRUE, updateVerification = userRole == 'intern',
              createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
 }
 

@@ -2,11 +2,13 @@
 
 ## Create module UI function ######################################################
 
-toolsLayoutUI <- function(id, toolName, ...) {
+toolsLayoutUI <- function(id, toolName, instructionsPanelUIArgs = NULL, ...) {
 # Create the UI for the toolsLayout module
 # Parameters:
 #  - id: String, the module id
 #  - toolName: String, the name of the tool
+#  - instructionsPanelUIArgs: Named list, arguments to pass to the instructionsPanelUI function, should not contain the id argument.
+#                             Set to NULL, to do not create a panel. Default: NULL
 #  - ...: All other arguments needed by the inner module function
 # 
 # Returns a div containing the layout
@@ -16,6 +18,7 @@ toolsLayoutUI <- function(id, toolName, ...) {
   
   tagList(
     h1(toolName, class = 'global-header'),
+    if (!is.null(instructionsPanelUIArgs)) do.call(instructionsPanelUI, c(list(id = ns('info')), instructionsPanelUIArgs)),
     div(
       class = 'tool-layout',
       div(
@@ -52,17 +55,27 @@ toolsLayoutUI <- function(id, toolName, ...) {
 ## Create module server function ##################################################
 
 toolsLayout <- function(input, output, session,
-                               toolModule, toolModuleUI, pool, updateVerification = FALSE, ...) {
+                        toolModule, toolModuleUI, pool,
+                        instructionPanel = NULL, updateVerification = FALSE, ...) {
 # Create the logic for the toolsLayout module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
 #  - toolModule: Function, the tool module server function
 #  - toolModuleUI: Function, the tool module UI function
 #  - pool: The pool connection to the database
+#  - instructionPanel: Boolean or NULL, if it is NULL, the instructionsPanel module is not called.
+#                      If it is a Boolean, indicates the instruction panel initial visibility. TRUE == hidden, FALSE == visible
 #  - updateVerification: Boolean, whether to perform verification before update, default: FALSE
 #  - ...: All other arguments needed by the inner module function
 # 
 # Returns NULL
+  
+  ## Call instruction panel module if needed #######################################################
+  
+  if (!is.null(instructionPanel)) callModule(instructionsPanel, 'info', initStateHidden = instructionPanel)
+  
+  
+  
   
   ## Create update reactive value and update verification ############################################
   

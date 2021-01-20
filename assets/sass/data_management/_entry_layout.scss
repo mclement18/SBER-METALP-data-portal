@@ -39,7 +39,20 @@
 
         .btn,
         .form-group {
-            margin:  0 10px 0 0;
+            margin: 0 10px 0 0;
+        }
+    }
+
+    @include laptop {
+        justify-content: flex-start;
+
+        .btn,
+        .form-group {
+            margin: 0 1.5em 0 0;
+
+            &:last-child {
+                margin: 0;
+            }
         }
     }
 }

@@ -455,9 +455,9 @@ updateData <- function(pool, id, columns, values) {
 
 
 
-getDates <- function(pool, ...) {
+getDates <- function(pool, ..., descending = FALSE) {
   # Get data table and filter it
-  pool %>% tbl('data') %>% filter(...) %>%
+  dates <- pool %>% tbl('data') %>% filter(...) %>%
     # Select the DATE and TIME
     select(DATE_reading, TIME_reading_GMT) %>%
     # Perform query
@@ -465,11 +465,17 @@ getDates <- function(pool, ...) {
     # Create the DATETIME
     mutate(
       Date = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT')
-    ) %>%
-    # Order dates in an ascending order
-    arrange(Date) %>%
-    # Return a vector of dates
-    pull('Date')
+    )
+  
+  # Order dates in an ascending or descending order
+  if (descending) {
+    dates %<>% arrange(desc(Date))
+  } else {
+    dates %<>% arrange(Date)
+  }
+  
+  # Return a vector of dates
+  dates %>% pull('Date')
 }
 
 

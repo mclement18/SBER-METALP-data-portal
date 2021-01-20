@@ -46,33 +46,31 @@ entryLayoutUI <- function(id, pool, toolModuleUI, createNew = FALSE, ...) {
         )
       ),
       # Show/Hide tables
-      actionButton(ns('show'), icon('chevron-down'), class = 'icon-btn show-hide')
+      actionButton(ns('show'), icon('chevron-up'), class = 'icon-btn show-hide')
     ),
-    hidden(
+    div(
+      id = ns('content'),
+      class = 'entry-content',
+      # Creation and update dates
       div(
-        id = ns('content'),
-        class = 'entry-content',
-        # Creation and update dates
+        class = 'dates',
         div(
-          class = 'dates',
-          div(
-            class = 'date',
-            span('Created at:'),
-            textOutput(ns('creationDate'), inline = TRUE)
-          ),
-          div(
-            class = 'date',
-            span('Updated at:'),
-            textOutput(ns('updateDate'), inline = TRUE)
-          )
+          class = 'date',
+          span('Created at:'),
+          textOutput(ns('creationDate'), inline = TRUE)
         ),
-        # Tool UI
-        toolModuleUI(ns('tool'), pool, ...),
-        # Update errors
         div(
-          class = 'entry-errors',
-          uiOutput(ns('entryErrors'))
+          class = 'date',
+          span('Updated at:'),
+          textOutput(ns('updateDate'), inline = TRUE)
         )
+      ),
+      # Tool UI
+      toolModuleUI(ns('tool'), pool, ...),
+      # Update errors
+      div(
+        class = 'entry-errors',
+        uiOutput(ns('entryErrors'))
       )
     )
   )
@@ -117,7 +115,7 @@ entryLayout <- function(input, output, session, pool,
     if (updateDate()) {
       updateSelectInput(session, 'date', choices = c(
         'Pick a date ...' = '',
-        as.character(getDates(pool, station == local(input$site)))
+        as.character(getDates(pool, station == local(input$site), descending = TRUE))
       ))
     } else {
       # Set the updateDate to true to react to the next site change
@@ -232,7 +230,7 @@ entryLayout <- function(input, output, session, pool,
         updateSelectInput(session, 'date',
                           choices = c(
                             'Pick a date ...' = '',
-                            as.character(getDates(pool, station == local(input$station)))
+                            as.character(getDates(pool, station == local(input$station), descending = TRUE))
                           ),
                           selected = paste(input$DATE_reading, input$TIME_reading_GMT))
       }
@@ -393,7 +391,7 @@ entryLayout <- function(input, output, session, pool,
   ## Show/Hide content logic ######################################################
   
   # Track content visibility
-  showContent <- reactiveVal(FALSE)
+  showContent <- reactiveVal(TRUE)
   
   # Show or hide content
   observersOutput$contentLogic <- observeEvent(input$show, ignoreInit = TRUE, {
