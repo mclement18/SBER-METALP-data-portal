@@ -117,7 +117,7 @@ parameterCalculations <- function(input, output, session, pool) {
         output$caculationError <- renderUI({})
       } else {
         # Else show notif and error log
-        showNotification('Calculations completed with errors and/or warnings.', type = 'error')
+        showNotification('Calculations completed with errors and/or warnings.', duration = NULL, type = 'error')
         output$caculationError <- renderUI(
           htmlTemplate(
             './html_components/error_with_log.html',

@@ -115,6 +115,7 @@ portalActions <- function(input, output, session) {
           w$message,
           sep = '\n'
         ),
+        duration = NULL,
         type = 'error'
       )
     )
@@ -165,6 +166,7 @@ portalActions <- function(input, output, session) {
           readr::read_file(errorFile),
           sep = '\n'
         ),
+        duration = NULL,
         type = 'error'
       )
     } else {
@@ -204,7 +206,7 @@ portalActions <- function(input, output, session) {
       # Show success
       showNotification('Backup file successfully deleted!', type = 'message')
     } else {
-      showNotification('Could not delete the backup... ', type = 'error')
+      showNotification('Could not delete the backup... ', duration = NULL, type = 'error')
     }
   }
   
@@ -326,14 +328,14 @@ portalActions <- function(input, output, session) {
     # Check requirements
     # Must be a zip file
     if (uploadedFile$type != 'application/zip') {
-      showNotification('Please upload a zip archive file.', type = 'error')
+      showNotification('Please upload a zip archive file.', duration = NULL, type = 'error')
       # Remove spinner
       remove_modal_spinner()
       return()
     }
     # Cannot be empty
     if (uploadedFile$size == 0) {
-      showNotification('File cannot be empty!', type = 'error')
+      showNotification('File cannot be empty!', duration = NULL, type = 'error')
       # Remove spinner
       remove_modal_spinner()
       return()
@@ -355,6 +357,7 @@ portalActions <- function(input, output, session) {
           content,
           sep = '\n'
         ),
+        duration = NULL,
         type = 'error'
       )
       # Remove spinner
@@ -381,7 +384,7 @@ portalActions <- function(input, output, session) {
       any(grepl('^HF_data/12H_data.csv$', content)),
       any(grepl('^HF_data/24H_data.csv$', content))
     )) {
-      showNotification('Zip file does not have the correct content...', type = 'error')
+      showNotification('Zip file does not have the correct content...', duration = NULL, type = 'error')
       # Remove spinner
       remove_modal_spinner()
       return()
@@ -390,7 +393,7 @@ portalActions <- function(input, output, session) {
     # Copy zip file into data directory
     # If the copy failed, notify and return
     if (!file.copy(uploadedFile$datapath, './data/HF_data.zip', overwrite = TRUE)) {
-      showNotification('Could not copy the zip file to the data directory...', type = 'error')
+      showNotification('Could not copy the zip file to the data directory...', duration = NULL, type = 'error')
       # Remove spinner
       remove_modal_spinner()
       return()
@@ -408,6 +411,7 @@ portalActions <- function(input, output, session) {
           w$message,
           sep = '\n'
         ),
+        duration = NULL,
         type = 'error'
       )
     )

@@ -337,6 +337,7 @@ editableDT <- function(input, output, session, pool, tableName, element,
       } else {
         showNotification(
           paste("The following errors occured:", error),
+          duration = NULL,
           type = 'error'
         )
       }

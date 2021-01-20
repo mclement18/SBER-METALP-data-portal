@@ -190,7 +190,7 @@ requestsManagement <- function(input, output, session, pool, navbarSession, navb
       if (error == '') {
         showNotification('Successfully updated request.', type = 'message')
       } else {
-        showNotification('An error occured. One request could not be updated...', type = 'error')
+        showNotification('An error occured. One request could not be updated...', duration = NULL, type = 'error')
       }
     }
     

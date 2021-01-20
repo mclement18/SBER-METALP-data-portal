@@ -187,6 +187,7 @@ requestData <- function(input, output, session, pool, selectedData, dataSelectio
           error,
           sep = '\n'
         ),
+        duration = NULL,
         type = 'error'
       )
     }
