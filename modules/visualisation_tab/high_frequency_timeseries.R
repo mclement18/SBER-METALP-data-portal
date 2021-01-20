@@ -37,7 +37,12 @@ highFreqTimeSeriesUI <- function(id, pool) {
           choices = siteOptions,
           selected = siteOptions[[1]]
         ),
-        class = 'checkbox-grid'        
+        class = 'checkbox-grid no-margin'        
+      ),
+      # Add information sentence about plotting efficiency
+      p(
+        class = 'tiny-warning',
+        'BEWARE: loading simultaneously 10-min data of 4+ stations may take a while. Consider selecting a different frequency to speed up the visualization.'
       ),
       selectInput(
         ns('param'),
