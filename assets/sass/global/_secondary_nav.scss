@@ -14,6 +14,7 @@
     & > li > a {
     color: $secondary-color;
     border: none;
+    border-radius: unset;
 
         &:hover, &:focus {
             background: lighten($grey5, 20);
@@ -23,9 +24,9 @@
     & > li.active > a,
     & > li.active > a:focus,
     & > li.active > a:hover {
-        color: $primary-color;
+        color: $white;
         border: none;
-        background: $white;
+        background: $primary-color;
         cursor: default;
     }
 
