@@ -461,6 +461,11 @@ createInputs <- function(df, pool, table, session = getDefaultReactiveDomain()) 
       if (is.na(value)) value <- NULL
     }
     
+    # If value is factor, set levels
+    levels <- NULL
+    if (type == 'fct') levels <- df %>% pull(column) %>% levels()
+    
+    
     # Create the input and add it to the list
     inputs <- tagList(
       inputs,
@@ -470,6 +475,7 @@ createInputs <- function(df, pool, table, session = getDefaultReactiveDomain()) 
         value = value,
         pool = pool,
         table = table,
+        levels = levels,
         session = session
       )
     )
@@ -482,7 +488,7 @@ createInputs <- function(df, pool, table, session = getDefaultReactiveDomain()) 
 
 
 
-createInput <- function(type, label, value = NULL, table, pool, session = getDefaultReactiveDomain()) {
+createInput <- function(type, label, value = NULL, table, pool, levels = NULL, session = getDefaultReactiveDomain()) {
 # Create an input based on a df column name, type and value
 # Parameters:
 #  - type: String, the columns type used to choose the input
@@ -490,6 +496,7 @@ createInput <- function(type, label, value = NULL, table, pool, session = getDef
 #  - value: 'type' dependent, the value of the column used to populate the input
 #  - table: String, the database corresponding table
 #  - pool: Pool connection, the connection to an SQL Database
+#  - levels: Character vector, options to use for select input for in case it cannot be recovered from DB
 #  - session: Shiny session, the session in which to create the inputs, default: getDefaultReactiveDomain()
 # 
 # Returns the adequate input
@@ -498,7 +505,7 @@ createInput <- function(type, label, value = NULL, table, pool, session = getDef
   if (type == 'dbl' | type == 'int') {
     numericInput(session$ns(label), label = label, value = value)
   } else if (type == 'chr') {
-    if (label == 'description') {
+    if (label %in% c('description', 'text')) {
       textAreaInput(session$ns(label), label = label, value = value)
     } else {
       textInput(session$ns(label), label = label, value = value)
@@ -507,7 +514,11 @@ createInput <- function(type, label, value = NULL, table, pool, session = getDef
     checkboxInput(session$ns(label), label = label, value = value)
   } else if (type == 'fct') {
     # For a select input get the possible values from the SQL database
-    selectInput(session$ns(label), label = label, choices = getEnumValues(pool, table, label), selected = value)
+    choices <- getEnumValues(pool, table, label)
+    # If NULL, get the factor levels
+    if (is.null(choices)) choices <- levels
+    # Create input
+    selectInput(session$ns(label), label = label, choices = choices, selected = value)
   } else if (type == 'dttm') {
     airDatepickerInput(
       inputId = session$ns(label),

@@ -3,24 +3,8 @@
 ## Source needed files ############################################################
 
 source('./modules/data_management_tab/grab_data.R')
-source('./modules/data_management_tab/sensor_inventory.R')
 source('./modules/data_management_tab/parameter_calculations.R')
 source('./modules/data_management_tab/constants_management.R')
-source('./modules/data_management_tab/tools/tool_layout.R')
-source('./modules/data_management_tab/tools/entry_layout.R')
-source('./modules/data_management_tab/tools/tool_table.R')
-source('./modules/data_management_tab/tools/field_data_tool.R')
-source('./modules/data_management_tab/tools/doc_tool.R')
-source('./modules/data_management_tab/tools/dom_tool.R')
-source('./modules/data_management_tab/tools/alkalinity_tool.R')
-source('./modules/data_management_tab/tools/co2_air_tool.R')
-source('./modules/data_management_tab/tools/pco2_tool.R')
-source('./modules/data_management_tab/tools/dic_tool.R')
-source('./modules/data_management_tab/tools/ions_tool.R')
-source('./modules/data_management_tab/tools/nutrients_tool.R')
-source('./modules/data_management_tab/tools/tss_afdm_tool.R')
-source('./modules/data_management_tab/tools/chla_tool.R')
-source('./utils/calculation_functions.R')
 
 
 
@@ -41,28 +25,14 @@ dataManagementTabUI <- function(id, pool, userRole) {
   # Create a tabsetPanel to create sub navigation
   tabsetPanelWithNULL(
     id = ns('dataTabs'),
-    # If the user is at least a sber member
-    if (userRole %in% c('sber', 'admin')) {
-      # Add the grab samples data management tab
-      tabPanel(
-        # Tab title
-        'Grab sample data',
-        # Tab content
-        grabDataUI(ns('grabData'), pool),
-        value = ns('grabDataTab')
-      )
-    } else NULL,
-    # If the user is at least a sber member
-    if (userRole %in% c('sber', 'admin')) {
-      # And the sensor inventory tab
-      tabPanel(
-        # Tab title
-        'Sensor inventory',
-        # Tab content
-        sensorInventoryUI(ns('sensorsTab'), pool),
-        value = ns('sensorsTab')
-      )
-    } else NULL,
+    # Add the grab samples data management tab
+    tabPanel(
+      # Tab title
+      'Database',
+      # Tab content
+      grabDataUI(ns('grabData'), pool),
+      value = ns('grabDataTab')
+    ),
     # If the user is an admin
     if (userRole == 'admin') {
       # And the sensor inventory tab
@@ -84,92 +54,7 @@ dataManagementTabUI <- function(id, pool, userRole) {
         constantsManagementUI(ns('constantsTab')),
         value = ns('constantsTab')
       )
-    } else NULL,
-    # And the tools tab
-    navbarMenu(
-      # Menu title
-      'Tools',
-      tabPanel(
-        # Tab title
-        'Field data',
-        # Tab content
-        toolsLayoutUI(ns('fieldDataTool'), 'Field data'),
-        value = ns('fieldDataTool')
-      ),
-      tabPanel(
-        # Tab title
-        'DOC',
-        # Tab content
-        toolsLayoutUI(ns('docTool'), 'DOC'),
-        value = ns('docTool')
-      ),
-      tabPanel(
-        # Tab title
-        'DOM',
-        # Tab content
-        toolsLayoutUI(ns('domTool'), 'DOM'),
-        value = ns('domTool')
-      ),
-      tabPanel(
-        # Tab title
-        'Alkalinity',
-        # Tab content
-        toolsLayoutUI(ns('alkalinityTool'), 'Alkalinity'),
-        value = ns('alkalinityTool')
-      ),
-      tabPanel(
-        # Tab title
-        'CO2 air',
-        # Tab content
-        toolsLayoutUI(ns('co2AirTool'), 'CO2 air'),
-        value = ns('co2AirTool')
-      ),
-      tabPanel(
-        # Tab title
-        'pCO2',
-        # Tab content
-        toolsLayoutUI(ns('pCO2Tool'), 'pCO2'),
-        value = ns('pCO2Tool')
-      ),
-      tabPanel(
-        # Tab title
-        'DIC',
-        # Tab content
-        toolsLayoutUI(ns('dicTool'), 'DIC'),
-        value = ns('dicTool')
-      ),
-      tabPanel(
-        # Tab title
-        'Ions',
-        # Tab content
-        toolsLayoutUI(ns('ionsTool'), 'Ions'),
-        value = ns('ionsTool')
-      ),
-      tabPanel(
-        # Tab title
-        'Nutrients',
-        # Tab content
-        toolsLayoutUI(ns('nutrientsTool'), 'Nutrients'),
-        value = ns('nutrientsTool')
-      ),
-      tabPanel(
-        # Tab title
-        'TSS & AFDM',
-        # Tab content
-        toolsLayoutUI(ns('tssAfdmTool'), 'TSS & AFDM'),
-        value = ns('tssAfdmTool')
-      ),
-      tabPanel(
-        # Tab title
-        'Chl a',
-        # Tab content
-        toolsLayoutUI(ns('chlaTool'), 'Chl a'),
-        value = ns('chlaTool')
-      ),
-      # Menu reference
-      menuName = 'toolsTabs',
-      icon = icon('tools')
-    )
+    } else NULL
   )
 }
 
@@ -186,75 +71,12 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
 # 
 # Returns NULL
   
-  ## Call tools modules ###########################################################
+  ## Call modules #########################################################
   
-  # Call the tools layout module with the field data tool
-  callModule(toolsLayout, 'fieldDataTool', fieldDataTool, fieldDataToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = TRUE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the DOC tool
-  callModule(toolsLayout, 'docTool', docTool, docToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the DOC tool
-  callModule(toolsLayout, 'domTool', domTool, domToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the Alkalinity tool
-  callModule(toolsLayout, 'alkalinityTool', alkalinityTool, alkalinityToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the CO2 air tool
-  callModule(toolsLayout, 'co2AirTool', co2AirTool, co2AirToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the CO2 air tool
-  callModule(toolsLayout, 'pCO2Tool', pCO2Tool, pCO2ToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the DIC tool
-  callModule(toolsLayout, 'dicTool', dicTool, dicToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the Ions tool
-  callModule(toolsLayout, 'ionsTool', ionsTool, ionsToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the nutrients tool
-  callModule(toolsLayout, 'nutrientsTool', nutrientsTool, nutrientsToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the TSS & AFDM tool
-  callModule(toolsLayout, 'tssAfdmTool', tssAfdmTool, tssAfdmToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  # Call the tools layout module with the TSS & AFDM tool
-  callModule(toolsLayout, 'chlaTool', chlaTool, chlaToolUI, pool,
-             updateVerification = userRole == 'intern',
-             createNew = FALSE, canUpdate = userRole %in% c('sber', 'admin'))
-  
-  
-  
+  # Call the grab data module
+  callModule(grabData, 'grabData', pool)
   
   ## Check authorizations #########################################################
-  
-  # If the user is at least a sber member
-  if (userRole %in% c('sber', 'admin')) {
-    # Call the grab data module
-    callModule(grabData, 'grabData', pool)
-    # Call the sensor inventory module
-    callModule(sensorInventory, 'sensorsTab', pool)
-  }
   
   # If the user is an admin
   if (userRole == 'admin') {

@@ -121,11 +121,14 @@ source('./utils/shiny_extensions.R')
 source('./modules/login/login.R')
 source('./modules/visualisation_tab/visualisation_tab.R')
 source('./modules/download_tab/download_tab.R')
+source('./modules/tools_tab/tools_tab.R')
 source('./modules/data_management_tab/data_management_tab.R')
+source('./modules/field_status_tab/field_status_tab.R')
 source('./modules/portal_management/portal_management.R')
 source('./modules/data_requests_management/data_requests_management.R')
 source('./modules/editableDT/editableDT.R')
 source('./modules/instruction_panel/intruction_panel.R')
+
 
 
 
@@ -224,7 +227,7 @@ server <- function(input, output, session) {
   
   
   ## Set maximum request size big enough for sensor data upload ###################
-  # Set it to 100MB
+  # Set it to 200MB
   options(shiny.maxRequestSize=200*1024^2)
   
   
@@ -276,8 +279,40 @@ server <- function(input, output, session) {
   # Do it when the user role changes
   observeEvent(user$role, {
     if (user$role %in% c('intern', 'sber', 'admin')) {
-      ## Generate dataManagementTab #################################################
+      ## Generate toolsTab #################################################
 
+      # Create the data management tab
+      appendTab(
+        'main-nav',
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('tools'),tags$span('Tools', class = 'navbar-menu-name')),
+          toolsTabUI('toolsTab'),
+          value = 'toolsTab'
+        )
+      )
+
+      # Load data management server logic
+      callModule(toolsTab, 'toolsTab', pool, user$role)
+      
+      # Add link to footer
+      insertUI(
+        selector = '#footer-nav-insertion',
+        where = 'beforeBegin',
+        ui = tags$li(actionLink('toolsLink', 'Tools')),
+        immediate = TRUE
+      )
+      
+      # Add nav update logic
+      observeEvent(input$toolsLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'toolsTab'))
+    }
+    
+    
+    
+    
+    if (user$role %in% c('sber', 'admin')) {
+      ## Generate dataManagementTab #################################################
+      
       # Create the data management tab
       appendTab(
         'main-nav',
@@ -288,7 +323,7 @@ server <- function(input, output, session) {
           value = 'dataTab'
         )
       )
-
+      
       # Load data management server logic
       callModule(dataManagementTab, 'data', pool, user$role)
       
@@ -302,43 +337,40 @@ server <- function(input, output, session) {
       
       # Add nav update logic
       observeEvent(input$dataLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'dataTab'))
-    }
-
-
-    if (user$role == 'admin') {
-      ## Generate portalManagement tab ##########################################################
-
-      # Create users tab
+      
+      
+      
+      ## Generate fieldStatusTab #################################################
+      
+      # Create the data management tab
       appendTab(
         'main-nav',
         tabPanel(
           # Create a tab title with an icon
-          tags$span(icon('empire'), tags$span('Portal', class = 'navbar-menu-name')),
-          portalManagementUI('portal', pool),
-          value = 'portalTab'
+          tags$span(icon('map'),tags$span('Field status', class = 'navbar-menu-name')),
+          fieldStatusTabUI('fieldStatusTab', pool),
+          value = 'fieldStatusTab'
         )
       )
-
-      # Load users tab server logic
-      callModule(portalManagement, 'portal', pool)
+      
+      # Load data management server logic
+      callModule(fieldStatusTab, 'fieldStatusTab', pool)
       
       # Add link to footer
       insertUI(
         selector = '#footer-nav-insertion',
         where = 'beforeBegin',
-        ui = tags$li(actionLink('portalLink', 'Portal')),
+        ui = tags$li(actionLink('fieldStatusLink', 'Field status')),
         immediate = TRUE
       )
       
       # Add nav update logic
-      observeEvent(input$portalLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'portalTab'))
-    }
-    
-    
-    
-    
-    ## Generate data request tab ##########################################################
-    if (user$role %in% c('sber', 'admin')) {
+      observeEvent(input$fieldStatusLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'fieldStatusTab'))
+      
+      
+      
+      ## Generate data request tab ##########################################################
+      
       # Get the UI
       requestUI <- requestsManagementUI('requests', pool)
       
@@ -362,6 +394,38 @@ server <- function(input, output, session) {
                  navbarSession = session,
                  navbarId = 'main-nav',
                  requestTabId = 'requestsTab')
+    }
+    
+    
+    if (user$role == 'admin') {
+      ## Generate portalManagement tab ##########################################################
+      
+      # Create users tab
+      insertTab(
+        'main-nav',
+        tabPanel(
+          # Create a tab title with an icon
+          tags$span(icon('empire'), tags$span('Portal', class = 'navbar-menu-name')),
+          portalManagementUI('portal', pool),
+          value = 'portalTab'
+        ),
+        target = 'requestsTab',
+        position = 'before'
+      )
+      
+      # Load users tab server logic
+      callModule(portalManagement, 'portal', pool)
+      
+      # Add link to footer
+      insertUI(
+        selector = '#footer-nav-insertion',
+        where = 'beforeBegin',
+        ui = tags$li(actionLink('portalLink', 'Portal')),
+        immediate = TRUE
+      )
+      
+      # Add nav update logic
+      observeEvent(input$portalLink, ignoreInit = TRUE, updateNavbarPage(session, 'main-nav', selected = 'portalTab'))
     }
   })
 }

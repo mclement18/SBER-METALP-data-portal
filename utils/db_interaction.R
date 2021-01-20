@@ -930,3 +930,48 @@ updateConstant <- function(pool, constant, name = '', unit = '', value = 0, desc
 }
 
 
+
+
+
+## Notes queries ###################################################################
+
+createNote <- function(pool, station = '', text = '', verified = FALSE) {
+  # Check for valid input string
+  station <- validInputString(station)
+  text <- validInputString(text)
+  verified <- validInputBool(verified)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO notes
+    (station, text, verified)
+    values(?station, ?text, ?verified);',
+    station = station, text = text, verified = verified
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
+updateNote <- function(pool, note, station = '', text = '', verified = FALSE) {
+  # Check for valid input string
+  station <- validInputString(station, note$station)
+  text <- validInputString(text, note$text)
+  verified <- validInputBool(verified, note$verified)
+  
+  # Toggle read / unread
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE notes
+    SET station = ?station, text = ?text, verified = ?verified
+    WHERE id = ?id;',
+    id = note$id, station = station, text = text, verified = verified
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)  
+}
+
