@@ -121,13 +121,13 @@ calcCO2corr <- function(df, ...) {
       if (!is.na(fieldPressure) & fieldPressure <= 1050 & fieldPressure >= 700) {
         # Correct the CO2 with the field temp
         return(
-          rawCO2 * 1013 * (273 + temp) / (fieldPressure * 298)
+          rawCO2 * fieldPressure * 298 / ( 1013 * (273 + temp) )
         )
       } else if (!is.na(altPressure)) {
         # Else if the altPressure is present
         # Correct the CO2 with the pressure calculated from the altitude and temperature
         return(
-          rawCO2 * 1013 * (273 + temp) / (altPressure * 298)
+          rawCO2 * altPressure * 298 / ( 1013 * (273 + temp) )
         )
       }
     }
