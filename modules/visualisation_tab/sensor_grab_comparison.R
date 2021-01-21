@@ -159,11 +159,13 @@ sensorGrabComparison <- function(input, output, session, df, dateRange, pool) {
   })
   
   # Create a reactive expression that returns the selected grab sample parameter info
-  paramGrab <- reactive(getRows(
-    pool, 'grab_params_plotting',
-    param_name == local(input$paramGrab),
-    columns = c('order', 'param_name', 'units', 'data')
-  ) %>% arrange(order) %>% select(-order))
+  paramGrab <- reactive(
+    data.frame(
+      param_name = input$paramGrab,
+      data = input$paramGrab,
+      units = isolate(paramHf()$units)
+    )
+  )
   
   
   
