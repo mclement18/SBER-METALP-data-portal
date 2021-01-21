@@ -157,8 +157,8 @@ calcTSS <- function(df, ...) {
     }
   }
   
-  # If nothing is returned, return NA
-  as.numeric(NA)
+  # If nothing is returned, return 'KEEP OLD'
+  'KEEP OLD'
 }
 
 
@@ -180,8 +180,8 @@ calcAFDM <- function(df, ...) {
     }
   }
   
-  # If nothing is returned, return NA
-  as.numeric(NA)
+  # If nothing is returned, return 'KEEP OLD'
+  'KEEP OLD'
 }
 
 

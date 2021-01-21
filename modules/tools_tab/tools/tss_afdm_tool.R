@@ -144,9 +144,19 @@ tssAfdmTool <- function(input, output, session, pool, site, datetime, ...) {
   # Calculate upon button click
   observersOutput$calculationLogic <- observeEvent(input$calculate, ignoreInit = TRUE, {
     # Calculate TSS and AFDM
+    tss <- calcTSS(rawDataUpdated())
+    afdm <- calcAFDM(rawDataUpdated())
     calculations$tssAfdm <- data.frame(
-      'TSS_dry_weight_mgL' = calcTSS(rawDataUpdated()),
-      'AFDM_mgL' = calcAFDM(rawDataUpdated())
+      'TSS_dry_weight_mgL' = ifelse(
+        tss != 'KEEP OLD',
+        tss,
+        pull(row(), 'TSS_dry_weight_mgL')
+      ),
+      'AFDM_mgL' = ifelse(
+        afdm != 'KEEP OLD',
+        afdm,
+        pull(row(), 'AFDM_mgL')
+      )
     )
     
     # Use calculation
