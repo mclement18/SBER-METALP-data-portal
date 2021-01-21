@@ -451,8 +451,8 @@ calcBenthicAFDM <- function(df, ...) {
   }
   
   
-  # If nothing is returned, return NA
-  as.numeric(NA)
+  # If nothing is returned, return 'KEEP OLD'
+  'KEEP OLD'
 }
 
 
@@ -498,8 +498,8 @@ calcChlaPerM2 <- function(df, ...) {
   }
   
   
-  # If nothing is returned, return NA
-  as.numeric(NA)
+  # If nothing is returned, return 'KEEP OLD'
+  'KEEP OLD'
 }
 
 
@@ -543,8 +543,8 @@ calcChlaAcid <- function(df, pool, ...) {
   }
   
   
-  # If nothing is returned, return NA
-  as.numeric(NA)
+  # If nothing is returned, return 'KEEP OLD'
+  'KEEP OLD'
 }
 
 
@@ -577,8 +577,8 @@ calcChlaNoAcid <- function(df, pool, ...) {
   }
   
   
-  # If nothing is returned, return NA
-  as.numeric(NA)
+  # If nothing is returned, return 'KEEP OLD'
+  'KEEP OLD'
 }
 
 

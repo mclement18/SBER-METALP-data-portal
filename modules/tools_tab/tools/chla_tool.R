@@ -206,6 +206,11 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
         ),
         pool
       )
+      chla_acid_ugL_rep <- ifelse(
+        chla_acid_ugL_rep != 'KEEP OLD',
+        chla_acid_ugL_rep,
+        pull(row(), colNames[2])
+      )
       
       chla_noacid_ugL_rep <- calcChlaNoAcid(
         select(
@@ -215,6 +220,11 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
           )
         ),
         pool
+      )
+      chla_noacid_ugL_rep <- ifelse(
+        chla_noacid_ugL_rep != 'KEEP OLD',
+        chla_noacid_ugL_rep,
+        pull(row(), colNames[4])
       )
       
       afdm_g_filter_rep <- calcMinus(
@@ -244,28 +254,51 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
         !!colNames[1] := lab_chla_vol_filtrated_rep
       )
       
-      # Calculate new column
+      # Calculate chla per m2
+      chla_acid_ugm2_rep <- calcChlaPerM2(
+        perM2Cols %>% mutate(
+          !!colNames[2] := chla_acid_ugL_rep
+        )
+      )
+      chla_acid_ugm2_rep <- ifelse(
+        chla_acid_ugm2_rep != 'KEEP OLD',
+        chla_acid_ugm2_rep,
+        pull(row(), colNames[3])
+      )
+      
+      chla_noacid_ugm2_rep = calcChlaPerM2(
+        perM2Cols %>% mutate(
+          !!colNames[4] := chla_noacid_ugL_rep
+        )
+      )
+      chla_noacid_ugm2_rep <- ifelse(
+        chla_noacid_ugm2_rep != 'KEEP OLD',
+        chla_noacid_ugm2_rep,
+        pull(row(), colNames[5])
+      )
+      
+      # Calcualte afdm
+      afdm_gm2_rep = calcBenthicAFDM(
+        perM2Cols %>% mutate(
+          !!colNames[6] := afdm_g_filter_rep
+        )
+      )
+      afdm_gm2_rep <- ifelse(
+        afdm_gm2_rep != 'KEEP OLD',
+        afdm_gm2_rep,
+        pull(row(), colNames[7])
+      )
+      
+      # Create data.frame
       newCols <- setNames(
         data.frame(
           lab_chla_vol_filtrated_rep = lab_chla_vol_filtrated_rep,
           chla_acid_ugL_rep = chla_acid_ugL_rep,
-          chla_acid_ugm2_rep = calcChlaPerM2(
-            perM2Cols %>% mutate(
-              !!colNames[2] := chla_acid_ugL_rep
-            )
-          ),
+          chla_acid_ugm2_rep = chla_acid_ugm2_rep,
           chla_noacid_ugL_rep = chla_noacid_ugL_rep,
-          chla_noacid_ugm2_rep = calcChlaPerM2(
-            perM2Cols %>% mutate(
-              !!colNames[4] := chla_noacid_ugL_rep
-            )
-          ),
+          chla_noacid_ugm2_rep = chla_noacid_ugm2_rep,
           afdm_g_filter_rep = afdm_g_filter_rep,
-          afdm_gm2_rep = calcBenthicAFDM(
-            perM2Cols %>% mutate(
-              !!colNames[6] := afdm_g_filter_rep
-            )
-          )
+          afdm_gm2_rep = afdm_gm2_rep
         ),
         colNames
       )
