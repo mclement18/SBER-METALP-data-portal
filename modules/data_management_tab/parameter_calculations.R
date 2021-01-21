@@ -105,24 +105,63 @@ parameterCalculations <- function(input, output, session, pool) {
       # Bind needed packages to the new session
       packages = c('DBI', 'pool', 'RMySQL', 'dplyr', 'dbplyr', 'magrittr')
       # Once completed
-    ) %...>% (function(result) {
-      # Get errors and warnings
-      errors <- result$errors
-      warnings <- result$warnings
-      
-      # Parse errors and warnings
-      if (length(errors) == 0 & length(warnings) == 0) {
-        # If all went good show notif and remove error log
-        showNotification('All calculations successfully completed.', type = 'message')
-        output$caculationError <- renderUI({})
-      } else {
+    ) %>% then(
+      onFulfilled = function(result) {
+        browser()
+        print(result)
+        # Get errors and warnings
+        errors <- result$errors
+        warnings <- result$warnings
+        
+        # Parse errors and warnings
+        if (length(errors) == 0 & length(warnings) == 0) {
+          # If all went good show notif and remove error log
+          showNotification('All calculations successfully completed.', type = 'message')
+          output$caculationError <- renderUI({})
+        } else {
+          # Else show notif and error log
+          showNotification(
+            'Calculations completed with errors and/or warnings.',
+            duration = NULL,
+            type = 'error'
+          )
+          output$caculationError <- renderUI(
+            htmlTemplate(
+              './html_components/error_with_log.html',
+              errorNb = length(errors),
+              warningNb = length(warnings),
+              showHideButton = actionLink(session$ns('showLog'), 'show log', class = 'custom-links'),
+              errors = hidden(
+                pre(
+                  id = session$ns('log'),
+                  paste(
+                    'Errors:',
+                    '-----------\n',
+                    paste(errors, collapse = '\n\n'),
+                    '',
+                    'Warnings:',
+                    '-----------\n',
+                    paste(warnings, collapse = '\n\n'),
+                    sep = '\n'
+                  )
+                )
+              )
+            )
+          )
+        }
+      },
+      onRejected = function(err) {
         # Else show notif and error log
-        showNotification('Calculations completed with errors and/or warnings.', duration = NULL, type = 'error')
+        showNotification(
+          'Error: Promises could not be resolved. Note that some calculations might have still succeeded.',
+          duration = NULL,
+          type = 'error'
+        )
         output$caculationError <- renderUI(
           htmlTemplate(
             './html_components/error_with_log.html',
-            errorNb = length(errors),
-            warningNb = length(warnings),
+            errorNb = 1,
+            warningNb = 0,
             showHideButton = actionLink(session$ns('showLog'), 'show log', class = 'custom-links'),
             errors = hidden(
               pre(
@@ -130,20 +169,16 @@ parameterCalculations <- function(input, output, session, pool) {
                 paste(
                   'Errors:',
                   '-----------\n',
-                  paste(errors, collapse = '\n\n'),
-                  '',
-                  'Warnings:',
-                  '-----------\n',
-                  paste(warnings, collapse = '\n\n')
-                ),
-                sep = '\n'
+                  paste(err),
+                  sep = '\n'
+                )
               )
             )
           )
         )
       }
       # Remove spinner
-    }) %>% finally(remove_modal_spinner)
+    ) %>% finally(remove_modal_spinner)
   })
   
   # Track log visibility

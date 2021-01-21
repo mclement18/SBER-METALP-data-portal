@@ -37,7 +37,7 @@ calcMean <- function(df, ...) {
   if (nrow(df) == 1) {
     # Calculate and return mean
     avg <- df %>% tidyr::pivot_longer(everything()) %>% pull(value) %>% mean(na.rm = TRUE)
-    if (is.nan(avg)) avg <- 'KEEP OLD'
+    if (is.na(avg)) avg <- 'KEEP OLD'
     return(avg)
   }
   
@@ -52,7 +52,7 @@ calcSd <- function(df, ...) {
   if (nrow(df) == 1) {
     # Calculate and return stdev
     stdev <- df %>% tidyr::pivot_longer(everything()) %>% pull(value) %>% sd(na.rm = TRUE)
-    if (is.nan(stdev)) stdev <- 'KEEP OLD'
+    if (is.na(stdev)) stdev <- 'KEEP OLD'
     return(stdev)
   }
   
@@ -229,7 +229,7 @@ calcRatio <- function(df, ...) {
 
 
 
-calcDIC <- function(df, pool, labTemp = 'default', ...) {
+calcDIC <- function(df, pool, labTemp = 'default', labPressure = 'default', ...) {
   # labTemp values c('default', 'cst', 'db')
   
   # Check for the presence of the correct columns
@@ -314,7 +314,7 @@ calcDIC <- function(df, pool, labTemp = 'default', ...) {
 
 
 
-calcd13DIC <- function(df, pool, labTemp = 'default', ...) {
+calcd13DIC <- function(df, pool, labTemp = 'default', labPressure = 'default', ...) {
   # labTemp values c('default', 'cst', 'db')
   
   # Check for the presence of the correct columns
@@ -1068,17 +1068,15 @@ runGlobalCalculations <- function(df, pool) {
         pool = pool
       )
       
-      # Check if update
-      if (result != 'KEEP OLD') {
-        # Save result to update the DB
-        # And update row value for further calculations
-        if (is.na(result)) {
-          row[targetCol] <- as.numeric(NA)
-          updates[[targetCol]] <- 'NULL'
-        } else {
-          row[targetCol] <- result
-          updates[[targetCol]] <- result
-        }
+      # Save result to update the DB
+      # And update row value for further calculations
+      if (is.na(result)) {
+        row[targetCol] <- as.numeric(NA)
+        updates[[targetCol]] <- 'NULL'
+        # Save update when it is not indicated to keep old value
+      } else if (result != 'KEEP OLD') {
+        row[targetCol] <- result
+        updates[[targetCol]] <- result
       }
     }
     
