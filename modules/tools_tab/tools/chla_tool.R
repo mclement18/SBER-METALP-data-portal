@@ -19,7 +19,7 @@ chlaToolUI <- function(id, pool, ...) {
     'standard_curves',
     parameter %in% c('chla acid', 'chla noacid'),
     columns = c('date', 'parameter')
-  )
+  ) %>% arrange(desc(date))
   
   # Create layout
   div(

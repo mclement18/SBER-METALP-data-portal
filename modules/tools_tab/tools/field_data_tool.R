@@ -2,10 +2,11 @@
 
 ## Create module UI function ######################################################
 
-fieldDataToolUI <- function(id, ...) {
+fieldDataToolUI <- function(id, pool, ...) {
 # Create the UI for the fieldDataTool module
 # Parameters:
 #  - id: String, the module id
+#  - pool: The pool connection to the database
 # 
 # Returns a div containing the layout
   
@@ -25,7 +26,29 @@ fieldDataToolUI <- function(id, ...) {
       div(
         class = 'calculation-header',
         h4('Calculated columns:'),
+        checkboxInput(ns('vaisalaStdCurveCorr'), 'Vaisala std curve corr?', value = FALSE),
         actionButton(ns('calculate'), 'Calculate', class = 'custom-style custom-style--primary')
+      ),
+      div(
+        class = 'std-selection',
+        hidden(
+          selectInput(
+            ns('vaisalaStdCurveInput'),
+            'Vaisala CO2 standard curve',
+            choices = c(
+              'Select a date...',
+              parseOptions(
+                getRows(
+                  pool,
+                  'standard_curves',
+                  parameter == 'Vaisala corr',
+                  columns = 'date'
+                ) %>% arrange(desc(date)),
+                'date'
+              )
+            )
+          )
+        )
       ),
       div(
         class = 'calculated',
@@ -57,6 +80,18 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
   
   
   
+  ## Hide and show select input ##############################################################
+  
+  # Observe event that react to chla acid curve selection
+  observersOutput$vaisalaStdCurveVisibility <- observeEvent(input$vaisalaStdCurveCorr, ignoreInit = TRUE, {
+    toggleElement('vaisalaStdCurveInput', condition = input$vaisalaStdCurveCorr)
+    if (!input$vaisalaStdCurveCorr) updateSelectInput(session, 'vaisalaStdCurveInput', selected = 'Select a date...')
+  })
+  
+  
+  
+  
+  
   ## Get Row ####################################################################
   
   row <- reactive({
@@ -75,6 +110,7 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
         category == 'Field data',
         columns = c('order', 'param_name')
       ) %>% pull('param_name'),
+      'vaisala_std_curve_id',
       'created_at', 'updated_at'
     )
     
@@ -94,13 +130,58 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
   
   
   
+  ## Select preset std curves ############################################################
+  
+  # Update them each time the row update
+  observersOutput$stdCurvePreset <- observeEvent(row(), {
+    # Get curves
+    curveId <- row()$vaisala_std_curve_id
+    
+    if (!is.na(curveId) & curveId > 0) {
+      stdCurve <- getRows(
+        pool,
+        'standard_curves',
+        id == curveId
+      )
+      
+      # Update select input if needed
+      curveDate <- stdCurve %>% pull('date') %>% as_date()
+      updateSelectInput(session, 'vaisalaStdCurveInput', selected = curveDate)
+    }
+  })
+  
+  # Reactive that returns the std curves ids
+  stdCurveIds <- reactive({
+    vaisalaStdDate <- input$vaisalaStdCurveInput
+    
+    data.frame(
+      vaisala_std_curve_id = ifelse(
+        vaisalaStdDate == 'Select a date...',
+        as.numeric(NA),
+        getRows(
+          pool,
+          'standard_curves',
+          parameter == 'Vaisala corr',
+          date == vaisalaStdDate
+        ) %>% pull('id')
+      )
+    )
+  })
+  
+  
+  
+  
+  
+  
+  
   ## Render raw data ####################################################################
   
   # Row filtering
   rawData <- reactive({
     row() %>% select(-c(
       id, station, starts_with('DATE'), starts_with('TIME'), ends_with('GMT'),
-      ends_with('_at'), starts_with('Reach_depth'), Field_BP_altitude, ends_with('_corr')
+      ends_with('_at'), starts_with('Reach_depth'), Field_BP_altitude, ends_with('_corr'),
+      vaisala_std_curve_id
     ))
   })
   
@@ -236,13 +317,17 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
         starts_with('Vaisala_CO2'),
         WTW_Temp_degC_1, starts_with('Field_BP'),
       ),
-      calculations$bpAltitude
+      calculations$bpAltitude,
+      select(
+        stdCurveIds(),
+        vaisala_std_curve_id
+      )
     )
     
     calculations$co2corr <- data.frame(
-      'Vaisala_CO2_min_corr' = calcCO2corr(co2 %>% select(-matches('_avg|_max'))),
-      'Vaisala_CO2_avg_corr' = calcCO2corr(co2 %>% select(-matches('_min|_max'))),
-      'Vaisala_CO2_max_corr' = calcCO2corr(co2 %>% select(-matches('_avg|_min')))
+      'Vaisala_CO2_min_corr' = calcCO2corr(co2 %>% select(-matches('_avg|_max')), pool),
+      'Vaisala_CO2_avg_corr' = calcCO2corr(co2 %>% select(-matches('_min|_max')), pool),
+      'Vaisala_CO2_max_corr' = calcCO2corr(co2 %>% select(-matches('_avg|_min')), pool)
     )
     
     # Use calculation
@@ -273,7 +358,8 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
           co2corrUpdated(),
           bpAltitudeUpdated(),
           reachDepthCalcUpdated(),
-          reachDepthUpdated()
+          reachDepthUpdated(),
+          stdCurveIds()
         )
       }),
       # Returns errors and warnings

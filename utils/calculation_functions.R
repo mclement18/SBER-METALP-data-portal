@@ -107,13 +107,20 @@ calcAlt2BP <- function(df, pool, ...) {
 
 
 
-calcCO2corr <- function(df, ...) {
+calcCO2corr <- function(df, pool, ...) {
   # Check for the presence of the correct columns
-  if (nrow(df) == 1 & ncol(df) == 4 & all(c('WTW_Temp_degC_1', 'Field_BP', 'Field_BP_altitude') %in% colnames(df))) {
+  if (nrow(df) == 1 & ncol(df) == 5 & all(c('WTW_Temp_degC_1', 'Field_BP', 'Field_BP_altitude', 'vaisala_std_curve_id') %in% colnames(df))) {
     rawCO2 <- df %>% pull(1)
     temp <- df %>% pull('WTW_Temp_degC_1')
     fieldPressure <- df %>% pull('Field_BP')
     altPressure <- df %>% pull('Field_BP_altitude')
+    stdCurveId <- df %>% pull('vaisala_std_curve_id')
+    
+    # Correct values if there is a std curve id
+    if (!is.na(stdCurveId) & stdCurveId  > 0) {
+      stdCurve <- getRows(pool, 'standard_curves', id == stdCurveId)
+      rawCO2 <- rawCO2 * stdCurve$a + stdCurve$b
+    }
    
     # If there is a temp
     if (!is.na(temp)) {
