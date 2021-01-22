@@ -810,7 +810,7 @@ updateSensor <- function(pool, sensor, station = '', param_name = '', param_full
   calibration_b <- validInputNumber(calibration_b, sensor$calibration_b)
   description <- validInputString(description, sensor$description)
   
-  # Toggle read / unread
+  # Create SQL query
   query <- sqlInterpolate(
     pool,
     'UPDATE sensor_inventory
@@ -867,7 +867,7 @@ updateCalculation <- function(pool, calculation, param_category = '', column_cal
   calcul_func <- validInputString(calcul_func, calculation$calcul_func)
   columns_used <- validInputString(columns_used, calculation$columns_used)
   
-  # Toggle read / unread
+  # Create SQL query
   query <- sqlInterpolate(
     pool,
     'UPDATE parameter_calculations
@@ -920,7 +920,7 @@ updateConstant <- function(pool, constant, name = '', unit = '', value = 0, desc
   value <- validInputNumber(value, constant$value)
   description <- validInputString(description, constant$description)
   
-  # Toggle read / unread
+  # Create SQL query
   query <- sqlInterpolate(
     pool,
     'UPDATE constants
@@ -968,7 +968,7 @@ updateNote <- function(pool, note, station = '', text = '', verified = FALSE) {
   text <- validInputString(text, note$text)
   verified <- validInputBool(verified, note$verified)
   
-  # Toggle read / unread
+  # Create SQL query
   query <- sqlInterpolate(
     pool,
     'UPDATE notes
@@ -980,4 +980,55 @@ updateNote <- function(pool, note, station = '', text = '', verified = FALSE) {
   # Send Query and catch errors
   sendQueryWithError(pool, query)  
 }
+
+
+
+
+
+
+## Standard curves queries ###################################################################
+
+createStandardCurve <- function(pool, date, parameter, a, b) {
+  # Check for valid input string
+  date <- validInputDate(date)
+  parameter <- validInputString(parameter)
+  a <- validInputNumber(a)
+  b <- validInputNumber(b)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'INSERT INTO standard_curves
+    (date, parameter, a, b)
+    values(?date, ?parameter, ?a, ?b);',
+    date = date, parameter = parameter, a = a, b = b
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)
+}
+
+
+
+updateStandardCurve <- function(pool, standardCurve, date, parameter, a, b) {
+  # Check for valid input string
+  date <- validInputDate(date, standardCurve$date)
+  parameter <- validInputString(parameter, standardCurve$parameter)
+  a <- validInputNumber(a, standardCurve$a)
+  b <- validInputNumber(b, standardCurve$b)
+  
+  # Create SQL query
+  query <- sqlInterpolate(
+    pool,
+    'UPDATE standard_curves
+    SET date = ?date, parameter = ?parameter, a = ?a, b = ?b
+    WHERE id = ?id;',
+    id = standardCurve$id, date = date, parameter = parameter, a = a, b = b
+  )
+  
+  # Send Query and catch errors
+  sendQueryWithError(pool, query)  
+}
+
+
 

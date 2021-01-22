@@ -5,6 +5,7 @@
 source('./modules/data_management_tab/grab_data.R')
 source('./modules/data_management_tab/parameter_calculations.R')
 source('./modules/data_management_tab/constants_management.R')
+source('./modules/data_management_tab/standard_curves.R')
 
 
 
@@ -32,6 +33,14 @@ dataManagementTabUI <- function(id, pool, userRole) {
       # Tab content
       grabDataUI(ns('grabData'), pool),
       value = ns('grabDataTab')
+    ),
+    # Add the standard curves management tab
+    tabPanel(
+      # Tab title
+      'Standard curves',
+      # Tab content
+      standardCurvesUI(ns('standardCurvesTab'), pool),
+      value = ns('standardCurvesTab')
     ),
     # If the user is an admin
     if (userRole == 'admin') {
@@ -75,6 +84,8 @@ dataManagementTab <- function(input, output, session, pool, userRole) {
   
   # Call the grab data module
   callModule(grabData, 'grabData', pool)
+  # Call the standard curves module
+  callModule(standardCurves, 'standardCurvesTab', pool)
   
   ## Check authorizations #########################################################
   
