@@ -828,7 +828,9 @@ calcCO2 <- function(df, pool, labTemp = 'default', labPa = 'default', ...) {
       }
       # Get lab temp from data
       if (labParams[[param]] == 'db') {
-        labParams[[param]] <- df %>% pull(dbName) / 1013.25
+        labParams[[param]] <- df %>% pull(dbName)
+        # Convert hPa to atm
+        if (param == 'labPa') labParams[[param]] <- labParams[[param]] / 1013.25
         # Get lab temp from constant
       } else if (labParams[[param]] == 'cst') {
         labParams[[param]] <- constants %>%
@@ -836,7 +838,9 @@ calcCO2 <- function(df, pool, labTemp = 'default', labPa = 'default', ...) {
           pull('value')
       } else if (labParams[[param]] == 'default') {
         # Get db temp
-        labParams[[param]] <- df %>% pull(dbName) / 1013.25
+        labParams[[param]] <- df %>% pull(dbName)
+        # Convert hPa to atm
+        if (param == 'labPa') labParams[[param]] <- labParams[[param]] / 1013.25
         # If its value is NA, use constant
         if (is.na(labParams[[param]])) labParams[[param]] <- constants %>%
             filter(name == cstName) %>%
