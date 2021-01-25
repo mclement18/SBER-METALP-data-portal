@@ -107,8 +107,6 @@ parameterCalculations <- function(input, output, session, pool) {
       # Once completed
     ) %>% then(
       onFulfilled = function(result) {
-        browser()
-        print(result)
         # Get errors and warnings
         errors <- result$errors
         warnings <- result$warnings
