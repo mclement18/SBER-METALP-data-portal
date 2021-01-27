@@ -513,7 +513,7 @@ calcChlaPerM2 <- function(df, ...) {
 
 
 
-calcChlaAcid <- function(df, pool, useCstStdCurve = 'default', ...) {
+calcChlaAcid <- function(df, pool, ...) {
   # Check for the presence of the correct columns
   allColumns <- sum(
     grepl(
@@ -532,38 +532,15 @@ calcChlaAcid <- function(df, pool, useCstStdCurve = 'default', ...) {
     lab_chla_fluor_1_rep <- df %>% select(starts_with('lab_chla_fluor_1_rep')) %>% pull()
     lab_chla_fluor_2_rep <- df %>% select(starts_with('lab_chla_fluor_2_rep')) %>% pull()
     
-    # Determine which constant to use, from data entry (db) or constant table (cst)
-    # The default argument will prevail the 'db' and then fallback to the 'cst'
-    # Get constants from data
-    if (useCstStdCurve == 'db') {
-      stdCurveId <- df %>% pull('chla_acid_std_curve_id')
+    # Get std curve values for correction
+    stdCurveId <- df %>% pull('chla_acid_std_curve_id')
+    if (!is.na(stdCurveId) & stdCurveId > 0) {
       stdCurve <- getRows(pool, 'standard_curves', id == stdCurveId, columns = c('a', 'b'))
       chla_acidified_slope <- stdCurve %>% pull('a')
       chla_acidified_intercept <- stdCurve %>% pull('b')
-      # Get lab temp from constant
-    } else if (useCstStdCurve == 'cst') {
-      # Define constants to get
-      cst_to_get <- c('chla_acidified_slope', 'chla_acidified_intercept')
-      # Get constants
-      constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
-      # Constant needed
-      chla_acidified_slope <- constants %>% filter(name == 'chla_acidified_slope') %>% pull('value')
-      chla_acidified_intercept <- constants %>% filter(name == 'chla_acidified_intercept') %>% pull('value')
-    } else if (useCstStdCurve == 'default') {
-      stdCurveId <- df %>% pull('chla_acid_std_curve_id')
-      if (!is.na(stdCurveId) & stdCurveId > 0) {
-        stdCurve <- getRows(pool, 'standard_curves', id == stdCurveId, columns = c('a', 'b'))
-        chla_acidified_slope <- stdCurve %>% pull('a')
-        chla_acidified_intercept <- stdCurve %>% pull('b')
-      } else {
-        # Define constants to get
-        cst_to_get <- c('chla_acidified_slope', 'chla_acidified_intercept')
-        # Get constants
-        constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
-        # Constant needed
-        chla_acidified_slope <- constants %>% filter(name == 'chla_acidified_slope') %>% pull('value')
-        chla_acidified_intercept <- constants %>% filter(name == 'chla_acidified_intercept') %>% pull('value')
-      }
+    } else {
+      chla_acidified_slope <- NA
+      chla_acidified_intercept <- NA
     }
     
     # If no NAs, calculate Chla acidified
@@ -582,7 +559,7 @@ calcChlaAcid <- function(df, pool, useCstStdCurve = 'default', ...) {
 
 
 
-calcChlaNoAcid <- function(df, pool, useCstStdCurve = 'default', ...) {
+calcChlaNoAcid <- function(df, pool, ...) {
   # Check for the presence of the correct columns
   allColumns <- sum(
     grepl(
@@ -599,38 +576,15 @@ calcChlaNoAcid <- function(df, pool, useCstStdCurve = 'default', ...) {
     # Get values
     lab_chla_fluor_1_rep <- df %>% select(starts_with('lab_chla_fluor_1_rep')) %>% pull()
     
-    # Determine which constant to use, from data entry (db) or constant table (cst)
-    # The default argument will prevail the 'db' and then fallback to the 'cst'
-    # Get constants from data
-    if (useCstStdCurve == 'db') {
-      stdCurveId <- df %>% pull('chla_noacid_std_curve_id')
+    # Get std curve values for correction
+    stdCurveId <- df %>% pull('chla_noacid_std_curve_id')
+    if (!is.na(stdCurveId) & stdCurveId > 0) {
       stdCurve <- getRows(pool, 'standard_curves', id == stdCurveId, columns = c('a', 'b'))
       chla_non_acidified_slope <- stdCurve %>% pull('a')
       chla_non_acidified_intercept <- stdCurve %>% pull('b')
-      # Get lab temp from constant
-    } else if (useCstStdCurve == 'cst') {
-      # Define constants to get
-      cst_to_get <- c('chla_non_acidified_slope', 'chla_non_acidified_intercept')
-      # Get constants
-      constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
-      # Constant needed
-      chla_non_acidified_slope <- constants %>% filter(name == 'chla_non_acidified_slope') %>% pull('value')
-      chla_non_acidified_intercept <- constants %>% filter(name == 'chla_non_acidified_intercept') %>% pull('value')
-    } else if (useCstStdCurve == 'default') {
-      stdCurveId <- df %>% pull('chla_noacid_std_curve_id')
-      if (!is.na(stdCurveId) & stdCurveId > 0) {
-        stdCurve <- getRows(pool, 'standard_curves', id == stdCurveId, columns = c('a', 'b'))
-        chla_non_acidified_slope <- stdCurve %>% pull('a')
-        chla_non_acidified_intercept <- stdCurve %>% pull('b')
-      } else {
-        # Define constants to get
-        cst_to_get <- c('chla_non_acidified_slope', 'chla_non_acidified_intercept')
-        # Get constants
-        constants <- getRows(pool, 'constants', name %in% cst_to_get, columns = c('name', 'value'))
-        # Constant needed
-        chla_non_acidified_slope <- constants %>% filter(name == 'chla_non_acidified_slope') %>% pull('value')
-        chla_non_acidified_intercept <- constants %>% filter(name == 'chla_non_acidified_intercept') %>% pull('value')
-      }
+    } else {
+      chla_non_acidified_slope <- NA
+      chla_non_acidified_intercept <- NA
     }
     
     # If no NAs, calculate Chla non acidified

@@ -33,8 +33,6 @@ chlaToolUI <- function(id, pool, ...) {
       div(
         class = 'calculation-header',
         h4('Calculated columns:'),
-        checkboxInput(ns('chlaAcidUseConstant'), 'Cst for chla acid?', value = FALSE),
-        checkboxInput(ns('chlaNoAcidUseConstant'), 'Cst for chla no acid?', value = FALSE),
         actionButton(ns('calculate'), 'Calculate', class = 'custom-style custom-style--primary')
       ),
       div(
@@ -91,21 +89,6 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
   
   
   
-  ## Hide and show select input ##############################################################
-  
-  # Observe event that react to chla acid curve selection
-  observersOutput$acidStdCurveVisibility <- observeEvent(input$chlaAcidUseConstant, ignoreInit = TRUE, {
-    toggleElement('chlaAcidInput', condition = !input$chlaAcidUseConstant)
-    if (input$chlaAcidUseConstant) updateSelectInput(session, 'chlaAcidInput', selected = 'Select a date...')
-  })
-  # Observe event that react to chla noacid curve selection
-  observersOutput$noacidStdCurveVisibility <- observeEvent(input$chlaNoAcidUseConstant, ignoreInit = TRUE, {
-    toggleElement('chlaNoAcidInput', condition = !input$chlaNoAcidUseConstant)
-    if (input$chlaNoAcidUseConstant) updateSelectInput(session, 'chlaNoAcidInput', selected = 'Select a date...')
-  })
-  
-  
-  
   
   ## Get Row ####################################################################
   
@@ -148,36 +131,37 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
   
   # Update them each time the row update
   observersOutput$stdCurvePreset <- observeEvent(row(), {
+    req(nrow(row()) > 0)
     # Get curves ids that are not NA
-    curveIds <- na.omit(c(row()$chla_acid_std_curve_id, row()$chla_noacid_std_curve_id))
+    curveIds <- c(row()$chla_acid_std_curve_id, row()$chla_noacid_std_curve_id)
     
-    # If there is any id
-    if (length(curveIds) > 0) {
-      # Get the curves info
-      stdCurves <- getRows(
-        pool,
-        'standard_curves',
-        id %in% curveIds
-      )
-      
-      # For each curve
-      for (curve in c('chla_acid_std_curve_id', 'chla_noacid_std_curve_id')) {
-        # Get the id
-        curveId <- row() %>% pull(curve)
-        # If is not NA and superior to 0
-        if (!is.na(curveId) & curveId > 0) {
-          # Define the curve parameter name and select input id
-          if (curve == 'chla_acid_std_curve_id') {
-            paramName <- 'chla acid'
-            selectName <- 'chlaAcidInput'
-          } else {
-            paramName <- 'chla noacid'
-            selectName <- 'chlaNoAcidInput'
-          }
-          # Get the curve date and update the select input
-          curveDate <- stdCurves %>% filter(parameter == paramName) %>% pull('date') %>% as_date()
-          updateSelectInput(session, selectName, selected = curveDate)
+    # Get the curves info
+    stdCurves <- getRows(
+      pool,
+      'standard_curves',
+      id %in% curveIds
+    )
+    
+    # For each curve
+    for (curve in c('chla_acid_std_curve_id', 'chla_noacid_std_curve_id')) {
+      # Get the id
+      curveId <- row() %>% pull(curve)
+      # If is not NA and superior to 0
+      if (!is.na(curveId) & curveId > 0) {
+        # Define the curve parameter name and select input id
+        if (curve == 'chla_acid_std_curve_id') {
+          paramName <- 'chla acid'
+          selectName <- 'chlaAcidInput'
+        } else {
+          paramName <- 'chla noacid'
+          selectName <- 'chlaNoAcidInput'
         }
+        # Get the curve date and update the select input
+        curveDate <- stdCurves %>% filter(parameter == paramName) %>% pull('date') %>% as_date()
+        updateSelectInput(session, selectName, selected = curveDate)
+      } else {
+        selectName <- ifelse(curve == 'chla_acid_std_curve_id', 'chlaAcidInput', 'chlaNoAcidInput')
+        updateSelectInput(session, selectName, selected = 'Select a date...')
       }
     }
   })
@@ -337,8 +321,7 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
             chla_acid_std_curve_id
           )
         ),
-        pool,
-        ifelse(input$chlaAcidUseConstant, 'cst', 'db')
+        pool
       )
       chla_acid_ugL_rep <- ifelse(
         chla_acid_ugL_rep != 'KEEP OLD',
@@ -359,8 +342,7 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
             chla_noacid_std_curve_id
           )
         ),
-        pool,
-        ifelse(input$chlaNoAcidUseConstant, 'cst', 'db')
+        pool
       )
       chla_noacid_ugL_rep <- ifelse(
         chla_noacid_ugL_rep != 'KEEP OLD',
