@@ -91,29 +91,34 @@ toolTable <- function(input, output, session, df, replicates = FALSE, canUpdate 
       # Get table data
       updatedDf <- hot_to_r(input$toolTable)
       
-      # Pivot wider the table depending on the replicates
-      if (replicates) {
-        updatedDf %<>% pivot_wider(names_from = Parameter, values_from = -Parameter,  names_glue = '{Parameter}_{.value}')
+      # If the updated df is empty return a empty df with no column to avoid pivoting errors
+      if (nrow(updatedDf) == 0) {
+        return(data.frame())
       } else {
-        updatedDf %<>% pivot_wider(names_from = Parameter, values_from = Value)
-      }
-      
-      # Send back updated df
-      if (readOnly) {
-        df()
-      } else if (canUpdate) {
-        updatedDf
-      } else {
-        # If cannot update already set values
-        # Get initial df
-        df <- df()
+        # Pivot wider the table depending on the replicates
+        if (replicates) {
+          updatedDf %<>% pivot_wider(names_from = Parameter, values_from = -Parameter,  names_glue = '{Parameter}_{.value}')
+        } else {
+          updatedDf %<>% pivot_wider(names_from = Parameter, values_from = Value)
+        }
         
-        # Add a reference column to both df
-        df %<>% mutate(joining_col = 1)
-        updatedDf %<>% mutate(joining_col = 1)
-        
-        # Return a df with only the authorized updates
-        coalesce_join(df, updatedDf, by = 'joining_col') %>% select(-joining_col)
+        # Send back updated df
+        if (readOnly) {
+          df()
+        } else if (canUpdate) {
+          updatedDf
+        } else {
+          # If cannot update already set values
+          # Get initial df
+          df <- df()
+          
+          # Add a reference column to both df
+          df %<>% mutate(joining_col = 1)
+          updatedDf %<>% mutate(joining_col = 1)
+          
+          # Return a df with only the authorized updates
+          coalesce_join(df, updatedDf, by = 'joining_col') %>% select(-joining_col)
+        }
       }
     })
   )
