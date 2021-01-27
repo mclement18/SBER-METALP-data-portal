@@ -24,7 +24,29 @@ docToolUI <- function(id, ...) {
       div(
         class = 'calculation-header',
         h4('Calculated columns:'),
+        checkboxInput(ns('stdCurveCorr'), 'Std curve corr?', value = FALSE),
         actionButton(ns('calculate'), 'Calculate', class = 'custom-style custom-style--primary')
+      ),
+      div(
+        class = 'std-selection',
+        hidden(
+          selectInput(
+            ns('stdCurveInput'),
+            'Standard curve used to correct DOC',
+            choices = c(
+              'Select a date...',
+              parseOptions(
+                getRows(
+                  pool,
+                  'standard_curves',
+                  parameter == 'DOC corr',
+                  columns = 'date'
+                ) %>% arrange(desc(date)),
+                'date'
+              )
+            )
+          )
+        )
       ),
       div(
         class = 'calculated',
@@ -54,6 +76,19 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
   
   
   
+  ## Hide and show select input ##############################################################
+  
+  # Observe event that react to chla acid curve selection
+  observersOutput$stdCurveVisibility <- observeEvent(input$stdCurveCorr, ignoreInit = TRUE, {
+    toggleElement('stdCurveInput', condition = input$stdCurveCorr)
+    if (!input$stdCurveCorr) updateSelectInput(session, 'stdCurveInput', selected = 'Select a date...')
+  })
+  
+  
+  
+  
+  
+  
   ## Get Row ####################################################################
   
   row <- reactive({
@@ -72,6 +107,7 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
         category == 'DOC',
         columns = c('order', 'param_name')
       ) %>% pull('param_name'),
+      'doc_std_curve_id',
       'created_at', 'updated_at'
     )
     
@@ -83,6 +119,51 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
       DATE_reading == selectedDate,
       TIME_reading_GMT == selectedTime,
       columns = columns
+    )
+  })
+  
+  
+  
+  
+  
+  ## Select preset std curves ############################################################
+  
+  # Update them each time the row update
+  observersOutput$stdCurvePreset <- observeEvent(row(), {
+    req(nrow(row()) > 0)
+    # Get curves
+    curveId <- row()$doc_std_curve_id
+    
+    if (!is.na(curveId) & curveId > 0) {
+      stdCurve <- getRows(
+        pool,
+        'standard_curves',
+        id == curveId
+      )
+      
+      # Update select input if needed
+      curveDate <- stdCurve %>% pull('date') %>% as_date()
+      updateSelectInput(session, 'stdCurveInput', selected = curveDate)
+    } else {
+      updateSelectInput(session, 'stdCurveInput', selected = 'Select a date...')
+    }
+  })
+  
+  # Reactive that returns the std curves ids
+  stdCurveIds <- reactive({
+    stdDate <- input$stdCurveInput
+    
+    data.frame(
+      doc_std_curve_id = ifelse(
+        stdDate == 'Select a date...',
+        as.numeric(NA),
+        getRows(
+          pool,
+          'standard_curves',
+          parameter == 'DOC corr',
+          date == stdDate
+        ) %>% pull('id')
+      )
     )
   })
   
@@ -143,9 +224,15 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
   
   # Calculate upon button click
   observersOutput$calculationLogic <- observeEvent(input$calculate, ignoreInit = TRUE, {
+    # Get DOC replicates and std curve id
+    docRepUpdated <- bind_cols(
+      docRepUpdated(),
+      stdCurveIds()
+    )
+    
     # Calculate DOC avg and sd
-    newDocMean <- calcMean(docRepUpdated())
-    newDocSd <- calcSd(docRepUpdated())
+    newDocMean <- calcDOCavg(docRepUpdated)
+    newDocSd <- calcDOCsd(docRepUpdated)
     # Set new mean and sd
     # If KEEP OLD, take it from the row()
     calculations$docAvgSd <- data.frame(
@@ -186,7 +273,8 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
             ends_with('_at')
           ),
           docRepUpdated(),
-          docAvgSdUpdated()
+          docAvgSdUpdated(),
+          stdCurveIds()
         )
       }),
       # Returns errors and warnings
