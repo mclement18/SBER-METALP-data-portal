@@ -29,7 +29,10 @@ toolsLayoutUI <- function(id, toolName, instructionsPanelUIArgs = NULL, ...) {
         ),
         div(
           class = 'action btn-group',
-          actionButton(ns('update'), 'Update', class = 'custom-style custom-style--primary'),
+          actionButton(ns('check'), 'Check', class = 'custom-style'),
+          disabled(
+            actionButton(ns('update'), 'Update', class = 'custom-style custom-style--primary')
+          ),
           disabled(
             actionButton(ns('removeAll'), 'Remove All', icon = icon('trash-alt'), class = 'custom-style')
           )
@@ -77,6 +80,50 @@ toolsLayout <- function(input, output, session,
   
   
   
+  
+  ## Check values before update ######################################################################
+  
+  # Track the check status
+  checked <- reactiveVal(FALSE)
+  entriesChecked <- reactiveValues()
+  
+  # Toggle update button in function of the checked status
+  observeEvent(checked(), ignoreInit = TRUE, toggleState('update', condition = checked()))
+  
+  # Display notification when check is done
+  observeEvent(input$check, ignoreInit = TRUE, showNotification('Check performed!\nLook for warnings before updating!', type = 'message'))
+  
+  # Toggle checked in function of entries check status
+  observe({
+    # Convert entriesChecked to a list
+    entriesCheckedList <- reactiveValuesToList(entriesChecked)
+    
+    # If entriesCheckedList is not empty
+    if (length(entriesCheckedList) > 0) {
+      # Remove all NULL values from the list
+      entriesCheckedList[sapply(entriesCheckedList, is.null)] <- NULL
+      
+      # If entriesCheckedList is still not empty
+      if (length(entriesCheckedList) > 0) {
+        # If one of the entry is not checked set checked to FALSE else to TRUE
+        # Convert list to a logical vector and invert it to get the not checked information
+        # Get the sum and convert it to a logical (i.e. if 0 then FALSE, everything else will be TRUE)
+        # As this is the not checked information, invert it to get back the checked information
+        checked(!as.logical(sum(!unlist(entriesCheckedList))))
+        
+        # Stop here
+        return()
+      }
+    }
+    
+    # If entriesCheckedList is empty set checked to FALSE
+    checked(FALSE)
+  })
+  
+  
+  
+  
+  
   ## Create update reactive value and update verification ############################################
   
   # Create the update reactive value to pass to entry module
@@ -84,6 +131,8 @@ toolsLayout <- function(input, output, session,
   
   # Create an observeEvent that react to the update button
   observeEvent(input$update, ignoreInit = TRUE, {
+    req(checked())
+    
     # If a verification is needed, show verification modal
     if (updateVerification) {
       showModal(modalDialog(
@@ -169,8 +218,9 @@ toolsLayout <- function(input, output, session,
   # Track errors, warnings and successes NB
   errors <- reactiveValues(errors = 0, warnings = 0, success = 0)
   
-  # Reset it before update
-  observeEvent(input$update, {
+  # Reset it before update or check
+  observeEvent(input$update | input$check, priority = 1, {
+    req(input$update != 0 | input$check != 0)
     errors$errors <- 0
     errors$warnings <- 0
     errors$success <- 0
@@ -215,30 +265,38 @@ toolsLayout <- function(input, output, session,
     # Increment the number of entries
     entryNb(entryNb() + 1)
     
+    # Get current number
+    currentEntryNb <- entryNb()
+    
     # Insert the new entry UI elements
     insertUI(
       selector = paste0('#', session$ns('entries')),
       where = 'beforeEnd',
       ui = div(
-        id = session$ns(paste0('entry', entryNb())),
+        id = session$ns(paste0('entry', currentEntryNb)),
         class = 'entry',
-        entryLayoutUI(session$ns(entryNb()), pool, toolModuleUI, ...)
+        entryLayoutUI(session$ns(currentEntryNb), pool, toolModuleUI, ...)
       ),
       immediate = TRUE
     )
     
     # Call new entry module function and retrieve, if any, the named list containing:
-    result <- callModule(entryLayout, entryNb(),
-                         pool, toolModule, update, ...)
+    result <- callModule(entryLayout, currentEntryNb,
+                         pool, toolModule, update, reactive(input$check), ...)
     
     # Save entry observers
-    entriesObservers[[as.character(entryNb())]] <- result$observers
+    entriesObservers[[as.character(currentEntryNb)]] <- result$observers
     
     # Update errors number using module result
-    entriesObservers[[as.character(entryNb())]]$layoutErrorLogic <- observeEvent(result$errors(), {
+    entriesObservers[[as.character(currentEntryNb)]]$layoutErrorLogic <- observeEvent(result$errors(), {
       errors$errors <- errors$errors + result$errors()$errors
       errors$warnings <- errors$warnings + result$errors()$warnings
       errors$success <- errors$success + result$errors()$success
+    })
+    
+    # Update check status depending on entry check status
+    entriesObservers[[as.character(currentEntryNb)]]$layoutCheckStatus <- observeEvent(result$checked(), {
+      entriesChecked[[as.character(currentEntryNb)]] <- result$checked()
     })
   })
   
@@ -257,6 +315,9 @@ toolsLayout <- function(input, output, session,
     
     # Destroy observers
     destroyObservers(entriesObservers[[as.character(entryNb())]])
+    
+    # Set entry check to NULL
+    entriesChecked[[as.character(entryNb())]] <- NULL
     
     # Decrement entry nb
     entryNb(entryNb() - 1)
@@ -283,6 +344,12 @@ toolsLayout <- function(input, output, session,
       # Destroy observers
       destroyObservers(entriesObservers[[as.character(i)]])
     }
+    
+    # Clear entriesChecked reactive values
+    clearReactiveValues(entriesChecked)
+    
+    # Reset checked to FALSE
+    checked(FALSE)
     
     # Reset entry number
     entryNb(0)

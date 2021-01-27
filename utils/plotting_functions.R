@@ -400,3 +400,57 @@ highlightDataSubset <- function(p, color, data, x, y, ...) {
 }
 
 
+
+
+
+plotDistribution <- function(distribution, row, column, plotTitle) {
+# Create a plot of distribution value ~ time and add row point with another color for comparison
+# Parameters:
+#  - distribution: Data.frame, contains the dtribution to plot
+#  - row: Data.frame, contains the row new values to compare with the distribution
+#  - column: String, the column name to use from both the distribution and row df
+#  - plotTitle: String, the plot title
+# 
+# Returns a ggplot object
+  
+  # Use !! to unquote the symbole returned by sym() -- trick to use string in ggplot2 aes()
+  p <- ggplot(distribution, aes(DATETIME_month_day_time_GMT, !!sym(column)))+
+    geom_point(size = 2, na.rm = TRUE, color = 'black')+
+    # Use geom_line to plot LOESS curve in order to use linetype aes
+    geom_line(stat="smooth", method = "loess", formula = y ~ x,
+              color = 'black',
+              size = 1.2,
+              alpha = 0.5)+
+    # Add new point
+    geom_point(data = row, mapping = aes(x = DATETIME_month_day_time_GMT, y = !!sym(column)), size = 3, color = '#e24727')+
+    ggtitle(plotTitle)+
+    ylab(column)+
+    xlab('Date')+
+    # Change the linetype legend label to 'LOESS curve'
+    scale_linetype(labels = 'LOESS curve')+
+    # Set the y axis limits
+    scale_y_continuous(limits = calculateYaxisLimits(
+      min(
+        pull(distribution, column),
+        pull(row, column),
+        na.rm = TRUE
+      ),
+      max(
+        pull(distribution, column),
+        pull(row, column),
+        na.rm = TRUE
+      )
+    ))+
+    # Set theme
+    theme_bw()+
+    # Remove legend title, move legend to the bottom of the plot and set text size
+    theme(
+      plot.title = element_text(size = 16, face = 'bold'),
+      legend.position = "bottom", legend.title = element_blank(), legend.text = element_text(size = 10),
+      axis.title = element_text(size = 14), axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 11)
+    )
+  return(p)
+}
+
+
+

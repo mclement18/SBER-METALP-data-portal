@@ -81,7 +81,7 @@ entryLayoutUI <- function(id, pool, toolModuleUI, createNew = FALSE, ...) {
 ## Create module server function ##################################################
 
 entryLayout <- function(input, output, session, pool,
-                        toolModule, update, createNew = FALSE, ...) {
+                        toolModule, update, check, createNew = FALSE, ...) {
 # Create the logic for the entryLayout module
 # Parameters:
 #  - input, output, session: Default needed parameters to create a module
@@ -281,6 +281,103 @@ entryLayout <- function(input, output, session, pool,
   
   
   
+  ## Check logic #################################################################
+  
+  # Track if check is done
+  checked <- reactiveVal(FALSE)
+  
+  # Track check warnings
+  checkWarnings <- reactiveVal(tagList())
+  
+  # Check the row values when check button is pressed
+  observersOutput$checkLogic <- observeEvent(check(), ignoreInit = TRUE, {
+    req(result$df(), check() != 0)
+    
+    # Get row
+    row <- result$df() %>% select(-id)
+    
+    # Get data distribution
+    distribution <- getDistribution(pool, input$site, datetime()$date, colnames(row))
+    
+    # Perform check
+    outliers <- checkDistribution(distribution$quantiles, row)
+    
+    # Add datetime column to distribution df and row
+    distribution$df %<>% mutate(
+      DATETIME_GMT = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT'),
+      DATE_reading = ymd(DATE_reading),
+      DATETIME_month_day_time_GMT = `year<-`(DATETIME_GMT, 2020)
+    )
+    
+    row %<>% mutate(
+      DATETIME_GMT = ymd_hms(paste(DATE_reading, TIME_reading_GMT), tz = 'GMT'),
+      DATE_reading = ymd(DATE_reading),
+      DATETIME_month_day_time_GMT = `year<-`(DATETIME_GMT, 2020)
+    )
+    
+    # Track warnings
+    warnings <- tagList()
+    
+    # If there is an outlier
+    if (length(outliers) > 0) {
+      # For each outlier create a warning
+      warningList <- lapply(1:length(outliers), function(n) {
+        # Get row value and outlier info
+        column <- names(outliers)[n]
+        value <- row %>% pull(column)
+        limit <- outliers[[column]]
+        limitValue <- distribution$quantiles %>% filter(quantile == limit) %>% pull(column)
+        # Create the plot id and title
+        plotId <- paste0('check-plot-', n)
+        plotTitle <- paste(input$site, column)
+        # Create warning
+        warning <- tagList(
+          paste0(
+            "Warning: Parameter '", column, " has a value of '", value,
+            "' which is +/- than the actual '", limit, "' of '", limitValue
+          ),
+          actionLink(session$ns(plotId), 'see plot'),
+          ''
+        )
+        # Create observer to display plot
+        observersOutput[[plotId]] <- observeEvent(input[[plotId]], ignoreInit = TRUE, {
+          showModal(
+            modalDialog(
+              renderPlot(plotDistribution(distribution$df, row, column, plotTitle)),
+              footer = NULL,
+              easyClose = TRUE
+            )
+          )
+        })
+        
+        # Return warning
+        warning
+      })
+      
+      # Convert the list to a tagList
+      for (warning in warningList) {
+        warnings <- tagList(
+          warnings,
+          warning
+        )
+      }
+    }
+    
+    # Set checkWarnings
+    checkWarnings(warnings)
+    
+    # Toggle checked
+    checked(TRUE)
+    
+    # Toggle updated
+    updated(FALSE)
+  })
+  
+  
+  
+  
+  
+  
   ## Update logic #################################################################
   
   # Track if update is done
@@ -288,7 +385,7 @@ entryLayout <- function(input, output, session, pool,
   
   # Update the row when update button is pressed
   observersOutput$updateLogic <- observeEvent(update(), ignoreInit = TRUE, {
-    req(result$df(), update() != 0)
+    req(result$df(), update() != 0, checked())
     # Get updated row
     row <- result$df()
     # Check that it is a single row
@@ -327,12 +424,23 @@ entryLayout <- function(input, output, session, pool,
     
     # Set updated to TRUE, to display errors
     updated(TRUE)
+    
+    # Reset checked and remove checkWarnings
+    checked(FALSE)
+    checkWarnings(tagList())
   })
   
-  # Reset updated to false when site or date is changed
+  
+  
+  
+  ## Reset updated and checked when data changes ######################################
+  
+  # Reset updated and checked to false when site, date or row is changed
   observersOutput$resetUpdatedLogic <- observe({
-    input$site;input$date
+    input$site;input$date;result$df()
     updated(FALSE)
+    checked(FALSE)
+    checkWarnings(tagList())
   })
   
   
@@ -346,40 +454,55 @@ entryLayout <- function(input, output, session, pool,
   
   # Render errors and warnings or success
   output$entryErrors <- renderUI({
-    req(updated())
-    # If no error or warning present, show success
-    if (length(errors$errors) == 0 & length(errors$warnings) == 0) {
-      p(class = 'success', 'Successfully updated row!')
-    } else {
-      # Error and warning layout
-      tagList(
-        # If any error, display it
-        if (length(errors$errors) > 0){
-          pre(
-            class = 'error',
-            paste(
-              'Errors:',
-              '----------',
-              '',
-              paste(errors$errors, collapse = '\n\n'),
-              sep = '\n'
+    if (updated()) {
+      # If no error or warning present, show success
+      if (length(errors$errors) == 0 & length(errors$warnings) == 0) {
+        p(class = 'success', 'Successfully updated row!')
+      } else {
+        # Error and warning layout
+        tagList(
+          # If any error, display it
+          if (length(errors$errors) > 0){
+            pre(
+              class = 'error',
+              paste(
+                'Errors:',
+                '----------',
+                '',
+                paste(errors$errors, collapse = '\n\n'),
+                sep = '\n'
+              )
             )
-          )
-        } else NULL,
-        # If any warning, display it
-        if (length(errors$warnings) > 0) {
-          pre(
-            class = 'warning',
-            paste(
-              'Warnings:',
-              '----------',
-              '',
-              paste(errors$warnings, collapse = '\n\n'),
-              sep = '\n'
+          } else NULL,
+          # If any warning, display it
+          if (length(errors$warnings) > 0) {
+            pre(
+              class = 'warning',
+              paste(
+                'Warnings:',
+                '----------',
+                '',
+                paste(errors$warnings, collapse = '\n\n'),
+                sep = '\n'
+              )
             )
-          )
-        } else NULL
-      )
+          } else NULL
+        )
+      }
+    } else if (checked()) {
+      # If no error or warning present, show success
+      if (length(checkWarnings()) == 0) {
+        p(class = 'success', 'Check successfully passed!')
+      } else {
+        # Error and warning layout
+        pre(
+          class = 'warning',
+          'Warnings:',
+          '----------',
+          '',
+          checkWarnings()
+        )
+      }
     }
   })
   
@@ -419,17 +542,19 @@ entryLayout <- function(input, output, session, pool,
       observers = observersOutput,
       # Errors, warning and success Nb to updated layout summary
       errors = reactive({
-        if (updated()) {
-          # Rerun on update
-          update()
+        if (updated() | checked()) {
+          # Rerun on update and check
+          update();check()
           # Return a list with error, warning and success Nb
           list(
             errors = if (length(errors$errors) > 0) 1 else 0,
-            warnings = if (length(errors$warnings) > 0) 1 else 0,
-            success = if (length(errors$errors) == 0 & length(errors$warnings) == 0) 1 else 0
+            warnings = if (length(errors$warnings) > 0 | length(checkWarnings()) > 0) 1 else 0,
+            success = if (length(errors$errors) == 0 & length(errors$warnings) == 0 & length(checkWarnings()) == 0) 1 else 0
           )
         }
-      })
+      }),
+      # Whether the data was checked or not
+      checked = checked
     )
   )
 }

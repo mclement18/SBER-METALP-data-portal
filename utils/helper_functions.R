@@ -256,3 +256,102 @@ coalesce_join <- function(x, y,
     select(all_of(cols))
 }
 
+
+
+getDistribution <- function(pool, site, date, columns) {
+# Get the grab data of specified columns for a 5 months period around the provided date for all years
+# And calculate the min, Q10, Q90 and max for each column
+# Parameters:
+#  - pool: Pool connection, the connection to an SQL Database
+#  - site: String, the station name to get the distribution of
+#  - date: Date or Datetime, the date used to define the 5 months period
+#  - columns: Character vector, the column names to get from the DB
+# 
+# Returns a list containing a df with the distribution and a df with the quantiles
+  
+  # Define a vector containing the months to sample
+  monthsToSample <- sapply(-2:2, function(i) month(date + months(i)))
+  
+  # Get all the distributions
+  distribution <- getRows(
+    pool,
+    'data',
+    station == site,
+    month(DATE_reading) %in% monthsToSample,
+    columns = columns
+  )
+  
+  # Calculate quantiles
+  quantiles <- distribution %>% summarise(
+    across(
+      where(is.numeric),
+      list(
+        min = ~min(.x, na.rm = TRUE),
+        Q10 = ~quantile(.x, probs = .1, na.rm = TRUE),
+        Q90 = ~quantile(.x, probs = .9, na.rm = TRUE),
+        max = ~max(.x, na.rm = TRUE)
+      )
+    )
+  ) %>% pivot_longer(
+    everything(),
+    names_to = c('parameter', 'quantile'),
+    names_pattern = '(.*)_(.*)'
+  ) %>% pivot_wider(quantile, names_from = parameter)
+  
+  # Returns the distribution and quantiles as list
+  return(list(
+    df = distribution,
+    quantiles = quantiles
+  ))
+}
+
+
+
+
+checkDistribution <- function(quantiles, row) {
+# Check each value from row against the correct quantile
+# Parameters:
+#  - quantiles: Data.frame, contains the quantiles information for all columns
+#  - row: Data.frame, contains the row new values to compare to the quantiles
+# 
+# Returns a list of outliers
+  
+  # Create a list to track the outliers
+  outliers <- list()
+  
+  # Get the row and quantiles column names
+  rowColNames <- colnames(row)
+  qColNames <- colnames(quantiles)
+  
+  # Check every column from row
+  for (column in rowColNames) {
+    # If the column is also in the quantiles
+    if (column %in% qColNames) {
+      # Get row value and quantiles
+      value <- row %>% pull(column)
+      # If value is not NA, check against quantiles
+      if (!is.na(value)) {
+        min <- quantiles %>% filter(quantile == 'min') %>% pull(column)
+        Q10 <- quantiles %>% filter(quantile == 'Q10') %>% pull(column)
+        Q90 <- quantiles %>% filter(quantile == 'Q90') %>% pull(column)
+        max <- quantiles %>% filter(quantile == 'max') %>% pull(column)
+        # Check if minus than min
+        if (!is.na(min) & value < min) {
+          outliers[[column]] <- 'min'
+        } else if (!is.na(Q10) & value < Q10) {
+          outliers[[column]] <- 'Q10'
+        } else if (!is.na(Q90) & value > Q90) {
+          outliers[[column]] <- 'Q90'
+        } else if (!is.na(max) & value > max) {
+          outliers[[column]] <- 'max'
+        }
+      }
+    }
+  }
+  
+  # Return the outliers list
+  outliers
+}
+
+
+
