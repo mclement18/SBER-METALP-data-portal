@@ -134,6 +134,7 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
   
   # Update them each time the row update
   observersOutput$stdCurvePreset <- observeEvent(row(), {
+    req(nrow(row()) > 0)
     # Get curves
     curveId <- row()$vaisala_std_curve_id
     
@@ -147,6 +148,8 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
       # Update select input if needed
       curveDate <- stdCurve %>% pull('date') %>% as_date()
       updateSelectInput(session, 'vaisalaStdCurveInput', selected = curveDate)
+    } else {
+      updateSelectInput(session, 'vaisalaStdCurveInput', selected = 'Select a date...')
     }
   })
   
