@@ -294,7 +294,7 @@ entryLayout <- function(input, output, session, pool,
     req(result$df(), check() != 0)
     
     # Get row
-    row <- result$df() %>% select(-id)
+    row <- result$df() %>% select(-ends_with('id'))
     
     # Get data distribution
     distribution <- getDistribution(pool, input$site, datetime()$date, colnames(row))
