@@ -333,8 +333,8 @@ entryLayout <- function(input, output, session, pool,
         # Create warning
         warning <- tagList(
           paste0(
-            "Warning: Parameter '", column, " has a value of '", value,
-            "' which is +/- than the actual '", limit, "' of '", limitValue
+            "Warning: Parameter '", column, "' has a value of '", value,
+            "' which is +/- than the actual '", limit, "' of '", limitValue, "'."
           ),
           actionLink(session$ns(plotId), 'see plot'),
           ''
