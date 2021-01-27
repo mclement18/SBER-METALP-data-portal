@@ -45,7 +45,7 @@ chlaToolUI <- function(id, pool, ...) {
           choices = c(
             'Select a date...',
             parseOptions(
-              stdCurves %>% filter(parameter == 'chla acid'),
+              stdCurves %>% filter(parameter == 'chla acid') %>% arrange(desc(date)),
               'date'
             )
           )
@@ -56,7 +56,7 @@ chlaToolUI <- function(id, pool, ...) {
           choices = c(
             'Select a date...',
             parseOptions(
-              stdCurves %>% filter(parameter == 'chla noacid'),
+              stdCurves %>% filter(parameter == 'chla noacid') %>% arrange(desc(date)),
               'date'
             )
           )
@@ -148,22 +148,34 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
   
   # Update them each time the row update
   observersOutput$stdCurvePreset <- observeEvent(row(), {
-    # Get curves
-    curveIds <- na.omit(row()$chla_acid_std_curve_id, row()$chla_noacid_std_curve_id)
+    # Get curves ids that are not NA
+    curveIds <- na.omit(c(row()$chla_acid_std_curve_id, row()$chla_noacid_std_curve_id))
     
+    # If there is any id
     if (length(curveIds) > 0) {
+      # Get the curves info
       stdCurves <- getRows(
         pool,
         'standard_curves',
         id %in% curveIds
       )
       
-      # Update select input if needed
+      # For each curve
       for (curve in c('chla_acid_std_curve_id', 'chla_noacid_std_curve_id')) {
+        # Get the id
         curveId <- row() %>% pull(curve)
-        if (!is.na(curveId & curveId > 0)) {
-          curveDate <- stdCurves %>% filter(parameter == curve) %>% pull('date') %>% as_date()
-          selectName <- ifelse(curve == 'chla_acid_std_curve_id', 'chlaAcidInput', 'chlaNoAcidInput')
+        # If is not NA and superior to 0
+        if (!is.na(curveId) & curveId > 0) {
+          # Define the curve parameter name and select input id
+          if (curve == 'chla_acid_std_curve_id') {
+            paramName <- 'chla acid'
+            selectName <- 'chlaAcidInput'
+          } else {
+            paramName <- 'chla noacid'
+            selectName <- 'chlaNoAcidInput'
+          }
+          # Get the curve date and update the select input
+          curveDate <- stdCurves %>% filter(parameter == paramName) %>% pull('date') %>% as_date()
           updateSelectInput(session, selectName, selected = curveDate)
         }
       }
