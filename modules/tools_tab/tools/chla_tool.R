@@ -529,7 +529,17 @@ chlaTool <- function(input, output, session, pool, site, datetime, ...) {
         )
       ),
       # Return observers to destroy them from the outer module
-      observers = observersOutput
+      observers = observersOutput,
+      # Return a character vector containing the name of the columns not to check
+      noCheckCols = reactive(row() %>% select(matches('_(avg|sd)(_(u)?gm2)?$')) %>% colnames()),
+      # Return a list containing key-value pairs of columns to check with the regex to get the columns to check against
+      checkCols = reactive({
+        # Add complex comparisons
+        cols <- row() %>% select(matches('_[ABCDE]$', ignore.case = FALSE)) %>% colnames()
+        cols2check <- `names<-`(as.list(sub('_[ABCDE]$', '_(A|B|C|D|E)', cols)), cols)
+        # Return list
+        cols2check
+      })
     )
   )
 }

@@ -363,7 +363,27 @@ pCO2Tool <- function(input, output, session, pool, site, datetime, ...) {
         )
       ),
       # Return observers to destroy them from the outer module
-      observers = observersOutput
+      observers = observersOutput,
+      # Return a character vector containing the name of the columns not to check
+      noCheckCols = reactive(row() %>% select(ends_with('_sd')) %>% colnames()),
+      # Return a list containing key-value pairs of columns to check with the regex to get the columns to check against
+      checkCols = reactive({
+        cols2check <- list()
+        # Add all standard comparisons
+        cols <- row() %>% select(matches('_avg$|_temp$|_press$')) %>% colnames()
+        cols2check <- c(
+          cols2check,
+          `names<-`(as.list(cols), cols)
+        )
+        # Add complex comparisons
+        cols <- row() %>% select(matches('_A$|_B$')) %>% colnames()
+        cols2check <- c(
+          cols2check,
+          `names<-`(as.list(sub('_[AB]$', '_(A|B)', cols)), cols)
+        )
+        # Return list
+        cols2check
+      })
     )
   )
 }

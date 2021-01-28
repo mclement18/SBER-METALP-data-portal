@@ -186,7 +186,11 @@ co2AirTool <- function(input, output, session, pool, site, datetime, ...) {
         )
       ),
       # Return observers to destroy them from the outer module
-      observers = observersOutput
+      observers = observersOutput,
+      # Return a character vector containing the name of the columns not to check
+      noCheckCols = reactive(c()),
+      # Return a list containing key-value pairs of columns to check with the regex to get the columns to check against
+      checkCols = reactive(list())
     )
   )
 }

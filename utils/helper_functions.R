@@ -258,7 +258,7 @@ coalesce_join <- function(x, y,
 
 
 
-getDistribution <- function(pool, site, date, columns) {
+getDistribution <- function(pool, site, date, columns, col2check) {
 # Get the grab data of specified columns for a 5 months period around the provided date for all years
 # And calculate the min, Q10, Q90 and max for each column
 # Parameters:
@@ -266,13 +266,15 @@ getDistribution <- function(pool, site, date, columns) {
 #  - site: String, the station name to get the distribution of
 #  - date: Date or Datetime, the date used to define the 5 months period
 #  - columns: Character vector, the column names to get from the DB
+#  - col2check: List, contains key-value pairs matching the columns to check and a regex to get the columns to check against
+#               If empty, check all columns in columns in a standard way
 # 
 # Returns a list containing a df with the distribution and a df with the quantiles
   
   # Define a vector containing the months to sample
   monthsToSample <- sapply(-2:2, function(i) month(date + months(i)))
   
-  # Get all the distributions
+  # Get all the data needed
   distribution <- getRows(
     pool,
     'data',
@@ -280,6 +282,39 @@ getDistribution <- function(pool, site, date, columns) {
     month(DATE_reading) %in% monthsToSample,
     columns = columns
   )
+  
+  # Get specific distributions if specified
+  if (length(col2check) > 0) {
+    # Get distribution to get
+    colsRegex <- unique(unlist(col2check))
+    # Track the new distributions
+    newDist <- data.frame()
+    
+    # Create new distributions
+    for (column in colsRegex) {
+      # Get distribution
+      newCol <- distribution %>%
+        select(DATE_reading, TIME_reading_GMT, matches(column, ignore.case = FALSE)) %>%
+        pivot_longer(matches(column, ignore.case = FALSE), values_to = column) %>%
+        arrange(name) %>%
+        select(-name) %>%
+        mutate(idx = 1:n())
+      
+      # Merge distributions
+      if (ncol(newDist) == 0) {
+        newDist <- newCol
+      } else {
+        newDist <- full_join(
+          newDist,
+          newCol,
+          by = c('idx', 'DATE_reading', 'TIME_reading_GMT')
+        )
+      }
+    }
+    
+    # Remove index column used for joining and assign newDist to distribution
+    distribution <- newDist %>% select(-idx)
+  }
   
   # Calculate quantiles
   quantiles <- distribution %>% summarise(
@@ -308,11 +343,13 @@ getDistribution <- function(pool, site, date, columns) {
 
 
 
-checkDistribution <- function(quantiles, row) {
+checkDistribution <- function(quantiles, row, col2check) {
 # Check each value from row against the correct quantile
 # Parameters:
 #  - quantiles: Data.frame, contains the quantiles information for all columns
 #  - row: Data.frame, contains the row new values to compare to the quantiles
+#  - col2check: List, contains key-value pairs matching the columns to check and the columns to check against
+#               If empty, check all columns in columns in a standard way
 # 
 # Returns a list of outliers
   
@@ -326,15 +363,21 @@ checkDistribution <- function(quantiles, row) {
   # Check every column from row
   for (column in rowColNames) {
     # If the column is also in the quantiles
-    if (column %in% qColNames) {
-      # Get row value and quantiles
+    if ((length(col2check) > 0 & column %in% names(col2check)) | column %in% qColNames) {
+      # Get row value and quantiles column
       value <- row %>% pull(column)
+      qColumn <- ifelse(
+        length(col2check) > 0,
+        col2check[[column]],
+        column
+      )
+      
       # If value is not NA, check against quantiles
       if (!is.na(value)) {
-        min <- quantiles %>% filter(quantile == 'min') %>% pull(column)
-        Q10 <- quantiles %>% filter(quantile == 'Q10') %>% pull(column)
-        Q90 <- quantiles %>% filter(quantile == 'Q90') %>% pull(column)
-        max <- quantiles %>% filter(quantile == 'max') %>% pull(column)
+        min <- quantiles %>% filter(quantile == 'min') %>% pull(qColumn)
+        Q10 <- quantiles %>% filter(quantile == 'Q10') %>% pull(qColumn)
+        Q90 <- quantiles %>% filter(quantile == 'Q90') %>% pull(qColumn)
+        max <- quantiles %>% filter(quantile == 'max') %>% pull(qColumn)
         # Check if minus than min
         if (!is.na(min) & value < min) {
           outliers[[column]] <- 'min'

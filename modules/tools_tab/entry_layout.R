@@ -293,14 +293,16 @@ entryLayout <- function(input, output, session, pool,
   observersOutput$checkLogic <- observeEvent(check(), ignoreInit = TRUE, {
     req(result$df(), check() != 0)
     
-    # Get row
-    row <- result$df() %>% select(-ends_with('id'))
+    # Get row, columns not to check and columns to check
+    noCheckCols <- result$noCheckCols()
+    checkCols <- result$checkCols()
+    row <- result$df() %>% select(-ends_with('id'), -all_of(noCheckCols))
     
     # Get data distribution
-    distribution <- getDistribution(pool, input$site, datetime()$date, colnames(row))
+    distribution <- getDistribution(pool, input$site, datetime()$date, colnames(row), checkCols)
     
     # Perform check
-    outliers <- checkDistribution(distribution$quantiles, row)
+    outliers <- checkDistribution(distribution$quantiles, row, checkCols)
     
     # Add datetime column to distribution df and row
     distribution$df %<>% mutate(
@@ -326,7 +328,12 @@ entryLayout <- function(input, output, session, pool,
         column <- names(outliers)[n]
         value <- row %>% pull(column)
         limit <- outliers[[column]]
-        limitValue <- distribution$quantiles %>% filter(quantile == limit) %>% pull(column)
+        qColumn <- ifelse(
+          length(checkCols) > 0,
+          checkCols[[column]],
+          column
+        )
+        limitValue <- distribution$quantiles %>% filter(quantile == limit) %>% pull(qColumn)
         # Create the plot id and title
         plotId <- paste0('check-plot-', n)
         plotTitle <- paste(input$site, column)
@@ -343,7 +350,7 @@ entryLayout <- function(input, output, session, pool,
         observersOutput[[plotId]] <- observeEvent(input[[plotId]], ignoreInit = TRUE, {
           showModal(
             modalDialog(
-              renderPlot(plotDistribution(distribution$df, row, column, plotTitle)),
+              renderPlot(plotDistribution(distribution$df, row, qColumn, column, plotTitle)),
               footer = NULL,
               easyClose = TRUE
             )

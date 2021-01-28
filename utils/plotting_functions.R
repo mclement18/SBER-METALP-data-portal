@@ -403,18 +403,18 @@ highlightDataSubset <- function(p, color, data, x, y, ...) {
 
 
 
-plotDistribution <- function(distribution, row, column, plotTitle) {
+plotDistribution <- function(distribution, row, distColumn, rowColumn, plotTitle) {
 # Create a plot of distribution value ~ time and add row point with another color for comparison
 # Parameters:
-#  - distribution: Data.frame, contains the dtribution to plot
+#  - distribution: Data.frame, contains the distribution to plot
 #  - row: Data.frame, contains the row new values to compare with the distribution
-#  - column: String, the column name to use from both the distribution and row df
+#  - distColumn, rowColumn: String, the column names to use from the distribution and row df, respectively
 #  - plotTitle: String, the plot title
 # 
 # Returns a ggplot object
   
   # Use !! to unquote the symbole returned by sym() -- trick to use string in ggplot2 aes()
-  p <- ggplot(distribution, aes(DATETIME_month_day_time_GMT, !!sym(column)))+
+  p <- ggplot(distribution, aes(DATETIME_month_day_time_GMT, !!sym(distColumn)))+
     geom_point(size = 2, na.rm = TRUE, color = 'black')+
     # Use geom_line to plot LOESS curve in order to use linetype aes
     geom_line(stat="smooth", method = "loess", formula = y ~ x,
@@ -422,22 +422,22 @@ plotDistribution <- function(distribution, row, column, plotTitle) {
               size = 1.2,
               alpha = 0.5)+
     # Add new point
-    geom_point(data = row, mapping = aes(x = DATETIME_month_day_time_GMT, y = !!sym(column)), size = 3, color = '#e24727')+
+    geom_point(data = row, mapping = aes(x = DATETIME_month_day_time_GMT, y = !!sym(rowColumn)), size = 3, color = '#e24727')+
     ggtitle(plotTitle)+
-    ylab(column)+
+    ylab(distColumn)+
     xlab('Date')+
     # Change the linetype legend label to 'LOESS curve'
     scale_linetype(labels = 'LOESS curve')+
     # Set the y axis limits
     scale_y_continuous(limits = calculateYaxisLimits(
       min(
-        pull(distribution, column),
-        pull(row, column),
+        pull(distribution, distColumn),
+        pull(row, rowColumn),
         na.rm = TRUE
       ),
       max(
-        pull(distribution, column),
-        pull(row, column),
+        pull(distribution, distColumn),
+        pull(row, rowColumn),
         na.rm = TRUE
       )
     ))+
