@@ -81,9 +81,17 @@ if (ENV == 'development') {
     output = 'www/main.css',
     options = sass::sass_options(output_style = 'compressed')
   )
+  cssfile <- 'main.css'
   
   # Compile and minify JavaScript
-  js_parser()
+  jsfile <- js_parser()
+  
+  # Create file with assets name
+  readr::write_file(paste(
+    paste0('STYLESHEET_FILE <- "', cssfile, '"'),
+    paste0('JAVASCRIPT_FILE <- "', jsfile, '"'),
+    sep = '\n'
+  ), file = './assets_name.R')
   
   # Plan future strategy
   # Use multisession because the development version will run mainly within Rstudio
@@ -93,6 +101,9 @@ if (ENV == 'development') {
   # Use multicore on the production server
   plan(multicore)
 }
+
+# Load env variables containing assets name
+source('./assets_name.R')
 
 
 
@@ -149,9 +160,9 @@ ui <- tagList(
   # Add stylesheet link and script tags to head
   tags$head(
     # Add link to main.css stylesheet
-    tags$link(href = 'main.css', rel = 'stylesheet', type = 'text/css'),
+    tags$link(href = STYLESHEET_FILE, rel = 'stylesheet', type = 'text/css'),
     # Add link for js script
-    tags$script(src = 'metalpdataportal.js')
+    tags$script(src = JAVASCRIPT_FILE)
   ),
   # Create the navbarPage using custom function to add a content-wrapper (defined in './utils/shiny_extensions.R')
   navbarPageWithWrapper(

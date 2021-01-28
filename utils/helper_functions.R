@@ -199,6 +199,9 @@ js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd(), e
   
   # Delete the temporary file
   file.remove(tmp)
+  
+  # Return file name
+  filename
 }
 
 
