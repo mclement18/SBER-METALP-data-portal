@@ -283,7 +283,10 @@ updateOrder <- function(pool, table, ids, order) {
 
 # Get user for login
 loginUser <- function(pool, username) {
-  pool %>% tbl('users') %>% filter(name == username, active == 1) %>% select(name, password, role, intern_confirmation) %>% head(1) %>% collect()
+  pool %>% tbl('users') %>%
+    filter(name == username, active == 1) %>%
+    select(name, password, role, intern_confirmation) %>%
+    head(1) %>% collect()
 }
 
 
@@ -372,6 +375,42 @@ updateUser <- function(pool, user, username = '', password = '', role = '', acti
   
   # Send Query and catch errors
   sendQueryWithError(pool, query)
+}
+
+
+
+
+updateUserPWD <- function(pool, username, password) {
+  # Check for valid input string
+  username <- validInputString(username)
+  password <- validInputString(password)
+  
+  # Get user id
+  userID <- pool %>% tbl('users') %>%
+    filter(name == username, active == 1) %>%
+    head(1) %>% select(id) %>% collect() %>% pull()
+  
+  # UPdate password only if a new one is provided
+  if (password != SQL('NULL') & length(userID) == 1 & !is.na(userID)) {
+    # Hash the new password
+    hashedPassword <- sodium::password_store(password)
+    
+    # Create query to update password
+    query <- sqlInterpolate(
+      pool,
+      "UPDATE users
+      SET password = ?password
+      WHERE id = ?id;",
+      id = userID, password = hashedPassword
+    )
+    # Send Query and catch errors
+    return(
+      sendQueryWithError(pool, query)
+    )
+  }
+  
+  # Return error
+  'Error: Could not update password. Missing/invalid password/user id.'
 }
 
 

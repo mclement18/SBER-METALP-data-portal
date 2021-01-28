@@ -51,27 +51,6 @@ login <- function(input, output, session, pool) {
   
   
   
-  ## Login modal form #############################################################
-  
-  # Create a modal dialog
-  loginForm <- modalDialog(
-    title = 'Log In', size = 's',
-    div(
-      class = 'login-form',
-      # Add an text output to log the errors
-      textOutput(session$ns('loginError')),
-      # Username and password inputs
-      textInput(session$ns('username'), 'Username'),
-      passwordInput(session$ns('password'), 'Password'),
-    ),
-    # Action buttons
-    footer = tagList(
-      actionButton(session$ns('login'), 'Log In', class = 'custom-style custom-style--primary'),
-      actionButton(session$ns('cancel'), 'Cancel', class = 'custom-style')
-    )
-  )
-  
-  
   
   
   ## Login modal display ##########################################################
@@ -79,7 +58,25 @@ login <- function(input, output, session, pool) {
   # Create observeEvent that react to the showLoginForm button
   observeEvent(input$showLoginForm, ignoreInit = TRUE, {
     req(user$loggedin == FALSE)
-    showModal(loginForm)
+    # Create a modal dialog
+    showModal(
+      modalDialog(
+        title = 'Log In', size = 's',
+        div(
+          class = 'login-form',
+          # Add an text output to log the errors
+          textOutput(session$ns('loginError')),
+          # Username and password inputs
+          textInput(session$ns('username'), 'Username'),
+          passwordInput(session$ns('password'), 'Password'),
+        ),
+        # Action buttons
+        footer = tagList(
+          actionButton(session$ns('login'), 'Log In', class = 'custom-style custom-style--primary'),
+          actionButton(session$ns('cancel'), 'Cancel', class = 'custom-style')
+        )
+      )
+    )
   })
   
   
@@ -105,6 +102,7 @@ login <- function(input, output, session, pool) {
         user$loggedin <- TRUE
         user$name <- userResult$name
         user$role <- userResult$role
+        user$error <- ''
         
         # Remove login form
         removeModal()
@@ -149,7 +147,7 @@ login <- function(input, output, session, pool) {
   # Render the error with validate in a renderText
   output$loginError <- renderText(shiny::validate(
     errorClass = 'form',
-    need(FALSE, message = user$error)
+    need(user$error == '', message = user$error)
   ))
   
   
@@ -169,8 +167,7 @@ login <- function(input, output, session, pool) {
     if(user$loggedin) {
       htmlTemplate(
         './html_components/user_status.html',
-        username = user$name,
-        role = roleToIcon(user$role),
+        username = actionLink(session$ns('changePWD'), user$name, icon = roleToIcon(user$role), class = 'custom-links'),
         logout = actionLink(session$ns('logout'), 'Log Out', class = 'custom-links')
       )
     }
@@ -185,6 +182,63 @@ login <- function(input, output, session, pool) {
     req(user$loggedin)
     # Refresh browser
     session$reload()
+  })
+  
+  
+  
+  
+  ## Change user password logic ###################################################
+  
+  # Create an observeEvent that react to the changePWD link
+  observeEvent(input$changePWD, ignoreInit = TRUE, {
+    req(user$loggedin)
+    # Show update password modal
+    showModal(
+      modalDialog(
+        title = 'Update your password', size = 's',
+        div(
+          class = 'login-form',
+          # Add an text output to log the errors
+          textOutput(session$ns('loginError')),
+          # Password field
+          passwordInput(session$ns('newPWD'), 'New password'),
+          # Confirmation field
+          passwordInput(session$ns('confirmPWD'), 'Confirm password'),
+        ),
+        footer = tagList(
+          actionButton(session$ns('updatePWD'), 'Update', class = 'custom-style custom-style--primary'),
+          actionButton(session$ns('cancel'), 'Cancel', class = 'custom-style')
+        )
+      )
+    )
+  })
+  
+  # Create an observeEvent that react to the updatePWD button
+  observeEvent(input$updatePWD, ignoreInit = TRUE, {
+    req(user$loggedin)
+    # Get inputs
+    newPWD <- input$newPWD
+    confirmPWD <- input$confirmPWD
+    # Check that fields are filled
+    if (newPWD == '' | confirmPWD == '') {
+      user$error <- 'Both field must filled!'
+      # Check that both field are the same
+    } else if (newPWD != confirmPWD) {
+      user$error <- 'Passwords do not match!'
+    } else if (newPWD == confirmPWD) {
+      # Update password
+      updateError <- updateUserPWD(pool, user$name, newPWD)
+      # If success
+      if (updateError == '') {
+        # Show notif and remove modal and error
+        showNotification('Password successfully updated!', type = 'message')
+        user$error <- ''
+        removeModal()
+      } else {
+        # Show error
+        user$error <- updateError
+      }
+    }
   })
   
   
