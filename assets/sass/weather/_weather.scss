@@ -1,0 +1,41 @@
+// ####################################
+// Weather tab style
+// ####################################
+
+.weather {
+    margin: 0 auto;
+    width: min-content;
+
+    h2 {
+        color: $primary-color;
+    }
+
+    iframe {
+        width: 340px;
+        height: 340px;
+    }
+
+    @include tablet {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    @include laptop {
+        gap: 3rem;
+
+        iframe {
+            width: 460px;
+            height: 370px;
+        }
+    }
+
+    @include desktop {
+        gap: 6rem;
+
+        iframe {
+            width: 600px;
+            height: 405px;
+        }
+    }
+}

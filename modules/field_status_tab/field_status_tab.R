@@ -38,6 +38,14 @@ fieldStatusTabUI <- function(id, pool) {
       # Tab content
       notesUI(ns('notesTab')),
       value = ns('notesTab')
+    ),
+    # And the weather tab
+    tabPanel(
+      # Tab title
+      'Weather',
+      # Tab content
+      htmlTemplate('./html_components/weather.html'),
+      value = ns('weatherTab')
     )
   )
 }
