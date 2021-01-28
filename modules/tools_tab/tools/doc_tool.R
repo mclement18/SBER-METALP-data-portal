@@ -2,7 +2,7 @@
 
 ## Create module UI function ######################################################
 
-docToolUI <- function(id, ...) {
+docToolUI <- function(id, pool, ...) {
 # Create the UI for the docTool module
 # Parameters:
 #  - id: String, the module id
