@@ -3,8 +3,8 @@ rsconnect/*
 data/*
 .Rproj.user
 .Rhistory
-www/main.css
-www/metalpdataportal.js
+www/*main.css
+www/*metalpdataportal.js
 secrets.R
 db_backups/*.sql
 restart.txt

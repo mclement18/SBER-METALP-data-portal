@@ -72,6 +72,9 @@ source('./utils/helper_functions.R')
 ## Development environment specific ##########################################################
 
 if (ENV == 'development') {
+  # Remove old files
+  file.remove(list.files('./www', pattern = 'main.css|metalpdataportal.js', full.names = TRUE))
+  
   # Compile CSS from Sass
   sass::sass(
     sass::sass_file('assets/sass/main.scss'), 

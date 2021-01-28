@@ -152,7 +152,7 @@ lm_eqn <- function(df, x, y){
 
 
 
-js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd()) {
+js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd(), env = 'dev') {
 # Parse and combine all JavaScript files present referenced in the assets/js/manifest.json file
 # Minify it and saves it in the www/ folder as metalpdataportal.js
 # Parameters:
@@ -183,7 +183,12 @@ js_parser <- function(inputDir = 'assets/js', outputDir = 'www', wd = getwd()) {
   readr::write_file(compiled, tmp)
   
   # Create the full path to the output file
-  outputFile = file.path(outputDir, 'metalpdataportal.js')
+  if (env == 'dev') {
+    filename <- 'metalpdataportal.js'
+  } else if (env == 'prod') {
+    filename <- paste0(gsub('[- :]', '', Sys.time()), '-metalpdataportal.js')
+  }
+  outputFile = file.path(outputDir, filename)
   
   # Get the correct terser command depending on the OS
   command <- 'terser'
