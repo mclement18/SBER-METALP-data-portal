@@ -239,9 +239,8 @@ mainDownload <- function(input, output, session, pool, user, hfDf, selectedSites
         pool, 'grab_params_plotting',
         active == TRUE,
         param_name %in% local(grabParamReactive_d()),
-        columns = c('order', 'data', 'sd', 'min_max') %>%
-          arrange(order) %>% select(-order)
-      )
+        columns = c('order', 'data', 'sd', 'min_max')
+      ) %>% arrange(order) %>% select(-order)
       
       # Get parameters
       raw_params <- na.exclude(c(parametersInfo$data, parametersInfo$sd, parametersInfo$min_max))
