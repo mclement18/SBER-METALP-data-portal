@@ -146,7 +146,7 @@ calcCO2corr <- function(df, pool, ...) {
 
 
 
-calcDOC <- function(df, func) {
+calcDOC <- function(df, func, pool) {
   # Check for the presence of the correct columns
   allColumns <- sum(
     grepl(
@@ -182,14 +182,14 @@ calcDOC <- function(df, func) {
 
 
 
-calcDOCavg <- function(df, ...) {
-  calcDOC(df, calcMean)
+calcDOCavg <- function(df, pool, ...) {
+  calcDOC(df, calcMean, pool)
 }
 
 
 
-calcDOCsd <- function(df, ...) {
-  calcDOC(df, calcSd)
+calcDOCsd <- function(df, pool, ...) {
+  calcDOC(df, calcSd, pool)
 }
 
 

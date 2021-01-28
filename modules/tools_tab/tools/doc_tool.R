@@ -231,8 +231,8 @@ docTool <- function(input, output, session, pool, site, datetime, ...) {
     )
     
     # Calculate DOC avg and sd
-    newDocMean <- calcDOCavg(docRepUpdated)
-    newDocSd <- calcDOCsd(docRepUpdated)
+    newDocMean <- calcDOCavg(docRepUpdated, pool)
+    newDocSd <- calcDOCsd(docRepUpdated, pool)
     # Set new mean and sd
     # If KEEP OLD, take it from the row()
     calculations$docAvgSd <- data.frame(
