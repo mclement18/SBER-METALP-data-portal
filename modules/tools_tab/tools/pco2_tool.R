@@ -135,7 +135,7 @@ pCO2Tool <- function(input, output, session, pool, site, datetime, ...) {
     if (useCalculated()) {
       calculations$pco2Ch4
     } else {
-      row() %>% select(lab_co2_ch4_dry_A, matches('^CO2_HS|^pCO2_HS|^CH4'), -matches('_avg$|_sd$'))
+      row() %>% select(matches('^CO2_HS|^pCO2_HS|^CH4|^lab_co2_ch4_dry_'), -matches('_avg$|_sd$'))
     }
   })
   
