@@ -365,18 +365,18 @@ pCO2Tool <- function(input, output, session, pool, site, datetime, ...) {
       # Return observers to destroy them from the outer module
       observers = observersOutput,
       # Return a character vector containing the name of the columns not to check
-      noCheckCols = reactive(row() %>% select(ends_with('_sd')) %>% colnames()),
+      noCheckCols = reactive(row() %>% select(matches('dry|h2o|_sd$|_temp$|_press$|^CO2|^(pCO2|CH4).*(A|B)$|^pCO2_HS_(P1_)?uatm$', ignore.case = FALSE)) %>% colnames()),
       # Return a list containing key-value pairs of columns to check with the regex to get the columns to check against
       checkCols = reactive({
         cols2check <- list()
         # Add all standard comparisons
-        cols <- row() %>% select(matches('_avg$|_temp$|_press$')) %>% colnames()
+        cols <- row() %>% select(matches('^(d13C|pCO2_HS_P2|CH4).*_avg$', ignore.case = FALSE)) %>% colnames()
         cols2check <- c(
           cols2check,
           `names<-`(as.list(cols), cols)
         )
         # Add complex comparisons
-        cols <- row() %>% select(matches('_A$|_B$')) %>% colnames()
+        cols <- row() %>% select(matches('lab_co2_(ch4|ich4|co2ppm|ico2)_(A|B)$', ignore.case = FALSE)) %>% colnames()
         cols2check <- c(
           cols2check,
           `names<-`(as.list(sub('_[AB]$', '_(A|B)', cols)), cols)

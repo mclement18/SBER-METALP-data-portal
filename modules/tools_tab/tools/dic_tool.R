@@ -311,18 +311,18 @@ dicTool <- function(input, output, session, pool, site, datetime, ...) {
       # Return observers to destroy them from the outer module
       observers = observersOutput,
       # Return a character vector containing the name of the columns not to check
-      noCheckCols = reactive(row() %>% select(ends_with('_std')) %>% colnames()),
+      noCheckCols = reactive(row() %>% select(matches('wght|SA|h2o|dry|(std|temp|pressure)$|DIC_(A|B)$', ignore.case = FALSE)) %>% colnames()),
       # Return a list containing key-value pairs of columns to check with the regex to get the columns to check against
       checkCols = reactive({
         cols2check <- list()
         # Add all standard comparisons
-        cols <- row() %>% select(matches('_avg$|_temp$|_pressure$')) %>% colnames()
+        cols <- row() %>% select(matches('_avg$')) %>% colnames()
         cols2check <- c(
           cols2check,
           `names<-`(as.list(cols), cols)
         )
         # Add complex comparisons
-        cols <- row() %>% select(matches('_A$|_B$')) %>% colnames()
+        cols <- row() %>% select(matches('^lab_dic_(delta_13)?co2_(A|B)$', ignore.case = FALSE)) %>% colnames()
         cols2check <- c(
           cols2check,
           `names<-`(as.list(sub('_[AB]$', '_(A|B)', cols)), cols)

@@ -341,24 +341,13 @@ nutrientsTool <- function(input, output, session, pool, site, datetime, ...) {
       # Return observers to destroy them from the outer module
       observers = observersOutput,
       # Return a character vector containing the name of the columns not to check
-      noCheckCols = reactive(row() %>% select(matches('_sd', ignore.case = FALSE)) %>% colnames()),
+      noCheckCols = reactive(row() %>% select(matches('_(avg|sd)$|^(NH4|SRP)', ignore.case = FALSE)) %>% colnames()),
       # Return a list containing key-value pairs of columns to check with the regex to get the columns to check against
       checkCols = reactive({
-        cols2check <- list()
-        # Add all standard comparisons
-        cols <- row() %>% select(matches('_avg(_ugL)?$')) %>% colnames()
-        cols2check <- c(
-          cols2check,
-          `names<-`(as.list(cols), cols)
-        )
         # Add complex comparisons
-        cols <- row() %>% select(matches('_A$|_B$|_C$', ignore.case = FALSE)) %>% colnames()
-        cols2check <- c(
-          cols2check,
-          `names<-`(as.list(sub('_[ABC]$', '_(A|B|C)', sub('^NH4', '^NH4', cols))), cols)
-        )
+        cols <- row() %>% select(matches('^NUT_.*_rep_(A|B|C)$', ignore.case = FALSE)) %>% colnames()
         # Return list
-        cols2check
+        `names<-`(as.list(sub('_[ABC]$', '_(A|B|C)', cols)), cols)
       })
     )
   )

@@ -375,7 +375,7 @@ fieldDataTool <- function(input, output, session, pool, site, datetime, ...) {
       # Return observers to destroy them from the outer module
       observers = observersOutput,
       # Return a character vector containing the name of the columns not to check
-      noCheckCols = reactive(row() %>% select(matches('^Reach_depth_(sd|rep)|_corr$')) %>% colnames()),
+      noCheckCols = reactive(row() %>% select(matches('^Reach_depth_(sd|rep)|Vaisala_CO2_(avg|min|max)$|_altitude$')) %>% colnames()),
       # Return a list containing key-value pairs of columns to check with the regex to get the columns to check against
       checkCols = reactive(list())
     )
