@@ -516,9 +516,11 @@ createInput <- function(type, label, value = NULL, table, pool, levels = NULL, s
     # For a select input get the possible values from the SQL database
     choices <- getEnumValues(pool, table, label)
     # If NULL, get the factor levels
-    if (is.null(choices)) choices <- levels
-    # Create input
-    selectInput(session$ns(label), label = label, choices = choices, selected = value)
+    if (is.null(choices)) {
+      selectizeInput(session$ns(label), label = label, choices = levels, selected = value, options = list(create = TRUE))
+    } else {
+      selectInput(session$ns(label), label = label, choices = choices, selected = value)
+    }
   } else if (type == 'dttm') {
     airDatepickerInput(
       inputId = session$ns(label),

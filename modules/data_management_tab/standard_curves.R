@@ -70,6 +70,7 @@ standardCurves <- function(input, output, session, pool) {
                  # Cast data types
                  mutate(
                    date = as_date(date),
+                   parameter = as.factor(parameter),
                    across(ends_with('_at'), ymd_hms)
                  )
              }),

@@ -222,6 +222,12 @@ parameterCalculations <- function(input, output, session, pool) {
                
                # Cast data types
                calculations %>% mutate(
+                 param_category = factor(
+                   param_category,
+                   getRows(pool, 'grab_param_categories', columns = c('order', 'category')) %>%
+                     arrange(order) %>% pull(category) %>% unique()
+                 ),
+                 calcul_func = as.factor(calcul_func),
                  across(ends_with('_at'), ymd_hms)
                )
              }),

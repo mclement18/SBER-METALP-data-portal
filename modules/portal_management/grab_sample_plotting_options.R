@@ -64,6 +64,7 @@ gbPlotOptions <- function(input, output, session, pool) {
                }
                # Cast data types
                table %>% mutate(
+                 section_name = as.factor(section_name),
                  plot_func = as.factor(plot_func),
                  active = as.logical(active),
                  across(ends_with('_at'), ymd_hms)

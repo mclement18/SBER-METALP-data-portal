@@ -67,6 +67,7 @@ grabParamCategories <- function(input, output, session, pool) {
                }
                # Cast data types
                table %>% mutate(
+                 category = as.factor(category),
                  across(ends_with('_at'), ymd_hms)
                )
              }),

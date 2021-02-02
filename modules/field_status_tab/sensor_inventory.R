@@ -91,6 +91,14 @@ sensorInventory <- function(input, output, session, pool) {
                
                # Cast data types
                rows %>% mutate(
+                 station = factor(
+                   station,
+                   getRows(pool, 'stations', columns = c('order', 'name')) %>%
+                     arrange(order) %>% pull(name)
+                 ),
+                 param_name = as.factor(param_name),
+                 param_full = as.factor(param_full),
+                 model = as.factor(model),
                  installation_date = ymd(installation_date),
                  in_field = as.logical(in_field),
                  across(ends_with('_at'), ymd_hms)
